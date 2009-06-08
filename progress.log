@@ -1,0 +1,14 @@
+Jun 8, 2009:
+Using pygame to set up a basic drawing area and World instance.
+Have a Unit moving back and forth across the empty screen.
+
+New main classes: World, World.Pos, Unit
+Testclass: Stupid(Unit)
+
+Todays reading (excluding API lookups):
+Pygame documentation
+Python metaclasses
+
+
+
+
