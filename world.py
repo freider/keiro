@@ -14,7 +14,7 @@ class World(object):
 			if len(pos) == 1:
 				pos = pos[0]
 				if isinstance(pos, World.Pos):
-					self.x, self.y = pos.x, pos.y
+					self.x, self.y = float(pos.x), float(pos.y)
 				elif isinstance(pos, tuple):
 					self.x, self.y = pos
 				else:
@@ -61,6 +61,12 @@ class World(object):
 		for u in self.units:
 			u.render(screen)
 		pygame.display.flip()
+
+class InteractionLayer(object):
+	def __init__(self, viewpoint, targetworld):
+		self.viewpoint = viewpoint
+		self.targetworld = targetworld
+
 			
 class Unit(object):
 	MAX_STEP_LENGTH = 10
