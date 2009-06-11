@@ -3,18 +3,20 @@ import math
 import random
 
 class Stupid(Unit):
-	MAX_STEP_LENGTH = 8
-	def __init__(self, homeworld):
-		Unit.__init__(self, homeworld)
-		self.step = 1
+	def moveRight(self):
+		self.setTarget(Position(self.homeworld.size[0], self.pos.y))
+	def moveLeft(self):
+		self.setTarget(Position(0, self.pos.y))
 	def think(self):
 		if self.pos.x >= self.homeworld.size[0]:
-			self.step = -1
+			self.moveLeft()
 		elif self.pos.x <= 0:
-			self.step = 1
-		self.place(World.Pos(self.pos.x+self.step, self.pos.y))
+			self.moveRight()
 
 if __name__ == "__main__":
-	w = World()
-	Stupid(w);
+	w = World((320, 240))
+	u = Stupid()
+	u.place(Position(w.size)*0.5)
+	w.addUnit(u)
+	u.moveRight()
 	w.run()
