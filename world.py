@@ -29,8 +29,13 @@ class Position(object):
 		return Position(self.x*v, self.y*v)
 	def __sub__(self, p):
 		return Position(self.x-p.x, self.y-p.y)
+	def __add__(self, p):
+		return Position(self.x+p.x, self.y+p.y)
 	def length(self):
 		return math.sqrt(self.x*self.x + self.y*self.y)
+	def norm(self):
+		l = self.length()
+		return Position(self.x/l, self.y/l)
 	
 
 class World(object):
@@ -70,8 +75,9 @@ class World(object):
 				length = diff.length()
 				maxlength = u.MAXSPEED*dt
 				if length <= maxlength:
-					u.place(u.target)
-				
+					u.pos = u.target
+				#else:
+				#	u.pos = u.pos + diff.norm()*maxlength
 				
 				
 			self.render(self.screen)
@@ -89,7 +95,7 @@ class InteractionLayer(object):
 		self.targetworld = targetworld
 			
 class Unit(object):
-	MAX_STEP_LENGTH = 10
+	MAXSPEED = 10
 	
 	def __init__(self):
 		self.place(Position(0,0))
