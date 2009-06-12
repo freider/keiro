@@ -14,15 +14,16 @@ class Bouncer(Unit):
 			self.moveRight()
 
 class SpeedTester(Unit):
+	MAXSPEED = 10
 	def __init__(self):
-		self.goal = Position(20, 10)
+		self.goal = Position(110, 10)
 		self.place(Position(10,10))
 	def think(self):
 		if self.target != self.goal:
 			self.setTarget(self.goal)
-			self.starttime = time.clock()			
+			self.starttime = pygame.time.get_ticks()			
 		if self.pos == self.target:
-			print 10.0/(time.clock() - self.starttime)
+			print 100.0*1000/(pygame.time.get_ticks() - self.starttime)
 			self.homeworld.removeUnit(self)
 
 class RandomWalker(Unit):
@@ -40,4 +41,5 @@ if __name__ == "__main__":
 		u = RandomWalker()
 		u.place(Position(random.randrange(w.size[0]), random.randrange(w.size[1])))
 		w.addUnit(u)
+	#w.addUnit(SpeedTester())
 	w.run()

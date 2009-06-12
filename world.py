@@ -5,11 +5,12 @@ import sys
 from position import Position	
 
 class World(object):
-	MAXFPS = 100 #max 100 on some systems
-	MINDT = 1.0/MAXFPS
+	MAX_FPS = 1000 #max 100 on some systems
+	PRINT_FPS = False
 	def __init__(self, size):
 		self.units = [];
 		self.size = size
+		self.clock = pygame.time.Clock()
 	
 	def addUnit(self, u):
 		u.setWorld(self)
@@ -20,23 +21,9 @@ class World(object):
 	def run(self):
 		pygame.init()
 		self.screen = pygame.display.set_mode(self.size)
-		lasttime = time.clock()
-		frames = 0
 		while 1:
-			newtime = time.clock()
-			dt = newtime-lasttime
-			
-			#if timestep is to small, wait for a bit
-			if(dt < World.MINDT):
-				continue
-			
-			if dt > 0 and frames > 0:
-				fps = frames/dt if dt!=0 else -1
-				#sys.stdout.write("%f FPS\r"%fps);
-				#sys.stdout.flush()
-				lasttime = newtime
-				frames = 0
-				
+			dt = self.clock.tick(type(self).MAX_FPS)/1000.0
+
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
 					print "Bye bye"
@@ -49,15 +36,14 @@ class World(object):
 				diff = u.target - u.pos
 				length = diff.length()
 				maxlength = u.MAXSPEED*dt
-				#print "dt %f, dist %f:"%(dt, maxlength)
 				if length <= maxlength:
 					u.pos = u.target
 				else:
 					u.pos = u.pos + diff.norm()*maxlength
-				
-				
+			
+			if type(self).PRINT_FPS:
+				sys.stdout.write("%f fps           \r"%self.clock.get_fps())				
 			self.render(self.screen)
-			frames+=1
 			
 	def render(self, screen):
 		screen.fill((0,0,0))
@@ -83,7 +69,7 @@ class Unit(object):
 		raise NotImplementedError
 		
 	def render(self, screen):
-		pygame.draw.circle(screen, (255, 255, 0), self.pos.toIntTuple(), 5)
+		pygame.draw.circle(screen, (255, 255, 0), self.pos.toIntTuple(), 5, 1)
 		pygame.draw.line(screen, (140, 140, 255), self.pos.toIntTuple(), self.target.toIntTuple()) 
 
 	def setWorld(self, homeworld):
