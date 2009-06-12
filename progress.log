@@ -9,6 +9,23 @@ Todays reading (excluding API lookups):
 Pygame documentation
 Python metaclasses
 
+Jun 10, 2009:
+Setting up algebra for python. Looking into NumPy package
 
+Jun 11, 2009:
+Improved Position class (separated from World)
 
+Jun 12, 2009:
+Put Position class into separate file
+Working targetsystem for Units (World moves units according to their decisions)
+Created RandomWalker Unit to walk around randomly. (demo)
+Created Bouncer Unit to walk back and forth. (demo)
+Rendering of path to target
+Still no collision detection, but sketched up some ideas:
+	(for optimization)First check if the rectangle that a unit moves through intersects a rectangle from another units movement
+	 If so, do a robust check to see if, and with what force the units collide and record this data. 
+	 Should also move units apart where they collide (i.e. not be possible to move through other units)
+For system performance check, a simple FPS viewer is available. It needs some improvement though :
+	Average over time to account for big differences with short iteration times
+	
 
