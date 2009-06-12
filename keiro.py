@@ -32,12 +32,12 @@ class RandomWalker(Unit):
 		if(self.target == self.pos):
 			a = random.random()*math.pi*2
 			self.setTarget(self.pos + 
-				Position(math.cos(a)*type(self).STEP,
-						math.sin(a)*type(self).STEP))
+				Position(math.cos(a)*self.STEP,
+						math.sin(a)*self.STEP))
 
 if __name__ == "__main__":
-	w = World((320, 240))
-	for i in xrange(100):
+	w = World((640, 480))
+	for i in xrange(300):
 		u = RandomWalker()
 		u.place(Position(random.randrange(w.size[0]), random.randrange(w.size[1])))
 		w.addUnit(u)

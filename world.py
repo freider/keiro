@@ -6,7 +6,7 @@ from position import Position
 
 class World(object):
 	MAX_FPS = 1000 #max 100 on some systems
-	PRINT_FPS = False
+	PRINT_FPS = True
 	def __init__(self, size):
 		self.units = [];
 		self.size = size
@@ -22,7 +22,7 @@ class World(object):
 		pygame.init()
 		self.screen = pygame.display.set_mode(self.size)
 		while 1:
-			dt = self.clock.tick(type(self).MAX_FPS)/1000.0
+			dt = self.clock.tick(self.MAX_FPS)/1000.0
 
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
@@ -41,8 +41,8 @@ class World(object):
 				else:
 					u.pos = u.pos + diff.norm()*maxlength
 			
-			if type(self).PRINT_FPS:
-				sys.stdout.write("%f fps           \r"%self.clock.get_fps())				
+			if self.PRINT_FPS:
+				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
 			self.render(self.screen)
 			
 	def render(self, screen):
@@ -50,6 +50,13 @@ class World(object):
 		for u in self.units:
 			u.render(screen)
 		pygame.display.flip()
+		
+	@staticmethod
+	def checkCollision( p1_now, p2_now, 
+						p1_later, p2_later, 
+						p1_speed, p2_speed):
+		return True
+		
 
 class Unit(object):
 	MAXSPEED = 10
