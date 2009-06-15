@@ -2,7 +2,7 @@ import time
 import random
 import pygame
 import sys
-from position import Position	
+from vector import vec2d
 
 class World(object):
 	MAX_FPS = 1000 #max 100 on some systems
@@ -34,12 +34,12 @@ class World(object):
 			#move everyone and hope no one collides...				
 			for u in self.units:
 				diff = u.target - u.pos
-				length = diff.length()
+				length = diff.length
 				maxlength = u.MAXSPEED*dt
 				if length <= maxlength:
 					u.pos = u.target
 				else:
-					u.pos = u.pos + diff.norm()*maxlength
+					u.pos = u.pos + diff.normalized()*maxlength
 			
 			if self.PRINT_FPS:
 				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
@@ -61,11 +61,11 @@ class World(object):
 class Unit(object):
 	MAXSPEED = 10
 	def __init__(self):
-		self.place(Position(0,0))
+		self.place(vec2d(0,0))
 		
 	def place(self, pos):
-		if isinstance(pos, Position):
-			self.pos = self.target = Position(pos)
+		if isinstance(pos, vec2d):
+			self.pos = self.target = vec2d(pos)
 		else:
 			raise TypeError
 	
@@ -76,8 +76,8 @@ class Unit(object):
 		raise NotImplementedError
 		
 	def render(self, screen):
-		pygame.draw.circle(screen, (255, 255, 0), self.pos.toIntTuple(), 5, 1)
-		pygame.draw.line(screen, (140, 140, 255), self.pos.toIntTuple(), self.target.toIntTuple()) 
+		pygame.draw.circle(screen, (255, 255, 0), self.pos, 5, 1)
+		pygame.draw.line(screen, (140, 140, 255), self.pos, self.target) 
 
 	def setWorld(self, homeworld):
 		self.homeworld = homeworld

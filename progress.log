@@ -27,5 +27,6 @@ Still no collision detection, but sketched up some ideas:
 	 Should also move units apart where they collide (i.e. not be possible to move through other units)
 For system performance check, a simple FPS viewer is available. It needs some improvement though :
 	Average over time to account for big differences with short iteration times
-	
 
+Jun 13, 2009:
+Exchanged own Position class for Pygame inofficial vec2d-class which is more python-complete and well tested

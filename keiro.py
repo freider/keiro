@@ -4,9 +4,9 @@ import random
 
 class Bouncer(Unit):
 	def moveRight(self):
-		self.setTarget(Position(self.homeworld.size[0], self.pos.y))
+		self.setTarget(vec2d(self.homeworld.size[0], self.pos.y))
 	def moveLeft(self):
-		self.setTarget(Position(0, self.pos.y))
+		self.setTarget(vec2d(0, self.pos.y))
 	def think(self):
 		if self.pos.x >= self.homeworld.size[0]:
 			self.moveLeft()
@@ -16,8 +16,8 @@ class Bouncer(Unit):
 class SpeedTester(Unit):
 	MAXSPEED = 10
 	def __init__(self):
-		self.goal = Position(110, 10)
-		self.place(Position(10,10))
+		self.goal = vec2d(110, 10)
+		self.place(vec2d(10,10))
 	def think(self):
 		if self.target != self.goal:
 			self.setTarget(self.goal)
@@ -32,14 +32,14 @@ class RandomWalker(Unit):
 		if(self.target == self.pos):
 			a = random.random()*math.pi*2
 			self.setTarget(self.pos + 
-				Position(math.cos(a)*self.STEP,
+				vec2d(math.cos(a)*self.STEP,
 						math.sin(a)*self.STEP))
 
 if __name__ == "__main__":
 	w = World((640, 480))
 	for i in xrange(300):
 		u = RandomWalker()
-		u.place(Position(random.randrange(w.size[0]), random.randrange(w.size[1])))
+		u.place(vec2d(random.randrange(w.size[0]), random.randrange(w.size[1])))
 		w.addUnit(u)
 	#w.addUnit(SpeedTester())
 	w.run()
