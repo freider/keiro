@@ -30,3 +30,8 @@ For system performance check, a simple FPS viewer is available. It needs some im
 
 Jun 13, 2009:
 Exchanged own Position class for Pygame inofficial vec2d-class which is more python-complete and well tested
+
+Jun 15, 2009:
+Ideas:
+Planning, Physics, Rendering could be different modules
+But planning and physics would probably have to be synchronized/same thread to give repeatable results

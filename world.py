@@ -6,7 +6,7 @@ from vector import vec2d
 
 class World(object):
 	MAX_FPS = 1000 #max 100 on some systems
-	PRINT_FPS = True
+	PRINT_FPS = False
 	def __init__(self, size):
 		self.units = [];
 		self.size = size
@@ -28,18 +28,33 @@ class World(object):
 				if event.type == pygame.QUIT:
 					print "Bye bye"
 					return
+					
+			moveplan = dict()
 			#let everyone set targets
 			for u in self.units:
 				u.think();
-			#move everyone and hope no one collides...				
-			for u in self.units:
 				diff = u.target - u.pos
 				length = diff.length
 				maxlength = u.MAXSPEED*dt
 				if length <= maxlength:
-					u.pos = u.target
+					newpos = u.target
 				else:
-					u.pos = u.pos + diff.normalized()*maxlength
+					newpos = u.pos + diff.normalized()*maxlength
+				moveplan[u] = newpos
+				
+			#move everyone and hope no one collides...				
+			for u1,u1pos in moveplan.iteritems():
+				collision = False
+				for u2,u2pos in moveplan.iteritems():
+					if u1 != u2 and u1.pos.get_dist_sqrd(u2.pos) < 10**2:
+						collision = True
+						break
+				if collision:
+					u1.colliding = True
+				else:
+					u1.colliding = False
+				if not collision:	
+					u1.pos = u1pos
 			
 			if self.PRINT_FPS:
 				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
@@ -52,16 +67,22 @@ class World(object):
 		pygame.display.flip()
 		
 	@staticmethod
-	def checkCollision( p1_now, p2_now, 
-						p1_later, p2_later, 
-						p1_speed, p2_speed):
-		return True
+	def willCollide( p1_now, p1_later, p1_speed,
+					p2_now,	 p2_later, p2_speed):
+		r1 = pygame.Rect(p1_now, p1_later-p1_now)
+		r2 = pygame.Rect(p2_now, p2_later-p2_now)
+		if r1.colliderect(r2):
+			#print r1, r2
+			return True
+		else:
+			#print "hej"
+			return False
 		
-
 class Unit(object):
 	MAXSPEED = 10
 	def __init__(self):
 		self.place(vec2d(0,0))
+		self.colliding = False
 		
 	def place(self, pos):
 		if isinstance(pos, vec2d):
@@ -76,7 +97,12 @@ class Unit(object):
 		raise NotImplementedError
 		
 	def render(self, screen):
-		pygame.draw.circle(screen, (255, 255, 0), self.pos, 5, 1)
+		if self.colliding:
+			color = (255,0,0)
+		else:
+			color = (255, 255, 0)
+			
+		pygame.draw.circle(screen, color, (int(self.pos.x), int(self.pos.y)), 5, 1)
 		pygame.draw.line(screen, (140, 140, 255), self.pos, self.target) 
 
 	def setWorld(self, homeworld):
