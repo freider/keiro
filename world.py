@@ -2,11 +2,12 @@ import time
 import random
 import pygame
 import sys
+from itertools import combinations
 from vector import vec2d
 
 class World(object):
 	#MAX_FPS = 1000 #max 100 on some systems
-	PRINT_FPS = False
+	PRINT_FPS = True
 	def __init__(self, size):
 		self.units = [];
 		self.size = size
@@ -41,20 +42,18 @@ class World(object):
 				else:
 					newpos = u.pos + diff.normalized()*maxlength
 				u.pos = newpos
-				
-			for u1 in self.units:
-				collision = False
-				for u2 in self.units:
-					if u1 != u2:
-						dist = u1.pos.get_distance(u2.pos)-(u1.radius + u2.radius)
-						if dist < 0:
-							correction = (u2.pos - u1.pos).normalized()*dist/2
-							u2.pos -= correction
-							u1.pos += correction
-							collision = True
+			
+			for us in combinations(self.units, 2):
+				u1, u2 = us
+				dist = u1.pos.get_distance(u2.pos)-(u1.radius + u2.radius)
+				if dist < 0:
+					correction = (u2.pos - u1.pos).normalized()*dist/2
+					u2.pos -= correction
+					u1.pos += correction
 			
 			if self.PRINT_FPS:
 				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
+				sys.stdout.flush()
 			self.render(self.screen)
 			
 	def render(self, screen):
