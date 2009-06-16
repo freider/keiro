@@ -5,7 +5,7 @@ import sys
 from vector import vec2d
 
 class World(object):
-	MAX_FPS = 1000 #max 100 on some systems
+	#MAX_FPS = 1000 #max 100 on some systems
 	PRINT_FPS = False
 	def __init__(self, size):
 		self.units = [];
@@ -22,7 +22,7 @@ class World(object):
 		pygame.init()
 		self.screen = pygame.display.set_mode(self.size)
 		while 1:
-			dt = self.clock.tick(self.MAX_FPS)/1000.0
+			dt = self.clock.tick()/1000.0
 
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
@@ -35,26 +35,25 @@ class World(object):
 				u.think();
 				diff = u.target - u.pos
 				length = diff.length
-				maxlength = u.MAXSPEED*dt
+				maxlength = u.maxspeed*dt
 				if length <= maxlength:
-					newpos = u.target
+					newpos = vec2d(u.target)
 				else:
 					newpos = u.pos + diff.normalized()*maxlength
 				moveplan[u] = newpos
 				
-			#move everyone and hope no one collides...				
 			for u1,u1pos in moveplan.iteritems():
 				collision = False
 				for u2,u2pos in moveplan.iteritems():
-					if u1 != u2 and u1.pos.get_dist_sqrd(u2.pos) < 10**2:
+					if u1 != u2 and u1pos.get_dist_sqrd(u2pos) < (u1.radius + u2.radius)**2:
 						collision = True
 						break
 				if collision:
 					u1.colliding = True
 				else:
 					u1.colliding = False
-				if not collision:	
 					u1.pos = u1pos
+					
 			
 			if self.PRINT_FPS:
 				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
@@ -79,7 +78,8 @@ class World(object):
 			return False
 		
 class Unit(object):
-	MAXSPEED = 10
+	maxspeed = 10
+	radius = 5
 	def __init__(self):
 		self.place(vec2d(0,0))
 		self.colliding = False
@@ -102,7 +102,7 @@ class Unit(object):
 		else:
 			color = (255, 255, 0)
 			
-		pygame.draw.circle(screen, color, (int(self.pos.x), int(self.pos.y)), 5, 1)
+		pygame.draw.circle(screen, color, (int(self.pos.x), int(self.pos.y)), self.radius, 1)
 		pygame.draw.line(screen, (140, 140, 255), self.pos, self.target) 
 
 	def setWorld(self, homeworld):
