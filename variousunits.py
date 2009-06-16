@@ -14,7 +14,7 @@ class Bouncer(Unit):
 			self.moveRight()
 
 class SpeedTester(Unit):
-	MAXSPEED = 10
+	maxspeed = 10
 	def __init__(self):
 		self.goal = vec2d(110, 10)
 		self.place(vec2d(10,10))

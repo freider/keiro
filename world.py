@@ -63,29 +63,26 @@ class World(object):
 			u.render(screen)
 		pygame.display.flip()
 		
-	@staticmethod
-	def willCollide( p1_now, p1_later, p1_speed,
-					p2_now,	 p2_later, p2_speed):
-		r1 = pygame.Rect(p1_now, p1_later-p1_now)
-		r2 = pygame.Rect(p2_now, p2_later-p2_now)
-		if r1.colliderect(r2):
-			#print r1, r2
-			return True
+
+class UnitRegistrator(type):
+	def __new__(cls, name, bases, dct):
+		if "maxspeed" in dct:
+			maxspeed = dct["maxspeed"]
 		else:
-			#print "hej"
-			return False
+			maxspeed = "undefined"			
+		if name != "Unit":
+			print "Defining unit %s, maxspeed = %s"%(name,maxspeed)
+		return type.__new__(cls, name, bases, dct)
 		
 class Unit(object):
-	maxspeed = 10
+	__metaclass__ = UnitRegistrator
+	maxspeed = 200
 	radius = 5
 	def __init__(self):
 		self.place(vec2d(0,0))
 		
 	def place(self, pos):
-		if isinstance(pos, vec2d):
-			self.pos = self.target = vec2d(pos)
-		else:
-			raise TypeError
+		self.pos = self.target = vec2d(pos)
 	
 	def setTarget(self, target):
 		self.target = target
