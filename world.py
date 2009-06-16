@@ -40,20 +40,18 @@ class World(object):
 					newpos = vec2d(u.target)
 				else:
 					newpos = u.pos + diff.normalized()*maxlength
-				moveplan[u] = newpos
+				u.pos = newpos
 				
-			for u1,u1pos in moveplan.iteritems():
+			for u1 in self.units:
 				collision = False
-				for u2,u2pos in moveplan.iteritems():
-					if u1 != u2 and u1pos.get_dist_sqrd(u2pos) < (u1.radius + u2.radius)**2:
-						collision = True
-						break
-				if collision:
-					u1.colliding = True
-				else:
-					u1.colliding = False
-					u1.pos = u1pos
-					
+				for u2 in self.units:
+					if u1 != u2:
+						dist = u1.pos.get_distance(u2.pos)-(u1.radius + u2.radius)
+						if dist < 0:
+							correction = (u2.pos - u1.pos).normalized()*dist/2
+							u2.pos -= correction
+							u1.pos += correction
+							collision = True
 			
 			if self.PRINT_FPS:
 				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
@@ -82,7 +80,6 @@ class Unit(object):
 	radius = 5
 	def __init__(self):
 		self.place(vec2d(0,0))
-		self.colliding = False
 		
 	def place(self, pos):
 		if isinstance(pos, vec2d):
@@ -97,11 +94,7 @@ class Unit(object):
 		raise NotImplementedError
 		
 	def render(self, screen):
-		if self.colliding:
-			color = (255,0,0)
-		else:
-			color = (255, 255, 0)
-			
+		color = (255, 255, 0)			
 		pygame.draw.circle(screen, color, (int(self.pos.x), int(self.pos.y)), self.radius, 1)
 		pygame.draw.line(screen, (140, 140, 255), self.pos, self.target) 
 

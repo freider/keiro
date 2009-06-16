@@ -29,7 +29,7 @@ class SpeedTester(Unit):
 class RandomWalker(Unit):
 	STEP = 20
 	def think(self):
-		if(self.target == self.pos or self.colliding):
+		if self.target == self.pos:
 			a = random.random()*math.pi*2
 			step = random.gauss(self.STEP, self.STEP/2)
 			self.setTarget(self.pos + 
