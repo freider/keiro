@@ -21,27 +21,20 @@ class World(object):
 		self.clock = pygame.time.Clock()
 	
 	def addUnit(self, init_position, intelligence):
-		u = Unit()
-		u.setWorld(self)
-		self.units.append(u)
-	def removeUnit(self, u):
-		self.units.remove(u)
+		self.units.append((Unit(), intelligence))
 	
 	def run(self):
 		pygame.init()
 		self.screen = pygame.display.set_mode(self.size)
 		while 1:
 			dt = self.clock.tick()/1000.0
-
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
 					print "Bye bye"
 					return
-					
-			moveplan = dict()
-			#let everyone set targets
-			for u in self.units:
-				u.think();
+
+			for u,intelligence in self.units:
+				intelligence.think(InteractionLayer(u, self))
 				diff = u.target - u.pos
 				length = diff.length
 				maxlength = u.maxspeed*dt
@@ -51,6 +44,7 @@ class World(object):
 					newpos = u.pos + diff.normalized()*maxlength
 				u.pos = newpos
 			
+			#collision detection
 			for us in combinations(self.units, 2):
 				u1, u2 = us
 				dist = u1.pos.get_distance(u2.pos)-(u1.radius + u2.radius)
