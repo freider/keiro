@@ -20,7 +20,8 @@ class World(object):
 		self.size = size
 		self.clock = pygame.time.Clock()
 	
-	def addUnit(self, u):
+	def addUnit(self, init_position, intelligence):
+		u = Unit()
 		u.setWorld(self)
 		self.units.append(u)
 	def removeUnit(self, u):
@@ -69,19 +70,29 @@ class World(object):
 			u.render(screen)
 		pygame.display.flip()
 		
-class UnitRegistrator(type):
+class InteractionLayer(object):
+	def __init__(self, me, world):
+		self.me = me
+		self.units = list()
+		self.target = me
+		
+		for u in world.units:
+			#visual range logic goes here
+			self.units.append(u)
+
+class IntelRegister(type):
 	def __new__(cls, name, bases, dct):
-		if "maxspeed" in dct:
-			maxspeed = dct["maxspeed"]
-		else:
-			maxspeed = "undefined"			
-		if name != "Unit":
-			print "Defining unit %s, maxspeed = %s"%(name,maxspeed)
+		if name != "Intelligence":
+			print "Defining %s"%(name)
 		return type.__new__(cls, name, bases, dct)
 		
+class Intelligence(object):
+	__metaclass__ = IntelRegister
+	def think(self, interaction_layer):
+		raise NotImplementedError
+		
 class Unit(object):
-	__metaclass__ = UnitRegistrator
-	maxspeed = 200
+	maxspeed = 50
 	radius = 5
 	def __init__(self):
 		self.place(vec2d(0,0))
@@ -92,14 +103,8 @@ class Unit(object):
 	def setTarget(self, target):
 		self.target = target
 		
-	def think(self):
-		raise NotImplementedError
-		
 	def render(self, screen):
 		color = (255, 255, 0)			
 		pygame.draw.circle(screen, color, (int(self.pos.x), int(self.pos.y)), self.radius, 1)
 		pygame.draw.line(screen, (140, 140, 255), self.pos, self.target) 
-
-	def setWorld(self, homeworld):
-		self.homeworld = homeworld
 		

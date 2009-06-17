@@ -1,7 +1,7 @@
 from world import *
 import math
 import random
-
+"""
 class Bouncer(Unit):
 	def moveRight(self):
 		self.setTarget(vec2d(self.homeworld.size[0], self.pos.y))
@@ -24,14 +24,14 @@ class SpeedTester(Unit):
 			self.starttime = pygame.time.get_ticks()			
 		if self.pos == self.target:
 			print 100.0*1000/(pygame.time.get_ticks() - self.starttime)
-			self.homeworld.removeUnit(self)
+			self.homeworld.removeUnit(self)"""
 
-class RandomWalker(Unit):
-	STEP = 20
-	def think(self):
-		if self.target == self.pos:
+class RandomWalker(Intelligence):
+	target_distance = 20
+	def think(self, ilayer):
+		me, units = ilayer.me, ilayer.units
+		if me.target == me.pos:
 			a = random.random()*math.pi*2
-			step = random.gauss(self.STEP, self.STEP/2)
-			self.setTarget(self.pos + 
-				vec2d(math.cos(a)*step,
-						math.sin(a)*step))
+			step = random.gauss(self.target_distance, self.target_distance/3)
+			ilayer.target = me.pos + (math.cos(a)*step, math.sin(a)*step)
+			
