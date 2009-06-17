@@ -1,9 +1,16 @@
+from vector import vec2d
 import time
 import random
 import pygame
 import sys
-from itertools import combinations
-from vector import vec2d
+try:
+	from itertools import combinations
+except ImportError:
+	def combinations(l, n):
+		if n != 2: raise Exception('This placeholder only good for n=2')
+		for i in range(len(l)):
+			for j in range(i+1, len(l)):
+				yield l[i], l[j]
 
 class World(object):
 	#MAX_FPS = 1000 #max 100 on some systems
@@ -62,7 +69,6 @@ class World(object):
 			u.render(screen)
 		pygame.display.flip()
 		
-
 class UnitRegistrator(type):
 	def __new__(cls, name, bases, dct):
 		if "maxspeed" in dct:
