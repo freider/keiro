@@ -35,3 +35,10 @@ Jun 15, 2009:
 Ideas:
 Planning, Physics, Rendering could be different modules
 But planning and physics would probably have to be synchronized/same thread to give repeatable results
+
+Jun 16, 2009:
+Reading more python docs. Using itertools
+
+Jun 17, 2009:
+Refactoring design pattern to have better data encapsulation and protection.
+
