@@ -84,10 +84,13 @@ class Intelligence(object):
 	__metaclass__ = IntelRegister
 	def think(self, interaction_layer):
 		raise NotImplementedError
-		
-class Unit(object):
-	maxspeed = 50
-	radius = 5
+
+class Particle(object):
+	def __init__():
+		self.maxspeed = 30
+		self.radius = 5
+			
+class Unit(Particle):
 	def __init__(self):
 		self.place(vec2d(0,0))
 		

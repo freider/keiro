@@ -1,9 +1,16 @@
 from numpy import array, dot
 
-class state(object):
+class Particle(object):
 	def __init__(self, x, y, vx=0, vy=0):
 		self._statematrix = array([[x,vx],[y,vy]])
-		self._progressmatrix = array([[1,0],[0,1]])
+		self._progressmatrix = array([[1.0,0.0],[0.0,1.0]])
+		self.maxspeed = 
+		self.radius = 
+		self.
+		
+	def __str__(self):
+		return "(%f %f) + t*(%f %f)"%(self.x, self.y, self.vx, self.vy)
+		
 	def progress(self, dt):
 		self._progressmatrix[1][0] = dt
 		self._statematrix = dot(self._statematrix, self._progressmatrix)
@@ -36,21 +43,23 @@ class state(object):
 if __name__ == "__main__":
 	import unittest
 	
-	class UnitTestState(unittest.TestCase):
+	class UnitTestMovementMatrix(unittest.TestCase):
 		def setUp(self):
 			pass
 		
 		def testProperties(self):
-			s = state(1, 2, 3, 4)
+			s = Particle(1, 2, 3, 4)
 			self.assert_(s.x == 1 and s.y == 2 and s.vx == 3 and s.vy == 4)
 			s.x, s.y, s.vx, s.vy = 5, 6, 7, 8
 			self.assert_(s.x == 5 and s.y == 6 and s.vx == 7 and s.vy == 8)
 		
 		def testProgress(self):
-			s = state(0,0,1,2)
+			s = Particle(0,0,1,2)
 			s.progress(1)
 			assert(s.x == 1 and s.y == 2 and s.vx == 1 and s.vy == 2)
+			print s
 			s.progress(1.5)
+			print s
 			assert(s.x == 2.5 and s.y == 5 and s.vx == 1 and s.vy == 2)
 		
 	unittest.main()

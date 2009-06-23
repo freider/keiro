@@ -60,8 +60,18 @@ On second thought option #2 seems to be by far the best looking and structurally
 
 Physics state:
 Should unit state (i.e position, velocity, forces etc.) be encapsulated even further? Allowing physics model to be changed to using matrix oprations rather than multiple vectors.
+Should this state be encapsulated in the Unit class or in another structure owned or inherited by the Unit class?
 Created State class for benchmarking numpy array,matrix vs. pygame inofficial vec2d. Numpy matrix was slower, numpy array was faster (when should you ever use matrix?)
 
+Summary of plan:
+Unit - View in MVC pattern, holds informations such as a units color and drawing code (which gets access to physical state too when drawing).
+State - Model in MVC pattern, holds physical properties of object that in any way affects how the physics engine works on the object.
+	Optionally: PublicState - Special state object that exposes only certain physical properties for other parts than the physics engine to see
+Intelligence - Controller in MVC Pattern. Has the think(WorldData data) method that takes certain public properties of the rest of world as a parameter, and can issue orders of changed behaviour for the object to the physics engine.
 
+Engine step:
+So far the engine has been coded like a game: Draw frames as fast as possible and maintain real time syncronisation.
+For scientific purposes, this is not optimal - the results will vary depending on the hardware where the system is run.
+A better aproach would be to emulate a fixed framerate and send in the same time step for every frame. This way, the system will run equivalently every time (except if seeded "random" is used) allowing exact repeatability - the basis for empirical science. How this time step is determined is not very important, but could be chosen in a way that makes real-time display of simulations go at a pleasant speed. Also, collision detection could be made much simpler by choosing a small enough time step so that objects never can "pass" each other by accident and a simple bounding box/radius-comparison will suffice for basic collision detection.
 
 
