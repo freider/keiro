@@ -42,3 +42,26 @@ Reading more python docs. Using itertools
 Jun 17, 2009:
 Refactoring design pattern to have better data encapsulation and protection.
 
+Jun 23, 2009:
+Rethinking Unit/Intelligence/Physics design pattern.
+Intelligence should not be able to directly set the position or other properties controlled by the physics engine directly.
+As a result of this, the data passed to the intelligence should either be copies of the internal data, or immutable versions of the same (the latter is hard to achieve).
+In short: the internal datastructure holding physical properties of the object should never be exposed to the intelligence. In python, complete data security is practically impossible, but it should at least be apparent that physical properties should not be altered directly.
+Options:
+#1 Having a Unit class that contains both physical properties, intelligence and unit drawing. Creating a deep copy of the instance before calling the "think()"-method on the newly created instance, securing any data in the internal Unit-class for the physics engine to use.
+This still exposes a "fake" unit to the intelligence.
+	Pos: Everything about a unit is packaged together 
+	Neg: Thinking object (Unit) is not retained between think()-calls, making it hard to save data between calls.
+#2 Having separate Unit and Intelligence objects for each thinking entity. Physics data sent as argument to Intelligence when calling think()
+	Pos: The Intelligence instance can be retained between calls. More apparent that physics data are read-only.
+	Neg: Added complexity to the system. More code.
+	
+On second thought option #2 seems to be by far the best looking and structurally correct option, so I will go with that.
+
+Physics state:
+Should unit state (i.e position, velocity, forces etc.) be encapsulated even further? Allowing physics model to be changed to using matrix oprations rather than multiple vectors.
+Created State class for benchmarking numpy array,matrix vs. pygame inofficial vec2d. Numpy matrix was slower, numpy array was faster (when should you ever use matrix?)
+
+
+
+
