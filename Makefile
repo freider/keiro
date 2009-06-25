@@ -9,7 +9,7 @@ physics.py physics_wrap.cxx: physics.i physics.h
 	
 clean: 
 	rm -f *.cxx
-	rm -f *.so
 	rm -f *~ *.pyc *.pyo
 	rm -rf build
-	rm -f physics.py
+
+
