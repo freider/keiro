@@ -1,4 +1,5 @@
 from vector import vec2d
+from copy import deepcopy
 import time
 import random
 import pygame
@@ -17,11 +18,11 @@ class World(object):
 	PRINT_FPS = True
 	def __init__(self, size):
 		self.units = [];
-		self.size = size
+		self.size = vec2d(size)
 		self.clock = pygame.time.Clock()
 	
-	def addUnit(self, init_position, intelligence):
-		self.units.append((Unit(), intelligence))
+	def addUnit(self, unit):
+		self.units.append(unit)
 	
 	def run(self):
 		pygame.init()
@@ -33,26 +34,26 @@ class World(object):
 					print "Bye bye"
 					return
 
-			for u,intelligence in self.units:
-				intelligence.think(InteractionLayer(u, self))
-				diff = u.target - u.pos
-				length = diff.length
+			for u in self.units:
+				ilayer = InteractionLayer(u, self, view_range = 50)
+				u.ai.think(ilayer)
+				u.target = ilayer.target
 				maxlength = u.maxspeed*dt
-				if length <= maxlength:
-					newpos = vec2d(u.target)
+				if u.target_distance() <= maxlength:
+					newpos = vec2d(u.target) #copy of vector
 				else:
-					newpos = u.pos + diff.normalized()*maxlength
-				u.pos = newpos
+					newpos = u.xy + u.target_direction() * maxlength
+				u.xy = newpos
 			
 			#collision detection
 			for us in combinations(self.units, 2):
 				u1, u2 = us
-				dist = u1.pos.get_distance(u2.pos)-(u1.radius + u2.radius)
+				dist = u1.xy.get_distance(u2.xy)-(u1.radius + u2.radius)
 				if dist < 0:
-					correction = (u2.pos - u1.pos).normalized()*dist/2
-					u2.pos -= correction
-					u1.pos += correction
-			
+					correction = (u2.xy - u1.xy).normalized()*dist/2
+					u2.xy -= correction
+					u1.xy += correction
+
 			if self.PRINT_FPS:
 				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
 				sys.stdout.flush()
@@ -62,46 +63,55 @@ class World(object):
 		screen.fill((0,0,0))
 		for u in self.units:
 			u.render(screen)
+			u.ai.renderIllustration(screen)
 		pygame.display.flip()
 		
 class InteractionLayer(object):
-	def __init__(self, me, world):
+	def __init__(self, me, world, view_range = None):
 		self.me = me
-		self.units = list()
-		self.target = me
+		self.units = []
+		self.target = me.target
+		self.view_range = view_range
 		
 		for u in world.units:
-			#visual range logic goes here
-			self.units.append(u)
+			if view_range is None or view_range >= me.xy.get_distance(u.xy):
+				self.units.append(u)
 
 class IntelRegister(type):
+	register = []
 	def __new__(cls, name, bases, dct):
 		if name != "Intelligence":
 			print "Defining %s"%(name)
+		IntelRegister.register.append((name, cls));
 		return type.__new__(cls, name, bases, dct)
 		
 class Intelligence(object):
 	__metaclass__ = IntelRegister
 	def think(self, interaction_layer):
-		raise NotImplementedError
+		pass
+	def renderIllustration(self, screen):
+		pass
 
 class Particle(object):
-	def __init__():
+	def __init__(self, position = None):
 		self.maxspeed = 30
 		self.radius = 5
+		self.xy = vec2d(0,0) if position is None else vec2d(position)
+		self.target = vec2d(self.xy)
+	x = property(lambda: xy.x)
+	y = property(lambda: xy.y)
+	
+	def target_direction(self):
+		return (self.target - self.xy).normalized()
+	def target_distance(self):
+		return (self.target - self.xy).get_length()
 			
 class Unit(Particle):
-	def __init__(self):
-		self.place(vec2d(0,0))
-		
-	def place(self, pos):
-		self.pos = self.target = vec2d(pos)
-	
-	def setTarget(self, target):
-		self.target = target
+	def __init__(self, position, ai):
+		Particle.__init__(self, position)
+		self.ai = ai
+		self.color = (255, 255, 0)
 		
 	def render(self, screen):
-		color = (255, 255, 0)			
-		pygame.draw.circle(screen, color, (int(self.pos.x), int(self.pos.y)), self.radius, 1)
-		pygame.draw.line(screen, (140, 140, 255), self.pos, self.target) 
-		
+		pygame.draw.circle(screen, self.color, 
+			self.xy, self.radius, 1)		

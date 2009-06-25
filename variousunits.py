@@ -26,12 +26,25 @@ class SpeedTester(Unit):
 			print 100.0*1000/(pygame.time.get_ticks() - self.starttime)
 			self.homeworld.removeUnit(self)"""
 
+		
 class RandomWalker(Intelligence):
 	target_distance = 20
 	def think(self, ilayer):
-		me, units = ilayer.me, ilayer.units
-		if me.target == me.pos:
+		self.me, self.units = ilayer.me, ilayer.units
+		
+		if self.me.target == self.me.xy:
 			a = random.random()*math.pi*2
 			step = random.gauss(self.target_distance, self.target_distance/3)
-			ilayer.target = me.pos + (math.cos(a)*step, math.sin(a)*step)
-			
+			ilayer.target = self.me.xy + (math.cos(a)*step, math.sin(a)*step)
+
+class Stubborn(Intelligence):
+	def __init__(self, goal):
+		self.goal = goal
+	def think(self, ilayer):
+		self.prev_state = ilayer
+		ilayer.target = self.goal
+	def renderIllustration(self, screen):
+		pygame.draw.line(screen, (140, 140, 255), 
+			self.prev_state.me.xy, self.prev_state.me.target)
+		pygame.draw.circle(screen, (255, 150, 150), 
+			self.prev_state.me.xy, self.prev_state.view_range, 1)
