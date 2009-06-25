@@ -29,7 +29,7 @@ class SpeedTester(Unit):
 		
 class RandomWalker(Intelligence):
 	target_distance = 20
-	def think(self, ilayer):
+	def think(self, dt, ilayer):
 		self.me, self.units = ilayer.me, ilayer.units
 		
 		if self.me.target == self.me.xy:
@@ -40,7 +40,7 @@ class RandomWalker(Intelligence):
 class Stubborn(Intelligence):
 	def __init__(self, goal):
 		self.goal = goal
-	def think(self, ilayer):
+	def think(self, dt, ilayer):
 		self.prev_state = ilayer
 		ilayer.target = self.goal
 	def renderIllustration(self, screen):
@@ -48,3 +48,6 @@ class Stubborn(Intelligence):
 			self.prev_state.me.xy, self.prev_state.me.target)
 		pygame.draw.circle(screen, (255, 150, 150), 
 			self.prev_state.me.xy, self.prev_state.view_range, 1)
+		for u in self.prev_state.units:
+			pygame.draw.circle(screen, (150, 255, 150),
+				u.xy, u.radius, 0) 

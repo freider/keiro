@@ -36,7 +36,7 @@ class World(object):
 
 			for u in self.units:
 				ilayer = InteractionLayer(u, self, view_range = 50)
-				u.ai.think(ilayer)
+				u.ai.think(dt, ilayer)
 				u.target = ilayer.target
 				maxlength = u.maxspeed*dt
 				if u.target_distance() <= maxlength:
@@ -46,14 +46,14 @@ class World(object):
 				u.xy = newpos
 			
 			#collision detection
-			for us in combinations(self.units, 2):
+			"""for us in combinations(self.units, 2):
 				u1, u2 = us
 				dist = u1.xy.get_distance(u2.xy)-(u1.radius + u2.radius)
 				if dist < 0:
 					correction = (u2.xy - u1.xy).normalized()*dist/2
 					u2.xy -= correction
 					u1.xy += correction
-
+"""
 			if self.PRINT_FPS:
 				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
 				sys.stdout.flush()
@@ -74,7 +74,9 @@ class InteractionLayer(object):
 		self.view_range = view_range
 		
 		for u in world.units:
-			if view_range is None or view_range >= me.xy.get_distance(u.xy):
+			if u is not me and (
+				view_range is None or view_range >= me.xy.get_distance(u.xy)
+			):
 				self.units.append(u)
 
 class IntelRegister(type):
@@ -87,7 +89,7 @@ class IntelRegister(type):
 		
 class Intelligence(object):
 	__metaclass__ = IntelRegister
-	def think(self, interaction_layer):
+	def think(self, dt, interaction_layer):
 		pass
 	def renderIllustration(self, screen):
 		pass
