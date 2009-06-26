@@ -24,16 +24,19 @@ Vec2d Vec2d::operator+(const Vec2d &v) const{
 Vec2d Vec2d::operator-(const Vec2d &v) const{
 	return Vec2d(x-v.x, y-v.y);
 }
+bool Vec2d::operator==(const Vec2d &v) const{
+	return x==v.x && y==v.y;
+}
 /************
-**_particle**
+**Particle**
 ************/
-_particle::_particle(float x, float y, float _speed, float _radius):radius(_radius),speed(_speed){
+Particle::Particle(float x, float y, float _speed, float _radius):radius(_radius),speed(_speed){
 	position.x = x;
 	position.y = y;
 	target = position;
 }
 
-void _particle::update(float dt){
+void Particle::update(float dt){
 	Vec2d diff = target - position;
 	float dist = diff.length();
 	float maxstep = dt*speed;
@@ -58,8 +61,8 @@ World::~World(){
 	clear();
 }
 
-_particle* World::Particle(float x, float y, float speed, float radius){
-	_particle *p = new _particle(x,y,speed,radius);
+Particle* World::create_particle(float x, float y, float speed, float radius){
+	Particle *p = new Particle(x,y,speed,radius);
 	particles.push_back(p);
 	return p;
 }

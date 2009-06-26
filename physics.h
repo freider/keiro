@@ -8,11 +8,12 @@ struct Vec2d{
 	Vec2d operator*(float f) const;
 	Vec2d operator-(const Vec2d &v) const;
 	Vec2d operator+(const Vec2d &v) const;
+	bool operator==(const Vec2d &v) const;
 	float length() const;
 	Vec2d norm() const;
 };
 
-class _particle{
+class Particle{
 friend class World;
 public:
 	Vec2d position;
@@ -20,16 +21,15 @@ public:
 	float radius;
 	float speed;
 private:
-	World *world;
-	_particle::_particle(float x, float y, float _speed, float _radius);
+	Particle(float x, float y, float _speed, float _radius);
 	void update(float dt);
 };
 
 class World{
-	std::vector<_particle*> particles;
+	std::vector<Particle*> particles;
 public:
 	~World();
 	void clear();
-	_particle* Particle(float x, float y, float speed = 0, float radius = 0);
+	Particle* create_particle(float x, float y, float speed = 0, float radius = 0);
 	void update(float dt);
 };

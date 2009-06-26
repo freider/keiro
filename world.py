@@ -26,6 +26,7 @@ class World(object):
 	
 	def run(self):
 		pygame.init()
+		pygame.display.set_caption("Crowd Navigation")
 		self.screen = pygame.display.set_mode(self.size)
 		while 1:
 			dt = self.clock.tick()/1000.0
