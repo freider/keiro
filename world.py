@@ -29,8 +29,11 @@ class World(PhysicsWorld):
 			
 			self.update(dt)
 			for u in self.units:
-				#ilayer = InteractionLayer(u, self, view_range = 50)
-				u.think(dt, None)
+				if u.view_range != 0:
+					view = self.particles_in_range(u, u.view_range)
+				else:
+					view = None
+				u.think(dt, view)
 					
 			#collision detection
 			"""for us in combinations(self.units, 2):
@@ -72,15 +75,17 @@ class UnitRegister(type):
 		return type.__new__(cls, name, bases, dct)
 		
 class Unit(Particle):
+	color = (255, 255, 0)
 	def __init__(self, position):
 		Particle.__init__(self, *position)
 		self.radius = 5
 		self.speed = 30
-		self.color = (255, 255, 0)
 	
 	def think(self, dt, visible_particles):
 		pass
 		
 	def render(self, screen):
 		pygame.draw.circle(screen, self.color, 
-			self.position, self.radius, 1)		
+			self.position, self.radius, 1)
+		pygame.draw.line(screen, (100, 100, 250),
+			self.position, self.target, 1)

@@ -31,7 +31,7 @@ float Vec2d::distance_to(const Vec2d &v) const{
 	return sqrt(distance_to2(v));
 }
 float Vec2d::distance_to2(const Vec2d &v) const{
-	return sqrt((x-v.x)*(x-v.x)+(y-v.y)*(y-v.y));
+	return (x-v.x)*(x-v.x)+(y-v.y)*(y-v.y);
 }
 
 /************
@@ -95,7 +95,9 @@ void World::update(float dt){
 			if(dist2 < safe_dist2){
 				//collision
 				float diff = sqrt(dist2) - sqrt(safe_dist2);
-				Vec2d dirv = (particles[i]->position - particles[j]->position).norm();
+				Vec2d dirv(1,0);
+				if(dist2 != 0)
+				 	dirv = (particles[i]->position - particles[j]->position).norm();
 				particles[j]->position = particles[j]->position + dirv*diff;
 				particles[i]->position = particles[i]->position - dirv*diff;
 			}
@@ -105,8 +107,8 @@ void World::update(float dt){
 int World::num_particles(){
 	return particles.size();
 }
-
-/*World::particles_in_range(Particle *from, float range){
+/*
+World::particles_in_range(Particle *from, float range){
 	float range2 = range*range;
 	vector<Particle*> res;
 	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
