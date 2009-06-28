@@ -27,15 +27,28 @@ Vec2d Vec2d::operator-(const Vec2d &v) const{
 bool Vec2d::operator==(const Vec2d &v) const{
 	return x==v.x && y==v.y;
 }
+float Vec2d::distance_to(const Vec2d &v) const{
+	return sqrt(distance_to2(v));
+}
+float Vec2d::distance_to2(const Vec2d &v) const{
+	return sqrt((x-v.x)*(x-v.x)+(y-v.y)*(y-v.y));
+}
+
 /************
 **Particle**
 ************/
-Particle::Particle(float x, float y, float _speed, float _radius):radius(_radius),speed(_speed){
-	position.x = x;
-	position.y = y;
-	target = position;
+Particle::Particle(float x = 0, float y = 0)
+	:radius(0),
+	speed(0),
+	world(NULL)
+{
+	position = Vec2d(x, y);
+	target = position; //not moving
 }
-
+Particle::~Particle(){
+	if(world != NULL)
+		world->unbind(this);
+}
 void Particle::update(float dt){
 	Vec2d diff = target - position;
 	float dist = diff.length();
@@ -46,29 +59,67 @@ void Particle::update(float dt){
 		position = position + diff.norm()*maxstep;
 }
 
-
 /********
 **WORLD**
 ********/
-void World::clear(){
-	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
-		delete particles[i];
-	}
-	particles.clear();
-}
-
 World::~World(){
-	clear();
+	for(size_t i = 0; i<particles.size(); ++i){
+		particles[i]->world = NULL;
+	}
+}
+void World::unbind(Particle *p){
+	for(size_t i = 0; i<particles.size(); ++i){
+		if(particles[i] == p){
+			particles.erase(particles.begin() + i);
+			--i;
+		}
+	}
+	p->world = NULL;
 }
 
-Particle* World::create_particle(float x, float y, float speed, float radius){
-	Particle *p = new Particle(x,y,speed,radius);
+void World::bind(Particle *p){
 	particles.push_back(p);
-	return p;
+	p->world = this;
 }
+
 void World::update(float dt){
 	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
 		particles[i]->update(dt);
 	}
+	//collision detection
+	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
+		for(size_t j = i+1; j<sz; ++j){
+			float dist2 = particles[i]->position.distance_to2(particles[j]->position);
+			float safe_dist = particles[i]->radius + particles[j]->radius;
+			float safe_dist2 = safe_dist*safe_dist;
+			if(dist2 < safe_dist2){
+				//collision
+				float diff = sqrt(dist2) - sqrt(safe_dist2);
+				Vec2d dirv = (particles[i]->position - particles[j]->position).norm();
+				particles[j]->position = particles[j]->position + dirv*diff;
+				particles[i]->position = particles[i]->position - dirv*diff;
+			}
+		}
+	}
+}
+int World::num_particles(){
+	return particles.size();
 }
 
+/*World::particles_in_range(Particle *from, float range){
+	float range2 = range*range;
+	vector<Particle*> res;
+	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
+		if(particles[i] != from && particles[i]->distance_to2(*from))
+			res.push_back(particles[i]);
+	}
+	return res;
+}*/
+
+int main(void){
+	Particle *p = new Particle(0,0);
+	World w;
+	w.bind(p);
+	printf("%f %f\n", p->position.x, p->position.y);
+	delete p;
+}

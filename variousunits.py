@@ -27,27 +27,26 @@ class SpeedTester(Unit):
 			self.homeworld.removeUnit(self)"""
 
 		
-class RandomWalker(Intelligence):
-	target_distance = 20
-	def think(self, dt, ilayer):
-		self.me, self.units = ilayer.me, ilayer.units
-		
-		if self.me.target == self.me.xy:
+class RandomWalker(Unit):
+	step_mean = 20
+	def think(self, dt, visible_particles):
+		if self.target == self.position:
 			a = random.random()*math.pi*2
-			step = random.gauss(self.target_distance, self.target_distance/3)
-			ilayer.target = self.me.xy + (math.cos(a)*step, math.sin(a)*step)
+			step = random.gauss(self.step_mean, self.step_mean/3)
+			self.target = self.position + Vec2d(math.cos(a)*step, math.sin(a)*step)
 
-class Stubborn(Intelligence):
-	def __init__(self, goal):
+class Stubborn(Unit):
+	def __init__(self, position, goal):
+		Unit.__init__(self, position)
 		self.goal = goal
-	def think(self, dt, ilayer):
-		self.prev_state = ilayer
-		ilayer.target = self.goal
+	def think(self, dt, visible_particles):
+		self.prev_state = visible_particles
+		self.target = self.goal
 	def renderIllustration(self, screen):
 		pygame.draw.line(screen, (140, 140, 255), 
-			self.prev_state.me.xy, self.prev_state.me.target)
+			self.prev_state.me.position, self.prev_state.me.target)
 		pygame.draw.circle(screen, (255, 150, 150), 
-			self.prev_state.me.xy, self.prev_state.view_range, 1)
+			self.prev_state.me.position, self.prev_state.view_range, 1)
 		for u in self.prev_state.units:
 			pygame.draw.circle(screen, (150, 255, 150),
-				u.xy, u.radius, 0) 
+				u.position, u.radius, 0)

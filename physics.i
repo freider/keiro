@@ -34,6 +34,8 @@
 			self.y = value
 		else:
 			raise IndexError("Invalid subscript "+str(key)+" to Vec2d")
+			
+	
 %}
 };
 
