@@ -38,7 +38,7 @@ public:
 	void unbind(Particle *p);
 	void update(float dt);
 	int num_particles();
-//	void particles_in_range(particle, float range);
+	std::vector<Particle*> particles_in_range(const Particle *from, float range) const;
 private:
 	std::vector<Particle*> particles;
 };

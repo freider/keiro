@@ -42,6 +42,20 @@ class ParticleTest(unittest.TestCase):
 		del p
 		self.assert_(w.num_particles() == 0)
 		
-		
+class WorldTest(unittest.TestCase):
+	def setUp(self):
+		self.world = World()
+	def testRange(self):
+		p = Particle(1,0)
+		q = Particle(3,0)
+		self.world.bind(p)
+		self.world.bind(q)
+		self.assert_(self.world.num_particles() == 2)
+		v = self.world.particles_in_range(p, 1)
+		self.assert_(len(v) == 0)
+		v = self.world.particles_in_range(p, 2)
+		self.assert_(len(v) == 1)
+		self.assert_(v[0].this == q.this) #same underlying object hopefully
+	
 if __name__ == "__main__":
 	unittest.main()

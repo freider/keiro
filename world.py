@@ -32,18 +32,9 @@ class World(PhysicsWorld):
 				if u.view_range != 0:
 					view = self.particles_in_range(u, u.view_range)
 				else:
-					view = None
+					view = ()
 				u.think(dt, view)
 					
-			#collision detection
-			"""for us in combinations(self.units, 2):
-				u1, u2 = us
-				dist = u1.xy.get_distance(u2.xy)-(u1.radius + u2.radius)
-				if dist < 0:
-					correction = (u2.xy - u1.xy).normalized()*dist/2
-					u2.xy -= correction
-					u1.xy += correction
-"""
 			if self.PRINT_FPS:
 				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
 				sys.stdout.flush()
@@ -76,6 +67,7 @@ class UnitRegister(type):
 		
 class Unit(Particle):
 	color = (255, 255, 0)
+	view_range = 0
 	def __init__(self, position):
 		Particle.__init__(self, *position)
 		self.radius = 5

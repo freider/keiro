@@ -16,17 +16,19 @@ class RandomWalker(Unit):
 			self.lastpos = Vec2d(*self.position)
 
 class Stubborn(Unit):
-	def __init__(self, position, goal):
+	view_range = 75
+	def __init__(self, position, target):
 		Unit.__init__(self, position)
-		self.goal = goal
-	def think(self, dt, visible_particles):
-		self.prev_state = visible_particles
-		self.target = self.goal
-	def renderIllustration(self, screen):
-		pygame.draw.line(screen, (140, 140, 255), 
-			self.prev_state.me.position, self.prev_state.me.target)
+		self.last_view = ()
+		self.target = target
+		
+	def think(self, dt, view):
+		self.last_view = view
+
+	def render(self, screen):
+		Unit.render(self, screen)
 		pygame.draw.circle(screen, (255, 150, 150), 
-			self.prev_state.me.position, self.prev_state.view_range, 1)
-		for u in self.prev_state.units:
+			self.position, self.view_range, 1)
+		for p in self.last_view:
 			pygame.draw.circle(screen, (150, 255, 150),
-				u.position, u.radius, 0)
+				p.position, p.radius, 0)

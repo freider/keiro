@@ -108,15 +108,15 @@ void World::update(float dt){
 int World::num_particles(){
 	return particles.size();
 }
-/*World::particles_in_range(Particle *from, float range){
+std::vector<Particle*> World::particles_in_range(const Particle *from, float range) const{
 	float range2 = range*range;
-	vector<Particle*> res;
+	std::vector<Particle*> res;
 	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
-		if(particles[i] != from && particles[i]->distance_to2(*from))
+		if(particles[i] != from && particles[i]->position.distance_to2(from->position) <= range2)
 			res.push_back(particles[i]);
 	}
 	return res;
-}*/
+}
 
 int main(void){
 	Particle *p = new Particle(0,0);
