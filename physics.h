@@ -16,6 +16,7 @@ public:
 	Vec2d norm() const;
 };
 
+class World;
 class Particle{
 friend class World;
 public:

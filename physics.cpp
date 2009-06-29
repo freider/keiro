@@ -1,6 +1,7 @@
 #include "physics.h"
 #include <vector>
 #include <cmath>
+#include <cstdio>
 
 Vec2d::Vec2d():x(0),y(0){
 }
@@ -107,8 +108,7 @@ void World::update(float dt){
 int World::num_particles(){
 	return particles.size();
 }
-/*
-World::particles_in_range(Particle *from, float range){
+/*World::particles_in_range(Particle *from, float range){
 	float range2 = range*range;
 	vector<Particle*> res;
 	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
