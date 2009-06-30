@@ -74,4 +74,7 @@ So far the engine has been coded like a game: Draw frames as fast as possible an
 For scientific purposes, this is not optimal - the results will vary depending on the hardware where the system is run.
 A better aproach would be to emulate a fixed framerate and send in the same time step for every frame. This way, the system will run equivalently every time (except if seeded "random" is used) allowing exact repeatability - the basis for empirical science. How this time step is determined is not very important, but could be chosen in a way that makes real-time display of simulations go at a pleasant speed. Also, collision detection could be made much simpler by choosing a small enough time step so that objects never can "pass" each other by accident and a simple bounding box/radius-comparison will suffice for basic collision detection.
 
-
+Jun 29, 2009:
+C++ physics module written and added to projekt to allow fast simulations even with many units.
+Ai will still be written in python for simplicity, and possibly ported to C++ if performance is not sufficient.
+think() is supplied a tuple containing all particles within a units range
