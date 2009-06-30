@@ -4,12 +4,17 @@ import random
 		
 class RandomWalker(Unit):
 	step_mean = 20
-	view_range = 0
+	view_range = 15
 	def __init__(self, position):
 		Unit.__init__(self, position)
 		self.lastpos = Vec2d(*self.position)
-	def think(self, dt, visible_particles):
-		if self.target == self.position:
+	def think(self, dt, view):
+		collisioncourse = False
+		for p in view:
+			if (self.target - self.position).angle(p.position - self.position) < math.pi/2:
+				 collisioncourse = True
+				 break
+		if self.target == self.position or collisioncourse:
 			a = random.random()*math.pi*2
 			step = random.gauss(self.step_mean, self.step_mean/3)
 			self.target = self.position + Vec2d(math.cos(a)*step, math.sin(a)*step)

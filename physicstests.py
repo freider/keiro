@@ -1,5 +1,9 @@
 import unittest
+import math
 from physics import *
+
+def almost_equal(a, b, epsilon = 0.001):
+	return abs(a-b)<epsilon
 
 class Vec2dTest(unittest.TestCase):
 	def setUp(self):
@@ -15,6 +19,15 @@ class Vec2dTest(unittest.TestCase):
 		"""Operators"""
 		vec = Vec2d(5, 10)
 		self.assert_(vec == Vec2d(5,10))
+		
+	def testMethods(self):
+		"""Vector methods"""
+		a = Vec2d(1, 0)
+		b = Vec2d(0, 1)
+		self.assert_(almost_equal(a.angle(b), math.pi/2))
+		a = Vec2d(100,100)
+		b = Vec2d(0.5, 0)
+		self.assert_(almost_equal(a.angle(b), math.pi/4))
 		
 class ParticleTest(unittest.TestCase):
 	def setUp(self):

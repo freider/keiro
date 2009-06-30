@@ -14,6 +14,8 @@ public:
 	float distance_to2(const Vec2d &v) const;
 	float length() const;
 	Vec2d norm() const;
+	float dot(const Vec2d &v) const;
+	float angle(const Vec2d &v) const;
 };
 
 class World;
