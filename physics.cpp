@@ -44,7 +44,7 @@ float Vec2d::angle(const Vec2d &v) const{
 /************
 **Particle**
 ************/
-Particle::Particle(float x = 0, float y = 0)
+Particle::Particle(float x, float y, float dir)
 	:radius(0),
 	speed(0),
 	world(NULL)

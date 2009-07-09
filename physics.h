@@ -22,12 +22,14 @@ class World;
 class Particle{
 friend class World;
 public:
-	Particle(float x, float y);
+	Particle(float x = 0, float y = 0, float dir = 1);
 	~Particle();
 	Vec2d position;
 	Vec2d target;
 	float radius;
 	float speed;
+	float direction;
+	float turningspeed;
 private:
 	World *world;
 	void update(float dt);

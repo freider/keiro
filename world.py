@@ -2,6 +2,7 @@ import time
 import random
 import pygame
 import sys
+import math
 from physics import Vec2d, Particle, World as PhysicsWorld
 
 class World(PhysicsWorld):
@@ -68,8 +69,8 @@ class UnitRegister(type):
 class Unit(Particle):
 	color = (255, 255, 0)
 	view_range = 0
-	def __init__(self, position):
-		Particle.__init__(self, *position)
+	def __init__(self, position, direction = 1):
+		Particle.__init__(self, position[0], position[1], direction)
 		self.radius = 5
 		self.speed = 30
 	
@@ -81,3 +82,6 @@ class Unit(Particle):
 			self.position, self.radius, 1)
 		pygame.draw.line(screen, (100, 100, 250),
 			self.position, self.target, 1)
+		pygame.draw.line(screen, self.color,
+			self.position, 
+			(self.position.x + math.cos(self.direction)*self.radius, self.position.y + math.sin(self.direction)*self.radius))

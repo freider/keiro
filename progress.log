@@ -78,3 +78,15 @@ Jun 29, 2009:
 C++ physics module written and added to projekt to allow fast simulations even with many units.
 Ai will still be written in python for simplicity, and possibly ported to C++ if performance is not sufficient.
 think() is supplied a tuple containing all particles within a units range
+
+Jul 7, 2009:
+People avoid each other now but are still quite stupid.
+Carson suggests adding acceleration to the system. Possibly turning-speed too.
+Can you trust people to avoid robot?
+	- Depends on size and "camouflage" of robot. Does it nessesarily look like a human? Is it possibly smaller like a dog? Does it move to fast for people to notice it and does it make noise?
+Will probably make robot somewhat hard to avoid for people, to give greater responsibility to robot. Otherwise the project will transform into a human movement research problem.
+TODO: Add obstacles to system. Polygon based? Needs to be added on the C++ side for collision detection etc.
+At the moment the system is performing really well in terms of framerate. The thing that takes by far the most time is rendering, which is still done in un-accelerated pygame.
+TOPONDER: Emulated time and minimum frame per time unit? Set frame rate in emulated time?
+Anytime planning. Set frame rate should only affect physics/drawing part. Think()ing must still be done as fast as possible. Otherwise, algorithms will not be able to take advantage of having a fast iteration speed by being able to update targets more often.
+

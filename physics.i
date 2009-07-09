@@ -56,7 +56,7 @@ public:
 
 class Particle{
 public:
-	Particle(float x, float y);
+	Particle(float x = 0, float y = 0, float dir = 1);
 	~Particle();
 	%immutable;
 	Vec2d position;
@@ -64,6 +64,8 @@ public:
 	Vec2d target;
 	float radius;
 	float speed;
+	float direction;
+	float turningspeed;
 };
 
 class World{
