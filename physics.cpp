@@ -2,6 +2,7 @@
 #include <vector>
 #include <cmath>
 #include <cstdio>
+#include <cassert>
 
 Vec2d::Vec2d():x(0),y(0){
 }
@@ -40,6 +41,9 @@ float Vec2d::dot(const Vec2d &v) const{
 float Vec2d::angle(const Vec2d &v) const{
 	return acos(this->norm().dot(v.norm()));
 }
+float Vec2d::angle() const{
+	return atan2(y,x);
+}
 
 /************
 **Particle**
@@ -47,6 +51,7 @@ float Vec2d::angle(const Vec2d &v) const{
 Particle::Particle(float x, float y, float dir)
 	:radius(0),
 	speed(0),
+	direction(dir),
 	world(NULL)
 {
 	position = Vec2d(x, y);
@@ -57,13 +62,29 @@ Particle::~Particle(){
 		world->unbind(this);
 }
 void Particle::update(float dt){
-	Vec2d diff = target - position;
-	float dist = diff.length();
-	float maxstep = dt*speed;
-	if(dist <= maxstep)
-		position = target;
-	else
-		position = position + diff.norm()*maxstep;
+	if(!(target == position)){
+		Vec2d diff = target - position;
+		float dist = diff.length();
+		Vec2d norm = diff.norm();
+		float target_direction = norm.angle(); //TEMP
+		float anglediff = fmod(target_direction - direction, M_PI);
+		if(std::abs(anglediff) != 0){
+			float timeneeded = std::abs(anglediff/turningspeed);
+			//printf("ad:%f, tn:%f\n", anglediff, timeneeded);
+			if(timeneeded <= dt){
+				direction = target_direction;
+				dt -= timeneeded;
+			} else {
+				direction += dt*turningspeed*anglediff/std::abs(anglediff);
+				dt = 0;
+			}
+		}
+		float maxstep = dt*speed;
+		if(dist <= maxstep)
+			position = target;
+		else
+			position = position + norm*maxstep;
+	}
 }
 
 /********

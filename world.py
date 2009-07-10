@@ -6,7 +6,7 @@ import math
 from physics import Vec2d, Particle, World as PhysicsWorld
 
 class World(PhysicsWorld):
-	PRINT_FPS = True
+	PRINT_FPS = False
 	def __init__(self, size):
 		PhysicsWorld.__init__(self);
 		self.units = [];
@@ -69,10 +69,11 @@ class UnitRegister(type):
 class Unit(Particle):
 	color = (255, 255, 0)
 	view_range = 0
-	def __init__(self, position, direction = 1):
+	def __init__(self, position, direction = 0):
 		Particle.__init__(self, position[0], position[1], direction)
 		self.radius = 5
 		self.speed = 30
+		self.turningspeed = math.pi
 	
 	def think(self, dt, visible_particles):
 		pass

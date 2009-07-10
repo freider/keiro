@@ -90,3 +90,12 @@ At the moment the system is performing really well in terms of framerate. The th
 TOPONDER: Emulated time and minimum frame per time unit? Set frame rate in emulated time?
 Anytime planning. Set frame rate should only affect physics/drawing part. Think()ing must still be done as fast as possible. Otherwise, algorithms will not be able to take advantage of having a fast iteration speed by being able to update targets more often.
 
+Jul 9, 2009:
+Reading the following papers:
+Jan Rosell, Pedro Iniguez
+	Path planning using Harmonic Functions and Probabilistic Cell Decomposition
+David Hsu, Jean-Claude Latombe, Hanna Kurniawati
+	On the Probabilistic Foundations of Probabilistic Roadmap Planning
+Maxim Likhachev, Dave Ferguson, Geoff Gordon, Anthony Stentz, Sebastian Thrun
+	Anytime Search in Dynamic Graphs
+	
