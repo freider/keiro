@@ -67,12 +67,14 @@ void Particle::update(float dt){
 		float dist = diff.length();
 		Vec2d norm = diff.norm();
 		float target_direction = norm.angle(); //TEMP
-		float anglediff = fmod(target_direction - direction, M_PI);
+		float anglediff = fmod(target_direction - direction, 2*M_PI);
 		if(std::abs(anglediff) != 0){
+			if(anglediff > M_PI) anglediff -= 2*M_PI;
+			else if (anglediff < -M_PI) anglediff += 2*M_PI;
 			float timeneeded = std::abs(anglediff/turningspeed);
 			//printf("ad:%f, tn:%f\n", anglediff, timeneeded);
 			if(timeneeded <= dt){
-				direction = target_direction;
+				direction = fmod(target_direction, 2*M_PI);
 				dt -= timeneeded;
 			} else {
 				direction += dt*turningspeed*anglediff/std::abs(anglediff);

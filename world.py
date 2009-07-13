@@ -73,7 +73,7 @@ class Unit(Particle):
 		Particle.__init__(self, position[0], position[1], direction)
 		self.radius = 5
 		self.speed = 30
-		self.turningspeed = math.pi
+		self.turningspeed = 2*math.pi/3
 	
 	def think(self, dt, visible_particles):
 		pass
