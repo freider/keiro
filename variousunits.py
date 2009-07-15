@@ -1,7 +1,9 @@
 from world import *
 import math
 import random
-		
+import astar
+import graphs
+
 class RandomWalker(Unit):
 	step_mean = 20
 	view_range = 15
@@ -37,3 +39,17 @@ class Stubborn(Unit):
 		for p in self.last_view:
 			pygame.draw.circle(screen, (150, 255, 150),
 				p.position, p.radius, 0)
+				
+class AStarer(Stubborn):
+	view_range = 75
+	def __init__(self, position, goal):
+		Unit.__init__(self, position)
+		self.goal = goal
+		self.last_view = ()
+
+	def think(self, dt, view):
+		Stubborn.think(self, dt, view)
+		start, end = graphs.grid(self.position, self.goal, )
+		
+	def render(self, screen):
+		Stubborn.render(self, screen)

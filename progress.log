@@ -99,3 +99,7 @@ David Hsu, Jean-Claude Latombe, Hanna Kurniawati
 Maxim Likhachev, Dave Ferguson, Geoff Gordon, Anthony Stentz, Sebastian Thrun
 	Anytime Search in Dynamic Graphs
 	
+Jul 14, 2009:
+Implemented Dijkstra for simplicity. Tried making simple changes to transform it into an heuristic-based A* but realized that A* not always uses consistent heuristics, so will have to refactor the implementation a bit to get it to work with inconsistent heuristics.
+Constructed test case of a graph with inconsistent heuristic that breaks my first implementation of A*.
+Implemented proper A*. 
