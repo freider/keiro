@@ -102,4 +102,11 @@ Maxim Likhachev, Dave Ferguson, Geoff Gordon, Anthony Stentz, Sebastian Thrun
 Jul 14, 2009:
 Implemented Dijkstra for simplicity. Tried making simple changes to transform it into an heuristic-based A* but realized that A* not always uses consistent heuristics, so will have to refactor the implementation a bit to get it to work with inconsistent heuristics.
 Constructed test case of a graph with inconsistent heuristic that breaks my first implementation of A*.
-Implemented proper A*. 
+Later: Implemented proper A* that works (as far as I have tested) with inconsistent heuristics.
+
+Jul 16, 2009:
+First A* integrated into the simulator. Right now uses a randomized graph within the viewing range of the robot and updates the path for every step in the simulation, which is a bad combination as it makes the robot use a lot of its time for rotating on the spot when changing course. This brings up the problem of using distance for the measure of the A*. What should really be minimized is the time to reach the goal. This would include robot orientation as well as position in the state-space - making the graphs a lot bigger, depending on implementation.
+After some thinking and discussion with Carson Reynolds, I am leaning to a solution of having 2*N different orientations for each of the positional nodes in the current state graph where N is the number of positional neighbors to the current node. Each of these nodes would correspond to a direction to or from a neighbouring point and these nodes would be connected to each other (with the cost being the time it takes to rotate between states) and to the nodes they "point to" in the spatial state space. This will "only" increase the state space by a factor of the average connectivity of the graph but the connectivity of the new graph would likely be lower (some more in-depth analysis could be interesting).
+
+When the searched graph grows python gets increasingly slow at searching it using A* and this severely impacts performance of the whole system so I am considering "outsourcing" A* and a few other graph-related functions to C/C++ as has already been done with the physics engine.
+

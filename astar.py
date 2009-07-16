@@ -11,7 +11,7 @@ class Node:
 	def __repr__(self):
 		return str(self.data)
 		
-def astar(start, end, heuristic=lambda n:0):
+def shortest_path(start, end, heuristic=lambda n:0):
 	"""Finds shortest path using supplied heuristic"""
 	pq = []
 	start.dist = 0
@@ -23,7 +23,6 @@ def astar(start, end, heuristic=lambda n:0):
 		#has been expanded in a better state before
 		if node._best_expanded is not None and node._best_expanded <= heur: continue
 		node._best_expanded = heur
-		print "expanding " + str(node.data)
 		for child, cost in node.edges:
 			ndist = node.dist+cost
 			if child.dist is None or ndist < child.dist:
@@ -52,7 +51,7 @@ if __name__ == "__main__":
 		a.edges.append((b, 1))
 		b.edges.append((c, 1))
 		c.edges.append((d, 4))
-		res = astar(a, d, lambda n:0)
+		res = shortest_path(a, d, lambda n:0)
 		print res[-1].dist, res
 
 	def tc2():
@@ -63,7 +62,7 @@ if __name__ == "__main__":
 			if i[0] == end:
 				start.edges.remove(i)
 				break
-		print astar(start, end, lambda n:n.data.distance_to(Vec2d(100,100)))
+		print shortest_path(start, end, lambda n:n.data.distance_to(Vec2d(100,100)))
 	
 	tc2()
 			

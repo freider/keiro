@@ -46,10 +46,21 @@ class AStarer(Stubborn):
 		Unit.__init__(self, position)
 		self.goal = goal
 		self.last_view = ()
+		self.path = []
 
 	def think(self, dt, view):
 		Stubborn.think(self, dt, view)
-		start, end = graphs.grid(self.position, self.goal, )
-		
+		start, end = graphs.rand(self, self.goal, view)
+		path = astar.shortest_path(start, end)
+		if path is not False: 
+			self.path = path
+			self.target = self.path[1].data
+		else:
+			self.path = []
+			self.target = self.position
+	
 	def render(self, screen):
+		for i in xrange(len(self.path)-1):
+			pygame.draw.line(screen, (150, 150, 150), self.path[i].data, self.path[i+1].data, 1)
 		Stubborn.render(self, screen)
+				

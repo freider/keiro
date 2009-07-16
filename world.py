@@ -7,11 +7,13 @@ from physics import Vec2d, Particle, World as PhysicsWorld
 
 class World(PhysicsWorld):
 	PRINT_FPS = False
+	THINK_RATIO = 40
 	def __init__(self, size):
 		PhysicsWorld.__init__(self);
 		self.units = [];
 		self.size = Vec2d(*size)
 		self.clock = pygame.time.Clock()
+		self.ticker = 0
 	
 	def addUnit(self, unit):
 		self.units.append(unit)
@@ -29,13 +31,17 @@ class World(PhysicsWorld):
 					return
 			
 			self.update(dt)
-			for u in self.units:
-				if u.view_range != 0:
-					view = self.particles_in_range(u, u.view_range)
-				else:
-					view = ()
-				u.think(dt, view)
-					
+			if self.ticker == 0:
+				for u in self.units:
+					if u.view_range != 0:
+						view = self.particles_in_range(u, u.view_range)
+					else:
+						view = ()
+					u.think(dt, view)
+			self.ticker += 1
+			if self.ticker == self.THINK_RATIO:
+				self.ticker = 0
+			
 			if self.PRINT_FPS:
 				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
 				sys.stdout.flush()
