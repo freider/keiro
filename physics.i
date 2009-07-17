@@ -54,6 +54,18 @@ public:
 %}
 };
 
+class Path{
+private:
+	std::deque<Vec2d> path;
+public:
+	Path(const Vec2d &v);
+	void clear();
+	void progress(float distance);
+	void append(const Vec2d &v);
+	Vec2d position() const;
+	void debug_print() const;
+};
+
 class Particle{
 public:
 	Particle(float x = 0, float y = 0, float dir = 1);

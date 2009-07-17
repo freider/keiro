@@ -44,6 +44,33 @@ float Vec2d::angle(const Vec2d &v) const{
 float Vec2d::angle() const{
 	return atan2(y,x);
 }
+/************
+****Path*****
+************/
+Path::Path(const Vec2d &v){
+	path.push_back(v);
+}
+void Path::clear(){
+	if(path.size() > 1)
+		path.erase(path.begin()+1, path.end());
+}
+void Path::progress(float distance){
+	while(distance>0 && path.size() > 1){
+		float dd = path[0].distance_to(path[1]);
+		if(dd <= distance){
+			distance -= dd;
+			path.pop_front();
+		} else {
+			Vec2d tmp = path[0] + (path[1]-path[0]).norm()*distance;
+			path.pop_front();
+			path.push_front(tmp);
+			distance = 0;
+		}
+	}
+}
+void Path::append(const Vec2d &v){
+	path.push_back(v);
+}
 
 /************
 **Particle**
@@ -113,6 +140,7 @@ void World::bind(Particle *p){
 }
 
 void World::update(float dt){
+	//update all particles
 	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
 		particles[i]->update(dt);
 	}

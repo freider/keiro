@@ -28,7 +28,23 @@ class Vec2dTest(unittest.TestCase):
 		a = Vec2d(100,100)
 		b = Vec2d(0.5, 0)
 		self.assert_(almost_equal(a.angle(b), math.pi/4))
-		
+
+class PathTest(unittest.TestCase):
+	def setUp(self):
+		pass
+	def test(self):
+		p = Path(Vec2d(0,0))
+		self.assert_(p.position() == Vec2d(0,0))
+		p.append(Vec2d(3,4))
+		self.assert_(p.position() == Vec2d(0,0))
+		p.progress(2.5)
+		self.assert_(p.position() == Vec2d(1.5,2))
+		p.append(Vec2d(7,7))
+		p.progress(5)
+		self.assert_(p.position() == Vec2d(5,5.5))
+		p.progress(100)
+		self.assert_(p.position() == Vec2d(7,7))
+
 class ParticleTest(unittest.TestCase):
 	def setUp(self):
 		pass
