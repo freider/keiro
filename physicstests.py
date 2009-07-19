@@ -35,11 +35,11 @@ class PathTest(unittest.TestCase):
 	def test(self):
 		p = Path(Vec2d(0,0))
 		self.assert_(p.position() == Vec2d(0,0))
-		p.append(Vec2d(3,4))
+		p.target_push(Vec2d(3,4))
 		self.assert_(p.position() == Vec2d(0,0))
 		p.progress(2.5)
 		self.assert_(p.position() == Vec2d(1.5,2))
-		p.append(Vec2d(7,7))
+		p.target_push(Vec2d(7,7))
 		p.progress(5)
 		self.assert_(p.position() == Vec2d(5,5.5))
 		p.progress(100)

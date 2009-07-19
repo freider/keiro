@@ -47,29 +47,41 @@ float Vec2d::angle() const{
 /************
 ****Path*****
 ************/
-Path::Path(const Vec2d &v){
-	path.push_back(v);
-}
-void Path::clear(){
-	if(path.size() > 1)
-		path.erase(path.begin()+1, path.end());
+Path::Path(const Vec2d &v, float angle){
+	State st = {v, angle};
+	path.push_back(st);
 }
 void Path::progress(float distance){
 	while(distance>0 && path.size() > 1){
-		float dd = path[0].distance_to(path[1]);
+		float dd = path[0].position.distance_to(path[1].position);
 		if(dd <= distance){
 			distance -= dd;
 			path.pop_front();
 		} else {
-			Vec2d tmp = path[0] + (path[1]-path[0]).norm()*distance;
+			Vec2d tmp = path[0].position + (path[1].position-path[0].position).norm()*distance;
 			path.pop_front();
-			path.push_front(tmp);
+			State st = {tmp, path[0].angle};
+			path.push_front(st);
 			distance = 0;
 		}
 	}
 }
-void Path::append(const Vec2d &v){
-	path.push_back(v);
+void Path::target_clear(){
+	if(path.size() > 1)
+		path.erase(path.begin()+1, path.end());
+}
+
+void Path::target_push(const Vec2d &v){
+	//default angle = angle from last target to this target
+	target_push(v, (v-path.back().position).angle());
+}
+void Path::target_push(const Vec2d &v, float angle){
+	State st = {v, angle};
+	path.push_back(st);
+}
+void Path::target_pop(){
+	if(path.size() > 1)
+		path.pop_back();
 }
 
 /************

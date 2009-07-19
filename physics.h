@@ -1,6 +1,7 @@
 #include <vector>
 #include <deque>
 #include <cstdio>
+
 class Vec2d{
 public:
 	float x, y;
@@ -20,23 +21,26 @@ public:
 	float angle() const;
 };
 
+struct State{
+	Vec2d position;
+	float angle;
+};
+
 class Path{
 private:
-	std::deque<Vec2d> path;
+	std::deque<State> path;
 public:
-	Path(const Vec2d &v);
-	void clear();
+	Path(const Vec2d &v, float angle);
+	void target_clear();
 	void progress(float distance);
-	void append(const Vec2d &v);
+	void target_push(const Vec2d &v);
+	void target_push(const Vec2d &v, float angle);
+	void target_pop();
 	Vec2d position() const{
-		return path.front();
+		return path.front().position;
 	}
-	void debug_print() const{
-		printf("DEBUG path: ");
-		for(int i = 0; i<path.size(); ++i){
-			printf("(%f,%f)->", path[i].x, path[i].y);
-		}
-		printf("\n");
+	float angle() const{
+		return path.front().angle;
 	}
 };
 
