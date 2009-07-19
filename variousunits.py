@@ -9,25 +9,22 @@ class RandomWalker(Unit):
 	view_range = 15
 	def __init__(self, position):
 		Unit.__init__(self, position)
-		self.lastpos = Vec2d(*self.position)
 	def think(self, dt, view):
-		collisioncourse = False
 		for p in view:
-			if (self.target - self.position).angle(p.position - self.position) < math.pi/2:
-				 collisioncourse = True
-				 break
-		if self.target == self.position or collisioncourse:
+			if (self.target(0).position - self.position()).angle(p.position() - self.position()) < math.pi/2:
+				self.target_clear()
+				
+		while self.target_len() < 1:
 			a = random.random()*math.pi*2
 			step = random.gauss(self.step_mean, self.step_mean/3)
-			self.target = self.position + Vec2d(math.cos(a)*step, math.sin(a)*step)
-			self.lastpos = Vec2d(*self.position)
+			self.target_push(self.target(self.target_len()-1).position + Vec2d(math.cos(a)*step, math.sin(a)*step))
 
 class Stubborn(Unit):
 	view_range = 75
 	def __init__(self, position, target):
 		Unit.__init__(self, position)
 		self.last_view = ()
-		self.target = target
+		self.target_push(target)
 		
 	def think(self, dt, view):
 		self.last_view = view
@@ -35,10 +32,10 @@ class Stubborn(Unit):
 	def render(self, screen):
 		Unit.render(self, screen)
 		pygame.draw.circle(screen, (255, 150, 150), 
-			self.position, self.view_range, 1)
+			self.position(), self.view_range, 1)
 		for p in self.last_view:
 			pygame.draw.circle(screen, (150, 255, 150),
-				p.position, p.radius, 0)
+				p.position(), p.radius, 0)
 				
 class AStarer(Stubborn):
 	view_range = 75
@@ -54,10 +51,10 @@ class AStarer(Stubborn):
 		path = astar.shortest_path(start, end)
 		if path is not False: 
 			self.path = path
-			self.target = self.path[1].data
+			self.target_push(self.path[1].data)
 		else:
 			self.path = []
-			self.target = self.position
+			self.target_push(self.position())
 	
 	def render(self, screen):
 		for i in xrange(len(self.path)-1):

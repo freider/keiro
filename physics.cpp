@@ -44,45 +44,6 @@ float Vec2d::angle(const Vec2d &v) const{
 float Vec2d::angle() const{
 	return atan2(y,x);
 }
-/************
-****Path*****
-************/
-Path::Path(const Vec2d &v, float angle){
-	State st = {v, angle};
-	path.push_back(st);
-}
-void Path::progress(float distance){
-	while(distance>0 && path.size() > 1){
-		float dd = path[0].position.distance_to(path[1].position);
-		if(dd <= distance){
-			distance -= dd;
-			path.pop_front();
-		} else {
-			Vec2d tmp = path[0].position + (path[1].position-path[0].position).norm()*distance;
-			path.pop_front();
-			State st = {tmp, path[0].angle};
-			path.push_front(st);
-			distance = 0;
-		}
-	}
-}
-void Path::target_clear(){
-	if(path.size() > 1)
-		path.erase(path.begin()+1, path.end());
-}
-
-void Path::target_push(const Vec2d &v){
-	//default angle = angle from last target to this target
-	target_push(v, (v-path.back().position).angle());
-}
-void Path::target_push(const Vec2d &v, float angle){
-	State st = {v, angle};
-	path.push_back(st);
-}
-void Path::target_pop(){
-	if(path.size() > 1)
-		path.pop_back();
-}
 
 /************
 **Particle**
@@ -90,42 +51,111 @@ void Path::target_pop(){
 Particle::Particle(float x, float y, float dir)
 	:radius(0),
 	speed(0),
-	direction(dir),
 	world(NULL)
 {
-	position = Vec2d(x, y);
-	target = position; //not moving
+	Vec2d vec(x, y);
+	ParticleState st;
+	st.position = vec;
+	st.angle = dir;
+	path.push_back(st);
 }
+
 Particle::~Particle(){
 	if(world != NULL)
 		world->unbind(this);
 }
+void Particle::target_clear(){
+	if(path.size() > 1)
+		path.erase(path.begin()+1, path.end());
+}
+
+void Particle::target_push(const Vec2d &v){
+	//default angle = angle from last target to this target
+	target_push(v, (v-path.back().position).angle());
+}
+
+void Particle::target_push(const Vec2d &v, float angle){
+	ParticleState st = {v, angle};
+	path.push_back(st);
+}
+
+void Particle::target_pop(){
+	if(path.size() > 1)
+		path.pop_back();
+}
+
 void Particle::update(float dt){
-	if(!(target == position)){
-		Vec2d diff = target - position;
-		float dist = diff.length();
-		Vec2d norm = diff.norm();
-		float target_direction = norm.angle(); //TEMP
-		float anglediff = fmod(target_direction - direction, 2*M_PI);
-		if(std::abs(anglediff) != 0){
-			if(anglediff > M_PI) anglediff -= 2*M_PI;
-			else if (anglediff < -M_PI) anglediff += 2*M_PI;
-			float timeneeded = std::abs(anglediff/turningspeed);
-			//printf("ad:%f, tn:%f\n", anglediff, timeneeded);
-			if(timeneeded <= dt){
-				direction = fmod(target_direction, 2*M_PI);
-				dt -= timeneeded;
-			} else {
-				direction += dt*turningspeed*anglediff/std::abs(anglediff);
-				dt = 0;
+	while(dt>0 && path.size() > 1){
+		if(path[0].position == path[1].position){
+			float target_direction = path[1].angle;
+			float anglediff = fmod(target_direction - angle(), 2*M_PI);
+			if(std::abs(anglediff) == 0){
+				path.pop_front();
+			} else{
+				if(turningspeed == 0)
+					break;
+				if(anglediff > M_PI)
+					anglediff -= 2*M_PI;
+				else if (anglediff < -M_PI)
+					anglediff += 2*M_PI;
+				float timeneeded = std::abs(anglediff/turningspeed);
+				if(timeneeded <= dt){
+					path[0].angle = target_direction;
+					dt -= timeneeded;
+				} else {
+					path[0].angle += dt*turningspeed*anglediff/std::abs(anglediff);
+					dt = 0;
+				}
 			}
 		}
-		float maxstep = dt*speed;
-		if(dist <= maxstep)
-			position = target;
-		else
-			position = position + norm*maxstep;
+		else{
+			Vec2d diff = path[1].position-path[0].position;
+			float target_direction = diff.angle();
+			float anglediff = fmod(target_direction - angle(), 2*M_PI);
+			if(std::abs(anglediff) != 0){
+			//rotation
+				if(turningspeed == 0)
+					break;
+				if(anglediff > M_PI)
+					anglediff -= 2*M_PI;
+				else if (anglediff < -M_PI)
+					anglediff += 2*M_PI;
+				float timeneeded = std::abs(anglediff/turningspeed);
+				if(timeneeded <= dt){
+					path[0].angle = target_direction;
+					dt -= timeneeded;
+				} else {
+					path[0].angle += dt*turningspeed*anglediff/std::abs(anglediff);
+					dt = 0;
+				}
+			}
+			else {
+			//positioning
+				if(speed == 0) break;
+				float dd = diff.length();
+				float timeneeded = dd/speed;
+				if(timeneeded <= dt){
+					path.pop_front();
+					dt -= timeneeded;
+				} else {
+					path[0].position = path[0].position + diff.norm()*dt*speed;
+					dt = 0;
+				}
+			}
+		}
 	}
+}
+
+int Particle::target_len() const{
+	return path.size()-1;
+}
+const ParticleState& Particle::target(int i = 0) const{
+	return path[i+1];
+}
+
+void Particle::set_state(const Vec2d &v, float angle){
+	path[0].position = v;
+	path[0].angle = angle;
 }
 
 /********
@@ -159,7 +189,7 @@ void World::update(float dt){
 	//collision detection
 	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
 		for(size_t j = i+1; j<sz; ++j){
-			float dist2 = particles[i]->position.distance_to2(particles[j]->position);
+			float dist2 = particles[i]->position().distance_to2(particles[j]->position());
 			float safe_dist = particles[i]->radius + particles[j]->radius;
 			float safe_dist2 = safe_dist*safe_dist;
 			if(dist2 < safe_dist2){
@@ -167,9 +197,9 @@ void World::update(float dt){
 				float diff = sqrt(dist2) - sqrt(safe_dist2);
 				Vec2d dirv(1,0);
 				if(dist2 != 0)
-				 	dirv = (particles[i]->position - particles[j]->position).norm();
-				particles[j]->position = particles[j]->position + dirv*diff;
-				particles[i]->position = particles[i]->position - dirv*diff;
+				 	dirv = (particles[i]->position() - particles[j]->position()).norm();
+				particles[j]->set_state(particles[j]->position() + dirv*diff, particles[j]->angle());
+				particles[i]->set_state(particles[i]->position() - dirv*diff, particles[i]->angle());
 			}
 		}
 	}
@@ -181,7 +211,7 @@ std::vector<Particle*> World::particles_in_range(const Particle *from, float ran
 	float range2 = range*range;
 	std::vector<Particle*> res;
 	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
-		if(particles[i] != from && particles[i]->position.distance_to2(from->position) <= range2)
+		if(particles[i] != from && particles[i]->position().distance_to2(from->position()) <= range2)
 			res.push_back(particles[i]);
 	}
 	return res;
@@ -191,6 +221,6 @@ int main(void){
 	Particle *p = new Particle(0,0);
 	World w;
 	w.bind(p);
-	printf("%f %f\n", p->position.x, p->position.y);
+	printf("%f %f\n", p->position().x, p->position().y);
 	delete p;
 }

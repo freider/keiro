@@ -6,8 +6,8 @@ import math
 from physics import Vec2d, Particle, World as PhysicsWorld
 
 class World(PhysicsWorld):
-	PRINT_FPS = False
-	THINK_RATIO = 40
+	PRINT_FPS = True
+	THINK_RATIO = 1
 	def __init__(self, size):
 		PhysicsWorld.__init__(self);
 		self.units = [];
@@ -85,10 +85,14 @@ class Unit(Particle):
 		pass
 		
 	def render(self, screen):
+		last = self.position()
+		for i in xrange(self.target_len()):
+			pygame.draw.line(screen, (100, 100, 250), last, self.target(i).position, 1)
+			last = self.target(i).position
+		
 		pygame.draw.circle(screen, self.color, 
-			self.position, self.radius, 1)
-		pygame.draw.line(screen, (100, 100, 250),
-			self.position, self.target, 1)
+			self.position(), self.radius, 1)	
 		pygame.draw.line(screen, self.color,
-			self.position, 
-			(self.position.x + math.cos(self.direction)*self.radius, self.position.y + math.sin(self.direction)*self.radius))
+			self.position(), 
+			(self.position().x + math.cos(self.angle())*self.radius, self.position().y + math.sin(self.angle())*self.radius))
+		

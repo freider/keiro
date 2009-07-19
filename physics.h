@@ -21,27 +21,9 @@ public:
 	float angle() const;
 };
 
-struct State{
+struct ParticleState{
 	Vec2d position;
 	float angle;
-};
-
-class Path{
-private:
-	std::deque<State> path;
-public:
-	Path(const Vec2d &v, float angle);
-	void target_clear();
-	void progress(float distance);
-	void target_push(const Vec2d &v);
-	void target_push(const Vec2d &v, float angle);
-	void target_pop();
-	Vec2d position() const{
-		return path.front().position;
-	}
-	float angle() const{
-		return path.front().angle;
-	}
 };
 
 class World;
@@ -50,15 +32,26 @@ friend class World;
 public:
 	Particle(float x = 0, float y = 0, float dir = 1);
 	~Particle();
-	Vec2d position;
-	Vec2d target;
 	float radius;
 	float speed;
-	float direction;
 	float turningspeed;
+	Vec2d position() const{
+		return path.front().position;
+	}
+	float angle() const{
+		return path.front().angle;
+	}
+	void target_clear();
+	void target_push(const Vec2d &v);
+	void target_push(const Vec2d &v, float angle);
+	void target_pop();
+	int target_len() const;
+	const ParticleState &target(int i) const;
+	void update(float dt);
+	void set_state(const Vec2d &v, float angle);
 private:
 	World *world;
-	void update(float dt);
+	std::deque<ParticleState> path;
 };
 
 class World{

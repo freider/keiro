@@ -54,30 +54,30 @@ public:
 %}
 };
 
-class Path{
-private:
-	std::deque<State> path;
-public:
-	Path(const Vec2d &v, float angle);
-	void target_clear();
-	void progress(float distance);
-	void target_push(const Vec2d &v);
-	void target_pop();
-	Vec2d position() const;
+struct ParticleState{
+%immutable;
+	Vec2d position;
+	float angle;
+%mutable;
 };
 
 class Particle{
+friend class World;
 public:
 	Particle(float x = 0, float y = 0, float dir = 1);
 	~Particle();
-	%immutable;
-	Vec2d position;
-	%mutable;
-	Vec2d target;
 	float radius;
 	float speed;
-	float direction;
 	float turningspeed;
+	Vec2d position() const;
+	float angle() const;
+	void target_clear();
+	void update(float dt);
+	void target_push(const Vec2d &v);
+	void target_push(const Vec2d &v, float angle);
+	void target_pop();
+	int target_len() const;
+	const ParticleState &target(int i) const;
 };
 
 class World{

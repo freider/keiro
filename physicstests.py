@@ -29,39 +29,50 @@ class Vec2dTest(unittest.TestCase):
 		b = Vec2d(0.5, 0)
 		self.assert_(almost_equal(a.angle(b), math.pi/4))
 
-class PathTest(unittest.TestCase):
-	def setUp(self):
-		pass
-	def test(self):
-		p = Path(Vec2d(0,0))
-		self.assert_(p.position() == Vec2d(0,0))
-		p.target_push(Vec2d(3,4))
-		self.assert_(p.position() == Vec2d(0,0))
-		p.progress(2.5)
-		self.assert_(p.position() == Vec2d(1.5,2))
-		p.target_push(Vec2d(7,7))
-		p.progress(5)
-		self.assert_(p.position() == Vec2d(5,5.5))
-		p.progress(100)
-		self.assert_(p.position() == Vec2d(7,7))
-
 class ParticleTest(unittest.TestCase):
 	def setUp(self):
 		pass
+
 	def testAccess(self):
-		"""Particles position cannot be modified by user"""
-		p = Particle(0,0)
-		p.position = Vec2d(1,2);
-		self.assert_(p.position == Vec2d(0,0))
-		p.position.x, p.position.y = 5,10
-		self.assert_(p.position == Vec2d(0,0) and p.position.x == 0 and p.position.y == 0)
-		exception = False
-		try:
-			p.update(1.0)
-		except:
-			exception = True
-		self.assert_(exception)
-	
+		p = Particle(1,2,0.5);
+		self.assert_(p.angle() == 0.5)
+		self.assert_(p.position() == Vec2d(1,2))
+		self.assert_(p.target_len() == 0)
+		p.target_push(Vec2d(10,10))
+		self.assert_(p.target(0).position == Vec2d(10,10))
+		p.target(0).position = Vec2d(5,5)
+		self.assert_(p.target(0).position == Vec2d(10,10))
+		
+	def testTargeting(self):
+		p = Particle(10,5,0)
+		p.speed = 5
+		p.turningspeed = math.pi/2
+		targets = (Vec2d(15,5), Vec2d(10,5), Vec2d(10,10))
+		for t in targets:
+			p.target_push(t)
+		self.assert_(p.position() == Vec2d(10,5))
+		self.assert_(p.target_len() == 3)
+		for i in xrange(3):
+			self.assert_(p.target(i).position == targets[i])
+		p.update(1)
+		self.assert_(p.target_len() == 2)
+		self.assert_(p.position() == Vec2d(15,5))
+		self.assert_(p.angle() == 0)
+		p.update(1)
+		self.assert_(abs(abs(p.angle())-abs(math.pi/2)) < 0.001)
+		self.assert_(p.position() == Vec2d(15,5))
+		p.update(1)
+		self.assert_(p.position() == Vec2d(15,5))
+		self.assert_(abs(abs(p.angle()) - abs(math.pi)) < 0.001)
+		p.update(2)
+		self.assert_(p.position() == Vec2d(10,5))
+		self.assert_(abs(p.angle() - math.pi/2) < 0.001)
+		self.assert_(p.target_len() == 1)
+		p.update(100)
+		self.assert_(p.target_len() == 0)
+		self.assert_(p.position() == Vec2d(10,10))
+		self.assert_(abs(p.angle() - math.pi/2) < 0.001)
+		
 	def testMemory(self):
 		"""Deleted particles are removed from the World they are bound to"""
 		p = Particle(0,0)
