@@ -71,7 +71,8 @@ void Particle::target_clear(){
 
 void Particle::target_push(const Vec2d &v){
 	//default angle = angle from last target to this target
-	target_push(v, (v-path.back().position).angle());
+	if( !(v == path.back().position) )
+		target_push(v, (v-path.back().position).angle());
 }
 
 void Particle::target_push(const Vec2d &v, float angle){

@@ -19,18 +19,18 @@ def _graph_connect(nodes, obstacles, safe_distance = 0):
 			p2 = m.data
 			good = True
 			for o in obstacles:
-				if linesegdist2(p1, p2, o.position) <= (o.radius+safe_distance)**2:
+				if linesegdist2(p1, p2, o.position()) <= (o.radius+safe_distance)**2:
 					good = False
 					break
 			if good:
 				n.edges.append((m, p1.distance_to(p2)))
 				
 def rand(me, target_position, obstacles):
-	start = Node(me.position)
+	start = Node(me.position())
 	end = Node(target_position)
 	nodes = [start, end]
 	for i in xrange(20):
-		nodes.append(Node(me.position + Vec2d(random()*150-75, random()*150-75)))
+		nodes.append(Node(me.position() + Vec2d(random()*150-75, random()*150-75)))
 		
 	_graph_connect(nodes, obstacles, me.radius)
 	return (start, end)

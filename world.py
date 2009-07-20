@@ -6,7 +6,7 @@ import math
 from physics import Vec2d, Particle, World as PhysicsWorld
 
 class World(PhysicsWorld):
-	PRINT_FPS = True
+	PRINT_FPS = False
 	THINK_RATIO = 1
 	def __init__(self, size):
 		PhysicsWorld.__init__(self);
