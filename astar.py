@@ -64,5 +64,5 @@ if __name__ == "__main__":
 				break
 		print shortest_path(start, end, lambda n:n.data.distance_to(Vec2d(100,100)))
 	
-	tc2()
+	tc1()
 			
