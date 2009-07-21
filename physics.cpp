@@ -51,6 +51,7 @@ float Vec2d::angle() const{
 Particle::Particle(float x, float y, float dir)
 	:radius(0),
 	speed(0),
+	collisions(0),
 	world(NULL)
 {
 	Vec2d vec(x, y);
@@ -195,6 +196,8 @@ void World::update(float dt){
 			float safe_dist2 = safe_dist*safe_dist;
 			if(dist2 < safe_dist2){
 				//collision
+				particles[i]->collisions++;
+				particles[j]->collisions++;
 				float diff = sqrt(dist2) - sqrt(safe_dist2);
 				Vec2d dirv(1,0);
 				if(dist2 != 0)
@@ -205,6 +208,7 @@ void World::update(float dt){
 		}
 	}
 }
+
 int World::num_particles(){
 	return particles.size();
 }

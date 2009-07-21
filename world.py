@@ -19,15 +19,21 @@ class World(PhysicsWorld):
 		self.units.append(unit)
 		self.bind(unit);
 	
+	def trackUnit(self, unit):
+		self.tracked_unit = unit
+		
 	def run(self):
 		pygame.init()
 		pygame.display.set_caption("Crowd Navigation")
 		self.screen = pygame.display.set_mode(self.size)
+		
+		self.update(0) #so we have no initial collisions
+		self.tracked_unit.collisions = 0
 		while 1:
 			dt = self.clock.tick()/1000.0
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
-					print "Bye bye"
+					print "Collision count:",self.tracked_unit.collisions
 					return
 			
 			self.update(dt)

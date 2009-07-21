@@ -46,10 +46,19 @@ class AStarer(Stubborn):
 
 	def think(self, dt, view):
 		self.last_view = view
+		ccourse = False
+		if self.target_len() != 0:
+			for o in view:
+				if graphs.linesegdist2(self.position(), self.target(0).position,
+					o.position()) <= (self.radius + o.radius)**2:
+					ccourse = True
+					break
+
 		start, end = graphs.rand(self, self.goal, view)
 		path = astar.shortest_path(start, end)
-		self.target_clear()
-		if path is not False: 
+		
+		if path is not False and (ccourse == True or self.target_len() == 0 or path[-1].dist < self.cdist):
+			self.target_clear()
 			for n in path:
 				self.target_push(n.data)
-				
+			self.cdist = path[-1].dist			

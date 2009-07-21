@@ -69,6 +69,7 @@ public:
 	float radius;
 	float speed;
 	float turningspeed;
+	int collisions;
 	Vec2d position() const;
 	float angle() const;
 	void target_clear();
@@ -82,6 +83,7 @@ public:
 
 class World{
 public:
+	World();
 	~World();
 	void bind(Particle *p);
 	void unbind(Particle *p);
