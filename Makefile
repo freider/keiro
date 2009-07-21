@@ -6,6 +6,9 @@ _physics.so: setup.py physics_wrap.cxx physics.cpp
 
 physics.py physics_wrap.cxx: physics.i physics.h
 	swig -python -c++ physics.i	
+
+graphs: graphs.cpp graphs.h
+	g++ -o graphs graphs.cpp
 	
 clean: 
 	rm -f *.cxx
