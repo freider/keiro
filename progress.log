@@ -110,3 +110,9 @@ After some thinking and discussion with Carson Reynolds, I am leaning to a solut
 
 When the searched graph grows python gets increasingly slow at searching it using A* and this severely impacts performance of the whole system so I am considering "outsourcing" A* and a few other graph-related functions to C/C++ as has already been done with the physics engine.
 
+Jul 22, 2009:
+C++ optimized A* done. Proper Probabilistic Random Planning (PRP) implemented. Very short development time. Results are quite good but in urgent need of something that penalizes turning time.
+Todo for the coming days:
+- Turning time part of A* search
+- More intelligent crowd that actually has goals and possibly reacts with environment more
+- Some form of minimal time step for physics engine updating. Units should not be able to skip through each other because things gets slow. "Set frame rate" probably good idea but there should be some form of punishing longrunning algorithms as well. Possible solution: Run physics engine at set frame rate (say 30 fps) in real world (most computers should be able to do that, at least without rendering). Run a lower prioritized thread/process for the unit we are tracking so the number of iterations it can do is inverse proportional to it's average iteration time. This way there will be a fair measure of comparison as long as the tests are performed on the same system. Timing for the robot to reach it's goal will also be easier.

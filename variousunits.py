@@ -57,7 +57,7 @@ class AStarer(Stubborn):
 			last = self.target(i).position
 			if ccourse: break
 
-		result = graphs.prm(self, self.goal, view)
+		result = graphs.prp(self, self.goal, view)
 		
 		if ccourse is True:
 			self.target_clear()

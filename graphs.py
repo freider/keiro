@@ -16,7 +16,7 @@ def graph_connect(newnode, nodes, obstacles, safe_distance = 0):
 			n.connect(dist, newnode)
 	return connected
 			
-def prm(me, target_position, obstacles):
+def prp(me, target_position, obstacles):
 	safe_distance = me.radius+1
 	start = Node()
 	start.position = me.position()
@@ -32,6 +32,8 @@ def prm(me, target_position, obstacles):
 				newnode.est_cost_there = newnode.position.distance_to(target_position) 
 				nodes.append(newnode)
 
+	newnodes = []
+	
 	result = shortest_path(start, end, nodes)
 	if result.success:
 		result.path = [nodes[i].position for i in result.indices]
