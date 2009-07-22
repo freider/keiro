@@ -57,14 +57,13 @@ class AStarer(Stubborn):
 			last = self.target(i).position
 			if ccourse: break
 
-		start, end, nodes = graphs.prm(self, self.goal, view)
-		path = graphutils.shortest_path(start, end, nodes)
+		result = graphs.prm(self, self.goal, view)
 		
 		if ccourse is True:
 			self.target_clear()
 			
-		if path.success is True and (self.target_len() == 0 or path.total_cost < self.cdist):
+		if result.success is True and (self.target_len() == 0 or result.total_cost < self.cdist):
 			self.target_clear()
-			for i in path.indices:
-				self.target_push(nodes[i].position)
-			self.cdist = path.total_cost
+			for p in result.path:
+				self.target_push(p)
+			self.cdist = result.total_cost

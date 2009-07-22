@@ -27,10 +27,12 @@ def prm(me, target_position, obstacles):
 	if graph_connect(start, (end,), obstacles, safe_distance) is False:
 		while len(nodes) < 20:
 			newnode = Node()
-			newnode.position = me.position() + Vec2d(random()*150-75, random()*150-75)
+			newnode.position = me.position() + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
 			if graph_connect(newnode, nodes, obstacles, safe_distance) is True:
 				newnode.est_cost_there = newnode.position.distance_to(target_position) 
 				nodes.append(newnode)
 
-	return (start, end, nodes)
-
+	result = shortest_path(start, end, nodes)
+	if result.success:
+		result.path = [nodes[i].position for i in result.indices]
+	return result
