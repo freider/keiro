@@ -1,43 +1,6 @@
-#include <vector>
-#include <queue>
-#include <limits>
-#include <algorithm>
+#include "graphutils.h"
+#include <cstdio>
 
-class Node;
-
-struct Edge{
-	float cost;
-	Node *to;
-	Edge(float _cost, Node& _to):cost(_cost), to(&_to){}
-};
-
-struct Path{
-	bool success;
-	int total_cost;
-	std::vector<int> indices;
-};
-
-class Node{
-public:
-	std::vector<Edge> edges;
-	float cost_here;
-	float est_cost_there;
-	float cost_through_here(){return cost_here + est_cost_there;}
-	float _best_expanded; //used internally by A*
-	Node *parent;
-	int index;
-	Node(int _index, float _est_cost_there):
-			cost_here(std::numeric_limits<float>::max()),
-			est_cost_there(_est_cost_there), //default as a dijkstra
-			_best_expanded(std::numeric_limits<float>::max()),
-			parent(NULL),
-			index(_index)
-			{}
-};
-
-typedef std::pair<float,Node*> pqnode;
-
-//A* shortest path
 Path shortest_path(Node &start, Node &goal){
 	Path result;
 	std::priority_queue<pqnode, std::vector<pqnode>, std::greater<pqnode> > pq;
@@ -80,3 +43,15 @@ Path shortest_path(Node &start, Node &goal){
 	return result;
 }
 
+
+
+int main(void){
+	Node a(0, 6), b(1,5), c(2, 0), d(3, 0);
+	a.edges.push_back(Edge(10, d));
+	a.edges.push_back(Edge(5, c));
+	a.edges.push_back(Edge(1, b));
+	b.edges.push_back(Edge(1, c));
+	c.edges.push_back(Edge(4, d));
+	Path res = shortest_path(a, d);
+	printf("%d\n", res.total_cost);
+}

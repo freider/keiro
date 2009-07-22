@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-setup.py file for physics module
+setup.py file for physics and graph modules
 """
 
 from distutils.core import setup, Extension
