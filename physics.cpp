@@ -45,6 +45,18 @@ float Vec2d::angle() const{
 	return atan2(y,x);
 }
 
+float linesegdist2(Vec2d l1, Vec2d l2, Vec2d p){
+	Vec2d diff = l2-l1;
+	Vec2d unit = diff.norm();
+	float seglen = diff.length();
+	if(abs((p-l1).dot(unit)) >= seglen or abs((p-l2).dot(unit)) >= seglen)
+		return std::min(l1.distance_to2(p), l2.distance_to2(p));
+	else{
+		float dist = Vec2d(-unit.y, unit.x).dot(p-l1);
+		return dist*dist;
+	}
+}
+
 /************
 **Particle**
 ************/
