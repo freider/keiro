@@ -2,4 +2,8 @@ syntax: glob
 
 *~
 *.pyc
-
+*.cxx
+build/*
+*.so
+*.orig
+marcs_codebase*

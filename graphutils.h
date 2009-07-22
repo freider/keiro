@@ -26,16 +26,19 @@ public:
 	float _best_expanded; //used internally by A*
 	Node *parent;
 	int index;
-	Node(int _index, float _est_cost_there):
+	Node(float _est_cost_there = 0.0): //default as dijkstra
 			cost_here(std::numeric_limits<float>::max()),
-			est_cost_there(_est_cost_there), //default as a dijkstra
+			est_cost_there(_est_cost_there),
 			_best_expanded(std::numeric_limits<float>::max()),
 			parent(NULL),
-			index(_index)
+			index(-1)
 			{}
+	void connect(float cost, Node &n){
+		edges.push_back(Edge(cost, n));
+	}
 };
 
 typedef std::pair<float,Node*> pqnode;
 
 //A* shortest path
-Path shortest_path(Node &start, Node &goal);
+Path shortest_path(Node &start, Node &goal, const std::vector<Node*> &nodes = std::vector<Node*>());

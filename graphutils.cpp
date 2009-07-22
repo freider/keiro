@@ -1,7 +1,14 @@
 #include "graphutils.h"
 #include <cstdio>
 
-Path shortest_path(Node &start, Node &goal){
+Path shortest_path(Node &start, Node &goal, const std::vector<Node*> &nodes){
+	bool return_path = (nodes.size() != 0);
+	if(return_path){
+		//mark nodes with indices
+		for(int i = 0; i<(int)nodes.size(); ++i){
+			nodes[i]->index = i;		
+		}
+	}
 	Path result;
 	std::priority_queue<pqnode, std::vector<pqnode>, std::greater<pqnode> > pq;
 	start.cost_here = 0;
@@ -27,31 +34,32 @@ Path shortest_path(Node &start, Node &goal){
 			}
 		}
 	}
-	if(goal.parent == NULL){
+	if(goal.parent == NULL && &goal != &start){
 		result.success = false;
 		return result;
 	} else {
 		result.success = true;
 		result.total_cost = goal.cost_here;
-		Node *last = &goal;
-		while(last != NULL){
-			result.indices.push_back(last->index);
-			last = last->parent;
+		if(return_path){
+			Node *last = &goal;
+			while(last != NULL){
+				result.indices.push_back(last->index);
+				last = last->parent;
+			}
+			std::reverse(result.indices.begin(), result.indices.end());
 		}
-		std::reverse(result.indices.begin(), result.indices.end());
 	}
 	return result;
 }
 
 
-
 int main(void){
-	Node a(0, 6), b(1,5), c(2, 0), d(3, 0);
-	a.edges.push_back(Edge(10, d));
-	a.edges.push_back(Edge(5, c));
-	a.edges.push_back(Edge(1, b));
-	b.edges.push_back(Edge(1, c));
-	c.edges.push_back(Edge(4, d));
+	Node a(6), b(5), c(0), d(0);
+	a.connect(10, d);
+	a.connect(5, c);
+	a.connect(1, b);
+	b.connect(1, c);
+	c.connect(4, d);
 	Path res = shortest_path(a, d);
 	printf("%d\n", res.total_cost);
 }

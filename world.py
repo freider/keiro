@@ -93,8 +93,9 @@ class Unit(Particle):
 	def render(self, screen):
 		last = self.position()
 		for i in xrange(self.target_len()):
-			pygame.draw.line(screen, (100, 100, 250), last, self.target(i).position, 1)
+			pygame.draw.line(screen, (200, 200, 250), last, self.target(i).position, 1)
 			last = self.target(i).position
+			pygame.draw.line(screen, (250, 100, 100), last, last, 1)
 		
 		pygame.draw.circle(screen, self.color, 
 			self.position(), self.radius, 1)	

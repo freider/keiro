@@ -4,14 +4,8 @@
 %{
 #include "graphutils.h"
 %}
-
-class Node;
-
-struct Edge{
-	float cost;
-	Node *to;
-	Edge(float _cost, Node& _to);
-};
+%template(int_vector) std::vector<int>; 
+%template(node_vector) std::vector<Node*>; 
 
 struct Path{
 	bool success;
@@ -21,10 +15,10 @@ struct Path{
 
 class Node{
 public:
-	std::vector<Edge> edges;
 	float cost_here;
-	int index;
-	Node(int _index, float _est_cost_there);
+	float est_cost_there;
+	Node(float _est_cost_there = 0.0);
+	void connect(float cost, Node &n);
 };
 
-Path shortest_path(Node &start, Node &goal);
+Path shortest_path(Node &start, Node &goal, const std::vector<Node*> &nodes = std::vector<Node*>());

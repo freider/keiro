@@ -1,6 +1,6 @@
 from heapq import heappush, heappop
 
-class Node:
+class Py_Node:
 	__slots__ = ("edges", "data", "dist", "_best_expanded", "parent")
 	def __init__(self, data = None):
 		self.edges = []
@@ -11,7 +11,7 @@ class Node:
 	def __repr__(self):
 		return str(self.data)
 		
-def shortest_path(start, end, heuristic=lambda n:0):
+def Py_shortest_path(start, end, heuristic=lambda n:0):
 	"""Finds shortest path using supplied heuristic"""
 	pq = []
 	start.dist = 0
@@ -42,17 +42,23 @@ def shortest_path(start, end, heuristic=lambda n:0):
 
 		
 if __name__ == "__main__":
+	from graphutils import *
 	def tc1():
-		a = Node(("a", 6))
-		b = Node(("b", 5))
-		c = Node(("c", 0))
-		d = Node(("d", 0))
-		a.edges.append((c, 5))
-		a.edges.append((b, 1))
-		b.edges.append((c, 1))
-		c.edges.append((d, 4))
-		res = shortest_path(a, d, lambda n:0)
-		print res[-1].dist, res
+		a = Node()
+		b = Node()
+		c = Node()
+		d = Node()
+		a.connect(5, c)
+		c.connect(5, a)
+		a.connect(1, b)
+		b.connect(1, a)
+		b.connect(1, c)
+		c.connect(1, b)
+		c.connect(4, d)
+		d.connect(4, c)
+		graph = [a,b,c,d]
+		res = shortest_path(d, c, graph)
+		print res.success, res.total_cost, list(res.indices)
 
 	def tc2():
 		import graphs

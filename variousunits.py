@@ -1,7 +1,7 @@
 from world import *
 import math
 import random
-import astar
+import graphutils
 import graphs
 
 class RandomWalker(Unit):
@@ -47,18 +47,24 @@ class AStarer(Stubborn):
 	def think(self, dt, view):
 		self.last_view = view
 		ccourse = False
-		if self.target_len() != 0:
+		last = self.position()
+		for i in xrange(self.target_len()):
 			for o in view:
-				if graphs.linesegdist2(self.position(), self.target(0).position,
+				if graphs.linesegdist2(last, self.target(i).position,
 					o.position()) <= (self.radius + o.radius)**2:
 					ccourse = True
 					break
+			last = self.target(i).position
+			if ccourse: break
 
-		start, end = graphs.rand(self, self.goal, view)
-		path = astar.shortest_path(start, end)
+		start, end, nodes = graphs.prm(self, self.goal, view)
+		path = graphutils.shortest_path(start, end, nodes)
 		
-		if path is not False and (ccourse == True or self.target_len() == 0 or path[-1].dist < self.cdist):
+		if ccourse is True:
 			self.target_clear()
-			for n in path:
-				self.target_push(n.data)
-			self.cdist = path[-1].dist			
+			
+		if path.success is True and (self.target_len() == 0 or path.total_cost < self.cdist):
+			self.target_clear()
+			for i in path.indices:
+				self.target_push(nodes[i].position)
+			self.cdist = path.total_cost

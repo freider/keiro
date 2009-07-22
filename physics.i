@@ -54,6 +54,8 @@ public:
 %}
 };
 
+float linesegdist2(Vec2d l1, Vec2d l2, Vec2d p);
+
 struct ParticleState{
 %immutable;
 	Vec2d position;
