@@ -49,7 +49,7 @@ float linesegdist2(Vec2d l1, Vec2d l2, Vec2d p){
 	Vec2d diff = l2-l1;
 	Vec2d unit = diff.norm();
 	float seglen = diff.length();
-	if(abs((p-l1).dot(unit)) >= seglen or abs((p-l2).dot(unit)) >= seglen)
+	if(std::abs((p-l1).dot(unit)) >= seglen or std::abs((p-l2).dot(unit)) >= seglen)
 		return std::min(l1.distance_to2(p), l2.distance_to2(p));
 	else{
 		float dist = Vec2d(-unit.y, unit.x).dot(p-l1);
@@ -57,6 +57,14 @@ float linesegdist2(Vec2d l1, Vec2d l2, Vec2d p){
 	}
 }
 
+float angle_diff(float a1, float a2){
+	float anglediff = fmod(a1 - a2, 2*M_PI);
+	if(anglediff > M_PI)
+		anglediff -= 2*M_PI;
+	else if (anglediff < -M_PI)
+		anglediff += 2*M_PI;
+	return anglediff;
+}
 /************
 **Particle**
 ************/
@@ -102,16 +110,12 @@ void Particle::update(float dt){
 	while(dt>0 && path.size() > 1){
 		if(path[0].position == path[1].position){
 			float target_direction = path[1].angle;
-			float anglediff = fmod(target_direction - angle(), 2*M_PI);
+			float anglediff = angle_diff(target_direction, angle());
 			if(std::abs(anglediff) == 0){
 				path.pop_front();
 			} else{
 				if(turningspeed == 0)
 					break;
-				if(anglediff > M_PI)
-					anglediff -= 2*M_PI;
-				else if (anglediff < -M_PI)
-					anglediff += 2*M_PI;
 				float timeneeded = std::abs(anglediff/turningspeed);
 				if(timeneeded <= dt){
 					path[0].angle = target_direction;
@@ -125,15 +129,11 @@ void Particle::update(float dt){
 		else{
 			Vec2d diff = path[1].position-path[0].position;
 			float target_direction = diff.angle();
-			float anglediff = fmod(target_direction - angle(), 2*M_PI);
+			float anglediff = angle_diff(target_direction, angle());
 			if(std::abs(anglediff) != 0){
 			//rotation
 				if(turningspeed == 0)
 					break;
-				if(anglediff > M_PI)
-					anglediff -= 2*M_PI;
-				else if (anglediff < -M_PI)
-					anglediff += 2*M_PI;
 				float timeneeded = std::abs(anglediff/turningspeed);
 				if(timeneeded <= dt){
 					path[0].angle = target_direction;

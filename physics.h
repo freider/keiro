@@ -22,6 +22,7 @@ public:
 };
 
 float linesegdist2(Vec2d l1, Vec2d l2, Vec2d p);
+float angle_diff(float a1, float a2);
 
 struct ParticleState{
 	Vec2d position;
