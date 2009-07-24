@@ -1,5 +1,5 @@
 from random import random
-from physics import Vec2d, linesegdist2
+from physics import Vec2d, linesegdist2, angle_diff
 from graphutils import *
 
 def free_path(p1, p2, obstacles, safe_distance = 0):
@@ -38,30 +38,20 @@ def prp(me, target_position, obstacles):
 		result.path = [nodes[i].position for i in result.indices]
 	return result
 
-def prp_turning(me, target_position, obstacles):
-	safe_distance = me.radius+1
-	pre_graph = []
-	pre_graph.append((me.position(),[]))
-	pre_graph.append((target_position,[]))
-	
-	if free_path(me.position(), target_position, obstacles, safe_distance):
-		pre_graph[0][1].append(1)
-	else:
-		while len(nodes) < 20:
-			newnode = (me.position() + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range),[])
-			connected = False
-			for node in pre_graph:
-				if free_path(newnode[0], node[0], obstacles, safe_distance):
-					node[1].append(len(pre_graph))
-					connected = True
-			if connected:
-				pre_graph.append(newnode)
-	
-	
-	result = shortest_path(start, end, nodes)
-	if result.success:
-		result.path = [nodes[i].position for i in result.indices]
-	return result
+class SuperGraph(object):
+	def __init__(self):
+		self.graph = {} # position => angle => nodes
+	def add(self, position):
+		position = tuple(position)
+		if position in self.graph:
+			return self.graph[position]
+		newentry = {}
+		for npos, edges in self.graph.items():
+			diff = Vec2d(*npos) - Vec2d(*position)
+			angle = diff.angle()
+			comp_angle = angle_diff(angle, math.pi)
+			#TODO complete
+			
 	
 if __name__ == "__main__":
 	prm_turning((0,0), (10,10), ())
