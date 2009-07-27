@@ -9,7 +9,7 @@
 
 struct Path{
 	bool success;
-	int total_cost;
+	float total_cost;
 	std::vector<int> indices;
 };
 

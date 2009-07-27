@@ -23,6 +23,7 @@ public:
 	Vec2d norm() const;
 	float dot(const Vec2d &v) const;
 	float angle(const Vec2d &v) const;
+	float angle() const;
 };
 
 %extend Vec2d {
