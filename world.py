@@ -6,14 +6,15 @@ import math
 from physics import Vec2d, Particle, World as PhysicsWorld
 
 class World(PhysicsWorld):
-	PRINT_FPS = False
-	THINK_RATIO = 1
 	def __init__(self, size):
 		PhysicsWorld.__init__(self);
 		self.units = [];
 		self.size = Vec2d(*size)
 		self.clock = pygame.time.Clock()
 		self.ticker = 0
+		self.RENDER = True
+		self.PRINT_FPS = False
+		self.THINK_RATIO = 1
 	
 	def addUnit(self, unit):
 		self.units.append(unit)
@@ -29,12 +30,14 @@ class World(PhysicsWorld):
 		
 		self.update(0) #so we have no initial collisions
 		self.tracked_unit.collisions = 0
+		runtime = 0
 		while 1:
-			dt = self.clock.tick()/1000.0
+			dt = 0.1#self.clock.tick()/1000.0
+			runtime += dt
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
 					print "Collision count:",self.tracked_unit.collisions
-					return
+					return runtime
 			
 			self.update(dt)
 			if self.ticker == 0:
@@ -51,7 +54,10 @@ class World(PhysicsWorld):
 			if self.PRINT_FPS:
 				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
 				sys.stdout.flush()
-			self.render(self.screen)
+			if self.RENDER:
+				self.render(self.screen)
+			if self.tracked_unit.position() == self.tracked_unit.goal:
+				return runtime
 			
 	def render(self, screen):
 		screen.fill((0,0,0))

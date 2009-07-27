@@ -39,7 +39,30 @@ def prp(me, target_position, obstacles):
 		result.path = [nodes[i].position for i in result.indices]
 	return result
 
+def prp_turning(me, target_position, obstacles):
+	safe_distance = me.radius+1
+	graph = GraphBuilder(me.speed, me.turningspeed)
+	start = graph.node(me.position(), me.angle())
+	end = graph.node(target_position, None)
+	
+	if free_path(me.position(), target_position, obstacles, safe_distance):
+		graph.connect(me.position(), target_position)
+	else:
+		for i in xrange(25):
+			newpos = me.position() + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
+			for pos in graph.graph.keys():
+				if free_path(Vec2d(*pos), newpos, obstacles, safe_distance):
+					graph.connect(pos, newpos)
+					
+	nodes = graph.all_nodes()
+	result = shortest_path(start, end, nodes)
+	if result.success:
+		result.path = [nodes[i].position for i in result.indices]
+	return result
+	
+	
 class GraphBuilder(object):
+	"""Builds a graph for navigating R2 with penalties for distance and turning"""
 	def __init__(self, speed, turning_speed):
 		self.graph = {} # position => angle => nodes
 		self.speed = speed
@@ -60,6 +83,7 @@ class GraphBuilder(object):
 		angle = diff.angle()
 		comp_angle = angle_diff(angle, math.pi)
 		
+		#print cost
 		self.node(p1, angle).connect(cost, self.node(p2, angle))
 		self.node(p2, comp_angle).connect(cost, self.node(p1, comp_angle))
 						
@@ -75,7 +99,7 @@ class GraphBuilder(object):
 		else:
 			node = Node()
 			for a,n in edges.items():
-				if angle is None:
+				if angle is None or a is None:
 					cost = 0
 				else:
 					cost = abs(angle_diff(a,angle))/self.turning_speed

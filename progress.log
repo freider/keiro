@@ -116,3 +116,15 @@ Todo for the coming days:
 - Turning time part of A* search
 - More intelligent crowd that actually has goals and possibly reacts with environment more
 - Some form of minimal time step for physics engine updating. Units should not be able to skip through each other because things gets slow. "Set frame rate" probably good idea but there should be some form of punishing longrunning algorithms as well. Possible solution: Run physics engine at set frame rate (say 30 fps) in real world (most computers should be able to do that, at least without rendering). Run a lower prioritized thread/process for the unit we are tracking so the number of iterations it can do is inverse proportional to it's average iteration time. This way there will be a fair measure of comparison as long as the tests are performed on the same system. Timing for the robot to reach it's goal will also be easier.
+
+Jul 27, 2009:
+Successfully prototyped graph generator (class GraphBuilder) for building search graphs which has both orientation and position as state variables. To build this graph efficiently, only possible ways of orientation for the robot are stored at each position, i.e. the directions of adjacent nodes.
+Preliminary efficiency tests show a gain of approximately 10%-20% when robot turningspeed is set to 2*pi/3. Expectation is that the higher the turning speed, the lower the gain. Comparison was done using same random seeds and a set time step for each iteration. Iteration time has not been measured yet, but is assumably a bit worse but in the same order of magnitude.
+Made rendering optional in the engine, so runs can be made faster if only looking at statistics.
+Todo:
+- Improved repeatability. Set time steps. Measure world time/number of iterations, real time, and from this => average iteration time.
+- (From before) More intelligent crowd.
+- A*:ify GraphBuilder (uses heuristic = 0 at the moment => Dijkstra), if only for better slightly lower runtime/average iteration time.
+- C++ify GraphBuilder (right now takes a bit of time)
+- Recorder - Save test runs. Could be saved by saving all the intermediate states, or just the random seed used.
+- Keep statistics. Save statistics including revision of project and system used.

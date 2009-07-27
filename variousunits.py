@@ -57,7 +57,7 @@ class AStarer(Stubborn):
 			last = self.target(i).position
 			if ccourse: break
 
-		result = graphs.prp(self, self.goal, view)
+		result = graphs.prp_turning(self, self.goal, view)
 		
 		if ccourse is True:
 			self.target_clear()
@@ -65,5 +65,5 @@ class AStarer(Stubborn):
 		if result.success is True and (self.target_len() == 0 or result.total_cost < self.cdist):
 			self.target_clear()
 			for p in result.path:
-				self.target_push(p)
+				self.target_push(Vec2d(*p))
 			self.cdist = result.total_cost
