@@ -22,7 +22,7 @@ if __name__ == "__main__":
 	#cProfile.run("w.run()")
 	w.run()
 	total_time = time.clock() - pretime
-	print "Collision count:", w.tracked_unit.collisions, "s"
+	print "Collision count:", w.tracked_unit.collisions
 	#print "Travelled distance:", w.tracked_unit.total_distance, "units"
 	print "World Time:", w.runtime, "s"
 	print "Real Time:", total_time, "s"

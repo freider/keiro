@@ -35,43 +35,44 @@ class ParticleTest(unittest.TestCase):
 
 	def testAccess(self):
 		p = Particle(1,2,0.5);
-		self.assert_(p.angle() == 0.5)
-		self.assert_(p.position() == Vec2d(1,2))
-		self.assert_(p.target_len() == 0)
-		p.target_push(Vec2d(10,10))
-		self.assert_(p.target(0).position == Vec2d(10,10))
-		p.target(0).position = Vec2d(5,5)
-		self.assert_(p.target(0).position == Vec2d(10,10))
+		self.assert_(p.angle == 0.5)
+		self.assert_(p.position == Vec2d(1,2))
+		self.assert_(p.waypoint_len() == 0)
+		p.waypoint_push(Vec2d(10,10))
+		self.assert_(p.waypoint(0).position == Vec2d(10,10))
+		p.waypoint(0).position = Vec2d(5,5)
+		self.assert_(p.waypoint(0).position == Vec2d(10,10))
 		
-	def testTargeting(self):
+	def testWaypointing(self):
 		p = Particle(10,5,0)
 		p.speed = 5
 		p.turningspeed = math.pi/2
-		targets = (Vec2d(15,5), Vec2d(10,5), Vec2d(10,10))
-		for t in targets:
-			p.target_push(t)
-		self.assert_(p.position() == Vec2d(10,5))
-		self.assert_(p.target_len() == 3)
+		waypoints = (Vec2d(15,5), Vec2d(10,5), Vec2d(10,10))
+		for t in waypoints:
+			p.waypoint_push(t)
+		self.assert_(p.position == Vec2d(10,5))
+		self.assert_(p.angle == 0)
+		self.assert_(p.waypoint_len() == 3)
 		for i in xrange(3):
-			self.assert_(p.target(i).position == targets[i])
+			self.assert_(p.waypoint(i).position == waypoints[i])
 		p.update(1)
-		self.assert_(p.target_len() == 2)
-		self.assert_(p.position() == Vec2d(15,5))
-		self.assert_(p.angle() == 0)
+		self.assert_(p.waypoint_len() == 2)
+		self.assert_(p.position == Vec2d(15,5))
+		self.assert_(p.angle == 0)
 		p.update(1)
-		self.assert_(abs(abs(p.angle())-abs(math.pi/2)) < 0.001)
-		self.assert_(p.position() == Vec2d(15,5))
+		self.assert_(abs(abs(p.angle)-abs(math.pi/2)) < 0.001)
+		self.assert_(p.position == Vec2d(15,5))
 		p.update(1)
-		self.assert_(p.position() == Vec2d(15,5))
-		self.assert_(abs(abs(p.angle()) - abs(math.pi)) < 0.001)
+		self.assert_(p.position == Vec2d(15,5))
+		self.assert_(abs(abs(p.angle) - abs(math.pi)) < 0.001)
 		p.update(2)
-		self.assert_(p.position() == Vec2d(10,5))
-		self.assert_(abs(p.angle() - math.pi/2) < 0.001)
-		self.assert_(p.target_len() == 1)
+		self.assert_(p.position == Vec2d(10,5))
+		self.assert_(abs(p.angle - math.pi/2) < 0.001)
+		self.assert_(p.waypoint_len() == 1)
 		p.update(100)
-		self.assert_(p.target_len() == 0)
-		self.assert_(p.position() == Vec2d(10,10))
-		self.assert_(abs(p.angle() - math.pi/2) < 0.001)
+		self.assert_(p.waypoint_len() == 0)
+		self.assert_(p.position == Vec2d(10,10))
+		self.assert_(abs(p.angle - math.pi/2) < 0.001)
 		
 	def testMemory(self):
 		"""Deleted particles are removed from the World they are bound to"""

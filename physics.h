@@ -39,18 +39,16 @@ public:
 	float speed;
 	float turningspeed;
 	int collisions;
-	Vec2d position() const{
-		return path.front().position;
-	}
-	float angle() const{
-		return path.front().angle;
-	}
-	void target_clear();
-	void target_push(const Vec2d &v);
-	void target_push(const Vec2d &v, float angle);
-	void target_pop();
-	int target_len() const;
-	const ParticleState &target(int i) const;
+	Vec2d position;
+	float angle;
+
+	void waypoint_clear();
+	void waypoint_push(const Vec2d &v);
+	void waypoint_push(const Vec2d &v, float angle);
+	void waypoint_pop();
+	void waypoint_pop_first();
+	int waypoint_len() const;
+	const ParticleState &waypoint(int i = 0) const;
 	void update(float dt);
 	void set_state(const Vec2d &v, float angle);
 private:

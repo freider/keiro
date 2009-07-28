@@ -18,7 +18,8 @@ class World(PhysicsWorld):
 		self.timestep = 0.1
 		self.iterations = 0
 		self.runtime = 0
-	
+		self.tracked_unit = None
+			
 	def addUnit(self, unit):
 		self.units.append(unit)
 		self.bind(unit);
@@ -32,11 +33,13 @@ class World(PhysicsWorld):
 		self.screen = pygame.display.set_mode(self.size)
 		
 		self.update(0) #so we have no initial collisions
-		self.tracked_unit.collisions = 0
+		if self.tracked_unit is not None:
+			self.tracked_unit.collisions = 0
 		self.runtime = 0
 		self.iterations = 0
+		
 		while 1:
-			dt = 0.1#self.clock.tick()/1000.0
+			dt = self.clock.tick()/1000.0
 			self.runtime += dt
 			self.iterations += 1
 			
@@ -52,6 +55,7 @@ class World(PhysicsWorld):
 					else:
 						view = ()
 					u.think(dt, view)
+					
 			self.ticker += 1
 			if self.ticker == self.THINK_RATIO:
 				self.ticker = 0
@@ -61,8 +65,9 @@ class World(PhysicsWorld):
 				sys.stdout.flush()
 			if self.RENDER:
 				self.render(self.screen)
-			if self.tracked_unit.position() == self.tracked_unit.goal:
+			if self.tracked_unit is not None and self.tracked_unit.position == self.tracked_unit.goal:
 				return
+				
 			
 	def render(self, screen):
 		screen.fill((0,0,0))
@@ -102,15 +107,15 @@ class Unit(Particle):
 		pass
 		
 	def render(self, screen):
-		last = self.position()
-		for i in xrange(self.target_len()):
-			pygame.draw.line(screen, (200, 200, 250), last, self.target(i).position, 1)
-			last = self.target(i).position
+		last = self.position
+		for i in xrange(self.waypoint_len()):
+			pygame.draw.line(screen, (200, 200, 250), last, self.waypoint(i).position, 1)
+			last = self.waypoint(i).position
 			pygame.draw.line(screen, (250, 100, 100), last, last, 1)
 		
 		pygame.draw.circle(screen, self.color, 
-			self.position(), self.radius, 1)	
+			self.position, self.radius, 1)	
 		pygame.draw.line(screen, self.color,
-			self.position(), 
-			(self.position().x + math.cos(self.angle())*self.radius, self.position().y + math.sin(self.angle())*self.radius))
+			self.position, 
+			(self.position.x + math.cos(self.angle)*self.radius, self.position.y + math.sin(self.angle)*self.radius))
 		

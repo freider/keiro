@@ -5,15 +5,15 @@ import math
 
 def free_path(p1, p2, obstacles, safe_distance = 0):
 	for o in obstacles:
-		if linesegdist2(p1, p2, o.position()) <= (o.radius+safe_distance)**2:
+		if linesegdist2(p1, p2, o.position) <= (o.radius+safe_distance)**2:
 			return False
 	return True
 		
 def prp(me, target_position, obstacles):
 	safe_distance = me.radius+1
 	start = Node()
-	start.position = me.position()
-	start.est_cost_there = me.position().distance_to(target_position)
+	start.position = me.position
+	start.est_cost_there = me.position.distance_to(target_position)
 	end = Node(0)
 	end.position = target_position
 	nodes = [start, end]
@@ -22,7 +22,7 @@ def prp(me, target_position, obstacles):
 	else:
 		while len(nodes) < 20:
 			newnode = Node()
-			newnode.position = me.position() + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
+			newnode.position = me.position + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
 			connected = False
 			for n in nodes:
 				if free_path(newnode.position, n.position, obstacles, safe_distance):
@@ -42,14 +42,14 @@ def prp(me, target_position, obstacles):
 def prp_turning(me, target_position, obstacles):
 	safe_distance = me.radius+1
 	graph = GraphBuilder(me.speed, me.turningspeed)
-	start = graph.node(me.position(), me.angle())
+	start = graph.node(me.position, me.angle)
 	end = graph.node(target_position, None)
 	
-	if free_path(me.position(), target_position, obstacles, safe_distance):
-		graph.connect(me.position(), target_position)
+	if free_path(me.position, target_position, obstacles, safe_distance):
+		graph.connect(me.position, target_position)
 	else:
 		while len(graph.graph) < 20:
-			newpos = me.position() + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
+			newpos = me.position + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
 			for pos in graph.graph.keys():
 				if free_path(Vec2d(*pos), newpos, obstacles, safe_distance):
 					graph.connect(pos, newpos)
