@@ -48,7 +48,7 @@ def prp_turning(me, target_position, obstacles):
 	if free_path(me.position(), target_position, obstacles, safe_distance):
 		graph.connect(me.position(), target_position)
 	else:
-		for i in xrange(25):
+		while len(graph.graph) < 20:
 			newpos = me.position() + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
 			for pos in graph.graph.keys():
 				if free_path(Vec2d(*pos), newpos, obstacles, safe_distance):

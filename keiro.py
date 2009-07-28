@@ -11,11 +11,19 @@ if __name__ == "__main__":
 	for i in xrange(300):
 		init_position = Vec2d(random.randrange(w.size[0]), random.randrange(w.size[1]))
 		w.addUnit(RandomWalker(init_position))
-	vip = AStarer((0,0), w.size)
+	vip = AStarer(Vec2d(10,10), w.size)
+	#stubborn = Stubborn(Vec2d(0,10), w.size)
 	w.addUnit(vip)
+	#w.addUnit(stubborn)
 	w.trackUnit(vip)
+	
 	pretime = time.clock()	
 #	w.RENDER = False
 	#cProfile.run("w.run()")
-	print w.run()
-	print "Time:", time.clock() - pretime, "s"
+	w.run()
+	total_time = time.clock() - pretime
+	print "Collision count:", w.tracked_unit.collisions, "s"
+	#print "Travelled distance:", w.tracked_unit.total_distance, "units"
+	print "World Time:", w.runtime, "s"
+	print "Real Time:", total_time, "s"
+	print "Average iteration time:", total_time/w.iterations, "s"

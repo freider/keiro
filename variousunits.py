@@ -8,7 +8,7 @@ class RandomWalker(Unit):
 	step_mean = 20
 	view_range = 15
 	def __init__(self, position):
-		Unit.__init__(self, position)
+		Unit.__init__(self, position, 0)
 	def think(self, dt, view):
 		for p in view:
 			if (self.target(0).position - self.position()).angle(p.position() - self.position()) < math.pi/2:
@@ -21,11 +21,12 @@ class RandomWalker(Unit):
 
 class Stubborn(Unit):
 	view_range = 75
-	def __init__(self, position, target):
-		Unit.__init__(self, position)
+	def __init__(self, position, goal):
+		Unit.__init__(self, position, (goal-position).angle())
 		self.last_view = ()
-		self.target_push(target)
-		
+		self.goal = goal
+		self.target_push(goal)
+		self.color = (255, 0,0)
 	def think(self, dt, view):
 		self.last_view = view
 
@@ -40,9 +41,10 @@ class Stubborn(Unit):
 class AStarer(Stubborn):
 	view_range = 75
 	def __init__(self, position, goal):
-		Unit.__init__(self, position)
+		Stubborn.__init__(self, position, goal)
 		self.goal = goal
 		self.last_view = ()
+		
 
 	def think(self, dt, view):
 		self.last_view = view

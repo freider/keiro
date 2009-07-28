@@ -15,6 +15,9 @@ class World(PhysicsWorld):
 		self.RENDER = True
 		self.PRINT_FPS = False
 		self.THINK_RATIO = 1
+		self.timestep = 0.1
+		self.iterations = 0
+		self.runtime = 0
 	
 	def addUnit(self, unit):
 		self.units.append(unit)
@@ -30,14 +33,16 @@ class World(PhysicsWorld):
 		
 		self.update(0) #so we have no initial collisions
 		self.tracked_unit.collisions = 0
-		runtime = 0
+		self.runtime = 0
+		self.iterations = 0
 		while 1:
 			dt = 0.1#self.clock.tick()/1000.0
-			runtime += dt
+			self.runtime += dt
+			self.iterations += 1
+			
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
-					print "Collision count:",self.tracked_unit.collisions
-					return runtime
+					return
 			
 			self.update(dt)
 			if self.ticker == 0:
@@ -57,7 +62,7 @@ class World(PhysicsWorld):
 			if self.RENDER:
 				self.render(self.screen)
 			if self.tracked_unit.position() == self.tracked_unit.goal:
-				return runtime
+				return
 			
 	def render(self, screen):
 		screen.fill((0,0,0))
@@ -87,7 +92,7 @@ class UnitRegister(type):
 class Unit(Particle):
 	color = (255, 255, 0)
 	view_range = 0
-	def __init__(self, position, direction = 0):
+	def __init__(self, position, direction):
 		Particle.__init__(self, position[0], position[1], direction)
 		self.radius = 5
 		self.speed = 30
