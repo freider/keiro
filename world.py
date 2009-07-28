@@ -39,7 +39,7 @@ class World(PhysicsWorld):
 		self.iterations = 0
 		
 		while 1:
-			dt = self.clock.tick()/1000.0
+			dt = self.timestep#self.clock.tick()/1000.0
 			self.runtime += dt
 			self.iterations += 1
 			

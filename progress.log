@@ -128,3 +128,12 @@ Todo:
 - C++ify GraphBuilder (right now takes a bit of time)
 - Recorder - Save test runs. Could be saved by saving all the intermediate states, or just the random seed used.
 - Keep statistics. Save statistics including revision of project and system used.
+
+Jul 28, 2009:
+Some refactoring of physics system. Recording more stats now. Displays runtime, world time (which is a separate measure now), collisions and average iteration time. Still a lot work needed to be done in this aspect. And recording this to database/statistics files would be good to be able to follow progress. 
+Observations:
+- I am not sure the new "turning" A* works exactly as expected even though it obviously gives better results than previous approaches. The prototype needs to be examined closer.
+- When adding many points to the random roadmap simulations go slow. Unnecessarily so. Easy to port to C++ and should be.
+- Would be interesting to add a "human" robot to get an estimation of how good humans would be at the same planning. My hypotheses is that a human that get sufficient time for each time step would be more effective than the current implementation because it does not account for likely movements of units later in time.
+- This brings me to the next point: Creating an AI that efficiently navigates using other units likely movement to avoid future pileups of crowd members etc.
+- Crowd still needs to get more realistic to actually get something out of this. Should create some kind of repeatable "scenarios", possibly with rigid obstacles that the different strategies can be evaluated in.

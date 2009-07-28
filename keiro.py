@@ -6,8 +6,9 @@ import time
 import cProfile
 
 if __name__ == "__main__":
-	random.seed(2)
+	random.seed(1)
 	w = World((640, 480))
+	w.RENDER = True
 	for i in xrange(300):
 		init_position = Vec2d(random.randrange(w.size[0]), random.randrange(w.size[1]))
 		w.addUnit(RandomWalker(init_position))
