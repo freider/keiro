@@ -11,10 +11,8 @@ class World(PhysicsWorld):
 		self.units = [];
 		self.size = Vec2d(*size)
 		self.clock = pygame.time.Clock()
-		self.ticker = 0
 		self.RENDER = True
 		self.PRINT_FPS = False
-		self.THINK_RATIO = 1
 		self.timestep = 0.1
 		self.iterations = 0
 		self.runtime = 0
@@ -39,7 +37,12 @@ class World(PhysicsWorld):
 		self.iterations = 0
 		
 		while 1:
-			dt = self.timestep#self.clock.tick()/1000.0
+			if self.timestep == 0:
+				dt = self.clock.tick()/1000.0
+			else:
+				self.clock.tick()
+				dt = self.timestep
+				
 			self.runtime += dt
 			self.iterations += 1
 			
@@ -48,18 +51,13 @@ class World(PhysicsWorld):
 					return
 			
 			self.update(dt)
-			if self.ticker == 0:
-				for u in self.units:
-					if u.view_range != 0:
-						view = self.particles_in_range(u, u.view_range)
-					else:
-						view = ()
-					u.think(dt, view)
+			for u in self.units:
+				if u.view_range != 0:
+					view = self.particles_in_range(u, u.view_range)
+				else:
+					view = ()
+				u.think(dt, view)
 					
-			self.ticker += 1
-			if self.ticker == self.THINK_RATIO:
-				self.ticker = 0
-			
 			if self.PRINT_FPS:
 				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
 				sys.stdout.flush()

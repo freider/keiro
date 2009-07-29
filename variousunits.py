@@ -3,6 +3,7 @@ import math
 import random
 import graphutils
 import graphs
+import physics
 
 class RandomWalker(Unit):
 	step_mean = 20
@@ -37,6 +38,14 @@ class Stubborn(Unit):
 		for p in self.last_view:
 			pygame.draw.circle(screen, (150, 255, 150),
 				p.position, p.radius, 0)
+		
+def path_angle(start_angle, path):
+	"""how much is the robot turning to reach the goal using this path"""
+	a = abs(physics.angle_diff(start_angle, (Vec2d(*path[1])-Vec2d(*path[0])).angle()))
+	for i in xrange(len(path)-2):
+		a += abs((Vec2d(*path[i+1])-Vec2d(*path[i])).angle(Vec2d(*path[i+2])-Vec2d(*path[i+1])))
+	return a
+	
 				
 class AStarer(Stubborn):
 	view_range = 75
@@ -44,7 +53,7 @@ class AStarer(Stubborn):
 		Stubborn.__init__(self, position, goal)
 		self.goal = goal
 		self.last_view = ()
-		
+		self.cdist = 10000000
 
 	def think(self, dt, view):
 		self.last_view = view
@@ -58,8 +67,8 @@ class AStarer(Stubborn):
 			last = self.waypoint(i).position
 			if ccourse: break
 
-		result = graphs.prp_turning(self, self.goal, view)
-		
+		result = graphs.random_roadmap(self, self.goal, view, graphs.GraphBuilder(self.speed, self.turningspeed))
+	
 		if ccourse is True:
 			self.waypoint_clear()
 			
@@ -68,3 +77,4 @@ class AStarer(Stubborn):
 			for p in result.path:
 				self.waypoint_push(Vec2d(*p))
 			self.cdist = result.total_cost
+

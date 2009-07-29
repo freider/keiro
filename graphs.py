@@ -9,58 +9,37 @@ def free_path(p1, p2, obstacles, safe_distance = 0):
 			return False
 	return True
 		
-def prp(me, target_position, obstacles):
-	safe_distance = me.radius+1
-	start = Node()
-	start.position = me.position
-	start.est_cost_there = me.position.distance_to(target_position)
-	end = Node(0)
-	end.position = target_position
-	nodes = [start, end]
-	if free_path(start.position, end.position, obstacles, safe_distance):
-		start.connect(start.est_cost_there, end)
-	else:
-		while len(nodes) < 20:
-			newnode = Node()
-			newnode.position = me.position + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
-			connected = False
-			for n in nodes:
-				if free_path(newnode.position, n.position, obstacles, safe_distance):
-					dist = newnode.position.distance_to(n.position)
-					newnode.connect(dist, n)
-					n.connect(dist, newnode)
-					newnode.est_cost_there = newnode.position.distance_to(target_position) 
-					connected = True
-			if connected:
-				nodes.append(newnode)
+class SimpleGraphBuilder(object):
+	def __init__(self):
+		self.graph = {} #position => node
+				
+	def connect(self, p1, p2):
+		p1 = tuple(p1)
+		p2 = tuple(p2)
+		v1 = Vec2d(*p1)
+		v2 = Vec2d(*p2)
+		n1 = self.node(p1)
+		n2 = self.node(p2)
+		cost = v1.distance_to(v2)
+		n1.connect(cost, n2)
+		n2.connect(cost, n1)
 	
-	result = shortest_path(start, end, nodes)
-	if result.success:
-		result.path = [nodes[i].position for i in result.indices]
-	return result
-
-def prp_turning(me, target_position, obstacles):
-	safe_distance = me.radius+1
-	graph = GraphBuilder(me.speed, me.turningspeed)
-	start = graph.node(me.position, me.angle)
-	end = graph.node(target_position, None)
+	def node(self, position, angle = None):
+		position = tuple(position)
+		if position not in self.graph:
+			tmp = self.graph[position] = Node()
+			tmp.est_cost_there = 0 #TODO
+			tmp.position = position
+			return tmp
+		else:
+			return self.graph[position]
 	
-	if free_path(me.position, target_position, obstacles, safe_distance):
-		graph.connect(me.position, target_position)
-	else:
-		while len(graph.graph) < 20:
-			newpos = me.position + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
-			for pos in graph.graph.keys():
-				if free_path(Vec2d(*pos), newpos, obstacles, safe_distance):
-					graph.connect(pos, newpos)
-					
-	nodes = graph.all_nodes()
-	result = shortest_path(start, end, nodes)
-	if result.success:
-		result.path = [nodes[i].position for i in result.indices]
-	return result
+	def all_nodes(self):
+		return self.graph.values()
 	
-	
+	def positions(self):
+		return self.graph.keys()
+		
 class GraphBuilder(object):
 	"""Builds a graph for navigating R2 with penalties for distance and turning"""
 	def __init__(self, speed, turning_speed):
@@ -98,6 +77,9 @@ class GraphBuilder(object):
 			node = edges[angle]
 		else:
 			node = Node()
+			node.position = position
+			node.angle = angle
+			node.est_cost_there = 0 #TODO
 			for a,n in edges.items():
 				if angle is None or a is None:
 					cost = 0
@@ -112,12 +94,35 @@ class GraphBuilder(object):
 		nodes = []
 		for position,edges in self.graph.items():
 			for angle,node in edges.items():
-				node.angle = angle
-				node.position = position#Vec2d(position[0], position[1])
-				node.est_cost_there = 0 #TODO
 				nodes.append(node)
 		return nodes
+		
+	def positions(self):
+		return self.graph.keys()
+
+def random_roadmap(me, target_position, obstacles, graphbuilder):
+	safe_distance = me.radius+1
+	start = graphbuilder.node(me.position, me.angle)
+	end = graphbuilder.node(target_position, None)
 	
+	if free_path(me.position, target_position, obstacles, safe_distance):
+		graphbuilder.connect(me.position, target_position)
+	else:
+		while len(graphbuilder.positions()) < 20:
+			newpos = me.position + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
+			for pos in graphbuilder.positions():
+				if free_path(Vec2d(*pos), newpos, obstacles, safe_distance):
+					graphbuilder.connect(pos, newpos)
+					
+	nodes = graphbuilder.all_nodes()
+	result = shortest_path(start, end, nodes)
+	if result.success:
+		result.path = [tuple(me.position)]
+		for i in result.indices:
+			if result.path[-1] != nodes[i].position:
+				result.path.append(nodes[i].position)
+	return result
+		
 if __name__ == "__main__":
 	gb = GraphBuilder(1, math.pi/4)
 	gb.connect((0,0), (1,0))
