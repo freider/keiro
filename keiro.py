@@ -6,11 +6,12 @@ import time
 import cProfile
 from getopt import getopt
 import sys
+import scenarios
 
 if __name__ == "__main__":
 	opts, argv = getopt(sys.argv[1:], "n:fp", ["num-people=", "fps", "profile", "norender", "realtime"])
 	#Defaults
-	random.seed(1)
+	random.seed(2)
 	crowd_size = 300
 	profiling = False
 	render = True
@@ -31,29 +32,25 @@ if __name__ == "__main__":
 			profiling = True
 	
 	
-	w = World((640, 480))
-	w.RENDER = render
-	w.timestep = timestep
-	w.PRINT_FPS = fps
-	vip = AStarer(Vec2d(10,10), w.size)
-	w.addUnit(vip)
+	world = World((640, 480))
+	world.RENDER = render
+	world.timestep = timestep
+	world.PRINT_FPS = fps
 
-	for i in xrange(crowd_size):
-		init_position = vip.position#dummy
-		while init_position.distance_to(vip.position) < 20:
-			init_position = Vec2d(random.randrange(w.size[0]), random.randrange(w.size[1]))
-		w.addUnit(RandomWalker(init_position))
-		
-	w.trackUnit(vip)
+	agent = AStarer(Vec2d(0,0), Vec2d(*world.size))
+	scenario = scenarios.TheFlood(world, agent, crowd_size)
 	
 	pretime = time.clock()	
 	if profiling:
-		cProfile.run("w.run()")
+		cProfile.run("scenario.run()")
 	else:
-		w.run()
+		scenario.run()
+	
 	total_time = time.clock() - pretime
-	print "Collision count:", w.tracked_unit.collisions
+	print "Collision count:", agent.collisions
 	#print "Travelled distance:", w.tracked_unit.total_distance, "units"
-	print "World Time:", w.runtime, "s"
+	print "World Time:", world.runtime, "s"
 	print "Real Time:", total_time, "s"
-	print "Average iteration time:", total_time/w.iterations, "s"
+	print "Average iteration time:", total_time/world.iterations, "s"
+	
+

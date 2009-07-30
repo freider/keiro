@@ -21,7 +21,6 @@ class RandomWalker(Unit):
 				self.waypoint_clear()
 
 class Stubborn(Unit):
-	view_range = 75
 	def __init__(self, position, goal):
 		Unit.__init__(self, position, (goal-position).angle())
 		self.last_view = ()
@@ -33,11 +32,6 @@ class Stubborn(Unit):
 
 	def render(self, screen):
 		Unit.render(self, screen)
-		pygame.draw.circle(screen, (255, 150, 150), 
-			self.position, self.view_range, 1)
-		for p in self.last_view:
-			pygame.draw.circle(screen, (150, 255, 150),
-				p.position, p.radius, 0)
 		
 def path_angle(start_angle, path):
 	"""how much is the robot turning to reach the goal using this path"""
@@ -67,6 +61,7 @@ class AStarer(Stubborn):
 			last = self.waypoint(i).position
 			if ccourse: break
 
+		#result = graphs.random_roadmap(self, self.goal, view, graphs.SimpleGraphBuilder())
 		result = graphs.random_roadmap(self, self.goal, view, graphs.GraphBuilder(self.speed, self.turningspeed))
 	
 		if ccourse is True:
@@ -77,4 +72,15 @@ class AStarer(Stubborn):
 			for p in result.path:
 				self.waypoint_push(Vec2d(*p))
 			self.cdist = result.total_cost
-
+	def render(self, screen):
+		pygame.draw.line(screen, (255, 0, 0),
+				self.goal + Vec2d(-10,-10), self.goal + Vec2d(10,10), 1)
+		pygame.draw.line(screen, (255, 0, 0),
+				self.goal + Vec2d(10,-10), self.goal + Vec2d(-10,10), 1)
+		Stubborn.render(self, screen)
+		pygame.draw.circle(screen, (255, 150, 150), 
+			self.position, self.view_range, 1)
+		for p in self.last_view:
+			pygame.draw.circle(screen, (150, 255, 150),
+				p.position, p.radius, 0)
+		

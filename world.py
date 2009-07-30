@@ -16,14 +16,18 @@ class World(PhysicsWorld):
 		self.timestep = 0.1
 		self.iterations = 0
 		self.runtime = 0
-		self.tracked_unit = None
+		self.callbacks = []
 			
 	def addUnit(self, unit):
 		self.units.append(unit)
 		self.bind(unit);
 	
-	def trackUnit(self, unit):
-		self.tracked_unit = unit
+	def removeunit(self, unit):
+		self.units.remove(unit)
+		self.unbind(unit)
+
+	def addcallback(self, where):
+		self.callbacks.append(where)
 		
 	def run(self):
 		pygame.init()
@@ -31,8 +35,6 @@ class World(PhysicsWorld):
 		self.screen = pygame.display.set_mode(self.size)
 		
 		self.update(0) #so we have no initial collisions
-		if self.tracked_unit is not None:
-			self.tracked_unit.collisions = 0
 		self.runtime = 0
 		self.iterations = 0
 		
@@ -63,9 +65,8 @@ class World(PhysicsWorld):
 				sys.stdout.flush()
 			if self.RENDER:
 				self.render(self.screen)
-			if self.tracked_unit is not None and self.tracked_unit.position == self.tracked_unit.goal:
-				return
-				
+			for o in self.callbacks:
+				o.update(dt)
 			
 	def render(self, screen):
 		screen.fill((0,0,0))

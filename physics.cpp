@@ -227,11 +227,3 @@ std::vector<Particle*> World::particles_in_range(const Particle *from, float ran
 	}
 	return res;
 }
-
-int main(void){
-	Particle *p = new Particle(0,0);
-	World w;
-	w.bind(p);
-	printf("%f %f\n", p->position.x, p->position.y);
-	delete p;
-}

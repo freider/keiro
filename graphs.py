@@ -108,7 +108,7 @@ def random_roadmap(me, target_position, obstacles, graphbuilder):
 	if free_path(me.position, target_position, obstacles, safe_distance):
 		graphbuilder.connect(me.position, target_position)
 	else:
-		while len(graphbuilder.positions()) < 20:
+		for i in xrange(30):
 			newpos = me.position + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
 			for pos in graphbuilder.positions():
 				if free_path(Vec2d(*pos), newpos, obstacles, safe_distance):

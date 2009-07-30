@@ -137,3 +137,6 @@ Observations:
 - Would be interesting to add a "human" robot to get an estimation of how good humans would be at the same planning. My hypotheses is that a human that get sufficient time for each time step would be more effective than the current implementation because it does not account for likely movements of units later in time.
 - This brings me to the next point: Creating an AI that efficiently navigates using other units likely movement to avoid future pileups of crowd members etc.
 - Crowd still needs to get more realistic to actually get something out of this. Should create some kind of repeatable "scenarios", possibly with rigid obstacles that the different strategies can be evaluated in.
+
+Jul 29, 2009:
+
