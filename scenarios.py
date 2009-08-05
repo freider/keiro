@@ -1,8 +1,18 @@
-from variousunits import *
+from units import *
 from physics import Vec2d
 
+class ScenarioRegistrar (type):
+	"""Registers all scenarios that are declared, to let the user choose"""
+	register = {}
+	def __new__(cls, name, bases, dct):
+		if name != "Scenario":
+			print "Defining scenario %s"%(name,)
+		ret = ScenarioRegistrar.register[name] = type.__new__(cls, name, bases, dct)
+		return ret
+
 class Scenario(object):
-#TODO: register scenarios (using metaclass)
+	__metaclass__ = ScenarioRegistrar
+	
 	def __init__(self, world, agent):
 		self.world = world
 		self.agent = agent
@@ -35,7 +45,6 @@ class TheFlood(Scenario):
 		self.agent.position = Vec2d(10, world.size[1]/2)
 		self.agent.goal = Vec2d(world.size[0]-10, world.size[1]/2)
 		self.agent.angle = (self.agent.goal-self.agent.position).angle()
-		self.units = set()
 		
 	def update(self, dt):
 		exact = dt*self.crowd_rate

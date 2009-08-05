@@ -5,6 +5,41 @@ import graphutils
 import graphs
 import physics
 
+class UnitRegistrar(type):
+	register = {}
+	def __new__(cls, name, bases, dct):
+		if name != "Unit":
+			print "Defining unit %s"%(name,)
+		ret = UnitRegistrar.register[name] = type.__new__(cls, name, bases, dct)
+		return ret
+		
+class Unit(Particle):
+	__metaclass__ = UnitRegistrar
+	
+	color = (255, 255, 0)
+	view_range = 0
+	def __init__(self, position, direction):
+		Particle.__init__(self, position[0], position[1], direction)
+		self.radius = 5
+		self.speed = 30
+		self.turningspeed = 2*math.pi/3
+	
+	def think(self, dt, visible_particles):
+		pass
+		
+	def render(self, screen):
+		last = self.position
+		for i in xrange(self.waypoint_len()):
+			pygame.draw.line(screen, (200, 200, 250), last, self.waypoint(i).position, 1)
+			last = self.waypoint(i).position
+			pygame.draw.line(screen, (250, 100, 100), last, last, 1)
+		
+		pygame.draw.circle(screen, self.color, 
+			self.position, self.radius, 1)	
+		pygame.draw.line(screen, self.color,
+			self.position, 
+			(self.position.x + math.cos(self.angle)*self.radius, self.position.y + math.sin(self.angle)*self.radius))
+
 class RandomWalker(Unit):
 	step_mean = 20
 	view_range = 15

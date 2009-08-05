@@ -138,5 +138,9 @@ Observations:
 - This brings me to the next point: Creating an AI that efficiently navigates using other units likely movement to avoid future pileups of crowd members etc.
 - Crowd still needs to get more realistic to actually get something out of this. Should create some kind of repeatable "scenarios", possibly with rigid obstacles that the different strategies can be evaluated in.
 
-Jul 29, 2009:
+Aug 3, 2009:
+Reading paper on Path planning using harmonic functions and probabilistic cell decomposition.
+Got some inspiration for a "dynamic" A* using randomly expanding trees in space-time statespace to avoid future probable collisions.
+Scenarios can be chosen at launch using terminal parameters. Feature to create: GUI for launching simulations and saving results in a database.
+
 
