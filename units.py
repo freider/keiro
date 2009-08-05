@@ -61,7 +61,7 @@ class Stubborn(Unit):
 		self.last_view = ()
 		self.goal = goal
 		self.waypoint_push(goal)
-		self.color = (255, 0,0)
+	
 	def think(self, dt, view):
 		self.last_view = view
 
@@ -83,7 +83,8 @@ class AStarer(Stubborn):
 		self.goal = goal
 		self.last_view = ()
 		self.cdist = 10000000
-
+		self.color = (255, 0,0)
+		
 	def think(self, dt, view):
 		self.last_view = view
 		ccourse = False
