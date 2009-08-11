@@ -122,6 +122,44 @@ def random_roadmap(me, target_position, obstacles, graphbuilder):
 			if result.path[-1] != nodes[i].position:
 				result.path.append(nodes[i].position)
 	return result
+
+def anticipating_randomtree(me, target_position, obstacles):
+	class Py_Node:
+		def __init__(self, position):
+			self.edges = []
+			self.position = position
+			self.time = None
+			self._best_expanded = None
+			self.parent = None
+		
+	heuristic = lambda node:node.position.distance_to(target_position)/me.speed
+	pq = []
+	start = Py_Node(me.position)
+	start.time = 0
+	heappush(pq, (heuristic(start), start))
+	
+	while len(pq) != 0:
+		heur, node = heappop(pq)
+		if node == end:	break #done
+		#has been expanded in a better state before
+		if node._best_expanded is not None and node._best_expanded <= heur: continue
+		node._best_expanded = heur
+		for child, cost in node.edges:
+			ndist = node.dist+cost
+			if child.dist is None or ndist < child.dist:
+				child.dist = ndist
+				child.parent = node
+				heappush(pq, (ndist+heuristic(child), child))
+	if end.parent is None:
+		return False
+	else:
+		node = end
+		res = []
+		while node is not None:
+			res.append(node)
+			node = node.parent
+		res.reverse()
+		return res
 		
 if __name__ == "__main__":
 	gb = GraphBuilder(1, math.pi/4)

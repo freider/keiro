@@ -72,6 +72,7 @@ Particle::Particle(float x, float y, float dir)
 	:radius(0),
 	speed(0),
 	collisions(0),
+	velocity(0,0),
 	world(NULL)
 {
 	Vec2d vec(x, y);
@@ -130,6 +131,7 @@ void Particle::update(float dt){
 		if(std::abs(anglediff) != 0){
 			if(turningspeed == 0)
 				break;
+			velocity = Vec2d(0,0);
 			float timeneeded = std::abs(anglediff/turningspeed);
 			if(timeneeded <= dt){
 				angle = waypoint_direction;
@@ -145,17 +147,19 @@ void Particle::update(float dt){
 			if(speed == 0) break;
 			float dd = diff.length();
 			float timeneeded = dd/speed;
+			velocity = diff.norm()*speed;
 			if(timeneeded <= dt){
 				position = waypoint().position;
 				dt -= timeneeded;
 			}
 			else {
-				position = position + diff.norm()*dt*speed;
+				position = position + velocity*dt;
 				dt = 0;
 			}
 		}
 		if(std::abs(angle_diff(angle, waypoint().angle)) == 0 && position == waypoint().position){
 			waypoint_pop_first(); //we're there
+			velocity = Vec2d(0,0); //stop
 		}
 	}
 }
@@ -227,3 +231,9 @@ std::vector<Particle*> World::particles_in_range(const Particle *from, float ran
 	}
 	return res;
 }
+
+/*
+TODO: prototype in python first
+float freepath_probability(std::vector<Particle*> particles, Vec2d l1, Vec2d l2, float start_time, float speed){
+	
+}*/

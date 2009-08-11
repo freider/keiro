@@ -8,9 +8,15 @@ import cProfile
 from getopt import getopt
 import sys
 import scenarios
+import pickle
+
+keiro_settings = {"verbose":False}
+
+def print_options():
+	print pickle.dump(scenarios.ScenarioRegistrar.register, sys.stdout)
 
 if __name__ == "__main__":
-	opts, argv = getopt(sys.argv[1:], "n:fpt:s:", ["num-people=", "fps", "profile", "timestep=", "scenario=","norender"])
+	opts, argv = getopt(sys.argv[1:], "n:fpt:s:l", ["num-people=", "fps", "profile", "timestep=", "scenario=", "list-options", "norender"])
 	#Defaults
 	random.seed(2)
 	crowd_size = 300
@@ -32,9 +38,12 @@ if __name__ == "__main__":
 		elif opt in ("--timestep", "-t"):
 			timestep = float(arg)
 		elif opt in ("--scenario", "-s"):
-			print "==========="
 			scenario_class = scenarios.ScenarioRegistrar.register[arg]
-
+		elif opt in ("--list-options", "-l"):
+			print_options()
+			quit()
+		elif opt in ("--verbose", "-v"):
+			keiro_settings["verbose"] = True
 	
 	world = World((640, 480))
 	world.RENDER = render

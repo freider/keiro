@@ -40,6 +40,7 @@ public:
 	float turningspeed;
 	int collisions;
 	Vec2d position;
+	Vec2d velocity;
 	float angle;
 
 	void waypoint_clear();
