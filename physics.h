@@ -17,6 +17,7 @@ public:
 	float length() const;
 	Vec2d norm() const;
 	float dot(const Vec2d &v) const;
+	float cross(const Vec2d &v) const;
 	float angle(const Vec2d &v) const;
 	float angle() const;
 };

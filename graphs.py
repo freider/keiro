@@ -8,7 +8,15 @@ def free_path(p1, p2, obstacles, safe_distance = 0):
 		if linesegdist2(p1, p2, o.position) <= (o.radius+safe_distance)**2:
 			return False
 	return True
-		
+
+def line_distance2(l11, l12, l21, l22):
+	sign = lambda x:0 if x==0 else x/abs(x)
+	if sign((l21 - l11).cross(l22 - l11)) != sign((l21 - l12).cross(l22 - l12)) and \
+		sign((l11 - l21).cross(l12 - l21)) != sign((l11 - l22).cross(l12 - l22)):
+		return 0
+	return min(linesegdist2(l11, l12, l21), linesegdist2(l11, l12, l22),
+				linesegdist2(l21, l22, l11), linesegdist2(l21, l22, l12))
+
 class SimpleGraphBuilder(object):
 	def __init__(self):
 		self.graph = {} #position => node
@@ -123,44 +131,60 @@ def random_roadmap(me, target_position, obstacles, graphbuilder):
 				result.path.append(nodes[i].position)
 	return result
 
-def anticipating_randomtree(me, target_position, obstacles):
-	class Py_Node:
-		def __init__(self, position):
-			self.edges = []
+class ARTBuilder(object):
+	class node:
+		def __init__(self, position, angle, parent = None, time = 0, free_prob = 1):
 			self.position = position
-			self.time = None
-			self._best_expanded = None
-			self.parent = None
-		
-	heuristic = lambda node:node.position.distance_to(target_position)/me.speed
-	pq = []
-	start = Py_Node(me.position)
-	start.time = 0
-	heappush(pq, (heuristic(start), start))
+			self.angle = angle
+			self.time = time
+			self.parent = parent
+			self.free_prob = free_prob
 	
-	while len(pq) != 0:
-		heur, node = heappop(pq)
-		if node == end:	break #done
-		#has been expanded in a better state before
-		if node._best_expanded is not None and node._best_expanded <= heur: continue
-		node._best_expanded = heur
-		for child, cost in node.edges:
-			ndist = node.dist+cost
-			if child.dist is None or ndist < child.dist:
-				child.dist = ndist
-				child.parent = node
-				heappush(pq, (ndist+heuristic(child), child))
-	if end.parent is None:
-		return False
-	else:
-		node = end
-		res = []
-		while node is not None:
-			res.append(node)
-			node = node.parent
-		res.reverse()
-		return res
+	def _free_prob(self, me, me_start, start_angle, me_end, start_time):
+		diff = me_start - me_end
+		end_time = start_time + angle_diff(start_angle, diff.angle())/me.turningspeed + diff.length()/me.speed
+		for o in self.obstacles:
+			o_start = o.position + o.velocity*start_time
+			o_end = o.position + o.velocity*end_time
+			if line_distance2(me_start, me_end, o_start, o_end) <= (me.radius+o.radius+1)**2:
+				return (0, end_time)
+		return (1, end_time)
 		
+	def build(self, me, target_position, obstacles, max_size):
+		self.obstacles = obstacles
+		nodes = []
+		start = ARTBuilder.node(me.position, me.angle)
+		if self._free_prob(me, me.position, me.angle, target_position, 0)[0] > 0.9:
+			return [me.position, target_position] #direct path
+			
+		for x in xrange(max_size):
+			print "gen"
+			me_end = me.position + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
+			best = None
+			for n in nodes:
+				me_start = n.position
+				free_prob, end_time = self._free_prob(me, me_start, n.angle, me_end, n.time)
+				newprob = free_prob * n.free_prob
+				if newprob > 0.9:
+					if best is None or best[1] > end_time:
+						best = (new_prob, end_time, n)
+						
+			if best is not None:
+				print "Adding node"
+				new_prob, new_time, parent = best[0], best[1], best[2]
+				newnode = ARTBuilder.node(me_end, (me_end - n.position).angle(), parent = parent, time = new_time, free_prob = new_prob)
+				nodes.append(newnode)
+				free_prob, end_time = self._free_prob(me, newnode.position, newnode.angle, target_position, new_time)
+				target_prob = free_prob*new_prob
+				if target_prob > 0.9:
+					path = [target_prob]
+					n = newnode
+					while n != None:
+						path.append(n.position)
+						n = n.parent
+					return reverse(path)
+			return False
+			
 if __name__ == "__main__":
 	gb = GraphBuilder(1, math.pi/4)
 	gb.connect((0,0), (1,0))

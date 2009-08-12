@@ -50,7 +50,7 @@ if __name__ == "__main__":
 	world.timestep = timestep
 	world.PRINT_FPS = fps
 
-	agent = AStarer(Vec2d(0,0), Vec2d(*world.size))
+	agent = Arty(Vec2d(0,0), Vec2d(*world.size))#AStarer(Vec2d(0,0), Vec2d(*world.size))
 	scenario = scenario_class(world, agent, crowd_size)
 	
 	pretime = time.clock()	

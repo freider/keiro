@@ -119,4 +119,19 @@ class AStarer(Stubborn):
 		for p in self.last_view:
 			pygame.draw.circle(screen, (150, 255, 150),
 				p.position, p.radius, 0)
+
+class Arty(AStarer):
+	view_range = 75
+	def __init__(self, position, goal):
+		Stubborn.__init__(self, position, goal)
+		self.goal = goal
+		self.last_view = ()
+		self.color = (255, 0,0)
 		
+	def think(self, dt, view):
+		self.last_view = view
+		path = graphs.ARTBuilder().build(self, self.goal, view, 50)
+		self.waypoint_clear()
+		if path is not False:
+			for p in path:
+				self.waypoint_push(p)

@@ -38,6 +38,9 @@ float Vec2d::distance_to2(const Vec2d &v) const{
 float Vec2d::dot(const Vec2d &v) const{
 	return x*v.x + y*v.y;
 }
+float Vec2d::cross(const Vec2d &v) const{
+	return x*v.y - v.x*y;
+}
 float Vec2d::angle(const Vec2d &v) const{
 	return acos(this->norm().dot(v.norm()));
 }
