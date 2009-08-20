@@ -130,7 +130,7 @@ class Arty(AStarer):
 		
 	def think(self, dt, view):
 		self.last_view = view
-		path = graphs.ARTBuilder().build(self, self.goal, view, 50)
+		path = graphs.ARTBuilder().build(self, self.goal, view, 100)
 		self.waypoint_clear()
 		if path is not False:
 			for p in path:

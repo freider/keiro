@@ -152,37 +152,41 @@ class ARTBuilder(object):
 		
 	def build(self, me, target_position, obstacles, max_size):
 		self.obstacles = obstacles
-		nodes = []
+		
 		start = ARTBuilder.node(me.position, me.angle)
 		if self._free_prob(me, me.position, me.angle, target_position, 0)[0] > 0.9:
 			return [me.position, target_position] #direct path
-			
-		for x in xrange(max_size):
-			print "gen"
-			me_end = me.position + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
+		
+		nodes = [ARTBuilder.node(me.position, me.angle, parent = None, time = 0, free_prob = 1)]
+		#always use the nodes from the last solution in this iterations so they are kept if still good enough
+		trypos = [me.waypoint(i).position for i in xrange(me.waypoint_len())]
+		while len(trypos) < max_size:
+			trypos.append(me.position + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range))
+		for me_end in trypos:
 			best = None
 			for n in nodes:
 				me_start = n.position
 				free_prob, end_time = self._free_prob(me, me_start, n.angle, me_end, n.time)
-				newprob = free_prob * n.free_prob
-				if newprob > 0.9:
+				new_prob = free_prob * n.free_prob
+				if new_prob > 0.9:
 					if best is None or best[1] > end_time:
 						best = (new_prob, end_time, n)
 						
 			if best is not None:
-				print "Adding node"
 				new_prob, new_time, parent = best[0], best[1], best[2]
 				newnode = ARTBuilder.node(me_end, (me_end - n.position).angle(), parent = parent, time = new_time, free_prob = new_prob)
 				nodes.append(newnode)
+				#check if the new node has a good enough path to the goal
 				free_prob, end_time = self._free_prob(me, newnode.position, newnode.angle, target_position, new_time)
 				target_prob = free_prob*new_prob
 				if target_prob > 0.9:
-					path = [target_prob]
+					path = [target_position]
 					n = newnode
 					while n != None:
 						path.append(n.position)
 						n = n.parent
-					return reverse(path)
+					path.reverse()
+					return path
 			return False
 			
 if __name__ == "__main__":
