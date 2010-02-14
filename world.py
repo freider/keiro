@@ -15,6 +15,7 @@ class World(PhysicsWorld):
 		self.timestep = settings['timestep']
 				
 		self.units = [];
+		self.obstacles = [];
 		self.clock = pygame.time.Clock()
 		self.iterations = 0
 		self.runtime = 0
@@ -28,6 +29,14 @@ class World(PhysicsWorld):
 		self.units.remove(unit)
 		self.unbind(unit)
 
+	def add_obstacle(self, obstacle):
+		self.obstacles.append(obstacle)
+		self.bind(obstacle)
+		
+	def remove_obstacle(self, obstacle):
+		self.obstacles.remove(obstacle)
+		self.unbind(obstacle)
+		
 	def addcallback(self, where):
 		self.callbacks.append(where)
 		
@@ -74,6 +83,8 @@ class World(PhysicsWorld):
 			
 	def render(self, screen):
 		screen.fill((0,0,0))
+		for o in self.obstacles:
+			o.render(screen)
 		for u in self.units:
 			u.render(screen)
 		pygame.display.flip()

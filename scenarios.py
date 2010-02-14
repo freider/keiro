@@ -1,5 +1,6 @@
 from units import *
 from fast.physics import Vec2d
+from obstacle import Obstacle
 
 class ScenarioRegistrar (type):
 	"""Registers all scenarios that are declared, to let the user choose"""
@@ -34,6 +35,8 @@ class RandomWalkers(Scenario):
 		self.agent.position = Vec2d(10,10)
 		self.agent.goal = Vec2d(*world.size)-self.agent.position
 		self.agent.angle = (self.agent.goal-self.agent.position).angle()
+		
+		self.world.add_obstacle(Obstacle(Vec2d(450, 50), Vec2d(50, 420)))
 		
 		for i in xrange(crowd_size):
 			init_position = self.agent.position

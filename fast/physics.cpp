@@ -8,8 +8,11 @@ Vec2d::Vec2d():x(0),y(0){
 }
 Vec2d::Vec2d(float _x, float _y):x(_x),y(_y){
 }
+float Vec2d::length2() const{
+	return x*x + y*y;
+}
 float Vec2d::length() const{
-	return sqrt(x*x + y*y);
+	return sqrt(length2());
 }
 Vec2d Vec2d::norm() const{
 	return operator/(length());
@@ -79,7 +82,7 @@ Particle::Particle(float x, float y, float dir)
 	world(NULL)
 {
 	Vec2d vec(x, y);
-	position = vec;
+	previous_position = position = vec;
 	angle = dir;
 }
 
@@ -93,7 +96,7 @@ void Particle::waypoint_clear(){
 
 void Particle::waypoint_push(const Vec2d &v){
 	//default angle = angle from last waypoint to this waypoint
-	Vec2d last_waypoint = path.size()==0?position:path.back().position;
+	Vec2d last_waypoint = path.size()==0 ? position : path.back().position;
 	if( !(v == last_waypoint) )
 		waypoint_push(v, (v-last_waypoint).angle());
 }
@@ -119,6 +122,7 @@ const ParticleState& Particle::waypoint(int i) const{
 }
 
 void Particle::update(float dt){
+	previous_position = position;
 	while(dt>0 && waypoint_len() > 0){
 		float anglediff;
 		float waypoint_direction;
@@ -173,6 +177,10 @@ void Particle::set_state(const Vec2d &v, float angle){
 	angle = angle;
 }
 
+
+LineSegment::LineSegment(const Vec2d &p1, const Vec2d &p2) : p1(p1), p2(p2) { }
+
+
 /********
 **WORLD**
 ********/
@@ -191,9 +199,24 @@ void World::unbind(Particle *p){
 	p->world = NULL;
 }
 
-void World::bind(Particle *p){
+void World::unbind(LineSegment *l){
+	for(size_t i = 0; i<obstacles.size(); ++i){
+		if(obstacles[i] == l){
+			obstacles.erase(obstacles.begin() + i);
+			--i;
+		}
+	}
+	l->world = NULL;
+}
+
+void World::bind(Particle *p) {
 	particles.push_back(p);
 	p->world = this;
+}
+
+void World::bind(LineSegment *l) {
+	obstacles.push_back(l);
+	l->world = this;
 }
 
 void World::update(float dt){
@@ -201,7 +224,7 @@ void World::update(float dt){
 	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
 		particles[i]->update(dt);
 	}
-	//collision detection
+	//collision detection between all pairs of particles
 	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
 		for(size_t j = i+1; j<sz; ++j){
 			float dist2 = particles[i]->position.distance_to2(particles[j]->position);
@@ -220,11 +243,32 @@ void World::update(float dt){
 			}
 		}
 	}
+	
+	//collision detection between particles and obstacles
+	for (size_t i = 0, sz = particles.size(); i<sz; ++i) {
+		for(size_t j = 0, oz = obstacles.size(); j<oz; ++j) {
+			float dist2 = linesegdist2(obstacles[j]->p1, obstacles[j]->p2, particles[i]->position);
+			float safe_dist = particles[i]->radius;
+			float safe_dist2 = safe_dist*safe_dist;
+			if(dist2 < safe_dist2){
+				//collision
+				particles[i]->collisions++;
+				float diff = sqrt(dist2) - sqrt(safe_dist2);
+				Vec2d dirv(1,0);
+				Vec2d movement = particles[i]->position - particles[i]->previous_position;
+				particles[i]->set_state(particles[i]->previous_position, particles[j]->angle); //TODO: remove
+//				if(movement.length2() != 0)
+//				 	dirv = (particles[i]->position - particles[j]->position).norm();
+				//particles[j]->set_state(particles[j]->position + dirv*diff, particles[j]->angle);
+			}
+		}
+	}
 }
 
 int World::num_particles(){
 	return particles.size();
 }
+
 std::vector<Particle*> World::particles_in_range(const Particle *from, float range) const{
 	float range2 = range*range;
 	std::vector<Particle*> res;

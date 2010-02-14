@@ -15,6 +15,7 @@ public:
 	float distance_to(const Vec2d &v) const;
 	float distance_to2(const Vec2d &v) const;
 	float length() const;
+	float length2() const;
 	Vec2d norm() const;
 	float dot(const Vec2d &v) const;
 	float cross(const Vec2d &v) const;
@@ -32,7 +33,7 @@ struct ParticleState{
 
 class World;
 class Particle{
-friend class World;
+	friend class World;
 public:
 	Particle(float x = 0, float y = 0, float dir = 1);
 	~Particle();
@@ -41,6 +42,7 @@ public:
 	float turningspeed;
 	int collisions;
 	Vec2d position;
+	Vec2d previous_position;
 	Vec2d velocity;
 	float angle;
 
@@ -58,15 +60,28 @@ private:
 	std::deque<ParticleState> path;
 };
 
+class LineSegment {
+	friend class World;
+public:
+	LineSegment(const Vec2d &p1, const Vec2d &p2);
+	Vec2d p1, p2;
+	
+private:
+	World *world;
+};
+
 class World{
 public:
 	World(){}
 	~World();
 	void bind(Particle *p);
 	void unbind(Particle *p);
+	void bind(LineSegment *l);
+	void unbind(LineSegment *l);
 	void update(float dt);
 	int num_particles();
 	std::vector<Particle*> particles_in_range(const Particle *from, float range) const;
 private:
 	std::vector<Particle*> particles;
+	std::vector<LineSegment*> obstacles;
 };

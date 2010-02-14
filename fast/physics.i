@@ -67,7 +67,7 @@ struct ParticleState{
 };
 
 class Particle{
-friend class World;
+	friend class World;
 public:
 	Particle(float x = 0, float y = 0, float dir = 1);
 	~Particle();
@@ -88,12 +88,24 @@ public:
 	const ParticleState &waypoint(int i = 0) const;
 };
 
+class LineSegment {
+	friend class World;
+public:
+	LineSegment(const Vec2d &p1, const Vec2d &p2);
+	Vec2d p1, p2;
+	
+private:
+	World *world;
+};
+
 class World{
 public:
 	World();
 	~World();
 	void bind(Particle *p);
 	void unbind(Particle *p);
+	void bind(LineSegment *l);
+	void unbind(LineSegment *l);
 	void update(float dt);
 	int num_particles();
 	std::vector<Particle*> particles_in_range(const Particle *from, float range) const;
