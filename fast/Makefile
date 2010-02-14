@@ -12,9 +12,12 @@ physics.py physics_wrap.cxx: physics.i physics.h
 graphutils.py graphutils_wrap.cxx: graphutils.i graphutils.h
 	swig -python -c++ graphutils.i	
 
-clean: 
+clean:
+	rm -f physics.py
+	rm -f graphutils.py
 	rm -f *.cxx
 	rm -f *~ *.pyc *.pyo
+	rm -f *.so
 	rm -rf build
-
+	
 

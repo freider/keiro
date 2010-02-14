@@ -9,61 +9,77 @@ from getopt import getopt
 import sys
 import scenarios
 import pickle
+import os
+#import psyco
+#psyco.full()
+os.environ["DJANGO_SETTINGS_MODULE"] = "stats.settings"
+from stats.statsapp.models import Run
 
-keiro_settings = {"verbose":False}
+settings = dict(
+	seed = 2,
+	crowd_size = 10,
+	timestep = 0.1,
+	scenario_name = "RandomWalkers",
+	ai_name = "AStarer",
+	draw_fps = False,
+	profiling = False,
+	render = True,
+	verbose = False,
+	world_size = (640,480)
+	)
 
 def print_options():
 	print pickle.dump(scenarios.ScenarioRegistrar.register, sys.stdout)
 
 if __name__ == "__main__":
-	opts, argv = getopt(sys.argv[1:], "n:fpt:s:l", ["num-people=", "fps", "profile", "timestep=", "scenario=", "list-options", "norender"])
-	#Defaults
-	random.seed(2)
-	crowd_size = 300
-	profiling = False
-	render = True
-	timestep = 0.1
-	fps = False
-	scenario_class = scenarios.RandomWalkers
+	opts, argv = getopt(sys.argv[1:], "n:fpt:s:l", ["num-people=", "fps", "profiling", "timestep=", "scenario=", "list-options", "norender"])
 	
 	for opt,arg in opts:
 		if opt in ("--norender",):
-			render = False
+			settings['render'] = False
 		elif opt in ("--num-people", "-n"):
-			crowd_size = int(arg)
+			settings['crowd_size'] = int(arg)
 		elif opt in ("--fps", "-f"):
-			fps = True
-		elif opt in ("--profile", "-p"):
-			profiling = True
+			settings['draw_fps'] = True
+		elif opt in ("--profiling", "-p"):
+			settings['profiling'] = True
 		elif opt in ("--timestep", "-t"):
-			timestep = float(arg)
+			settings['timestep'] = float(arg)
 		elif opt in ("--scenario", "-s"):
-			scenario_class = scenarios.ScenarioRegistrar.register[arg]
-		elif opt in ("--list-options", "-l"):
+			settings['scenario_name'] = arg
+		elif opt in ("--verbose", "-v"):
+			settings["verbose"] = True
+		else:
 			print_options()
 			quit()
-		elif opt in ("--verbose", "-v"):
-			keiro_settings["verbose"] = True
 	
-	world = World((640, 480))
-	world.RENDER = render
-	world.timestep = timestep
-	world.PRINT_FPS = fps
-
-	agent = Arty(Vec2d(0,0), Vec2d(*world.size))#AStarer(Vec2d(0,0), Vec2d(*world.size))
-	scenario = scenario_class(world, agent, crowd_size)
 	
+	random.seed(settings['seed'])
+	
+	world = World(settings['world_size'], settings)
+	agent_class = UnitRegistrar.register[settings['ai_name']]
+	agent = agent_class()
+	scenario_class = scenarios.ScenarioRegistrar.register[settings['scenario_name']]
+	scenario = scenario_class(world, agent, settings['crowd_size'])
+		
 	pretime = time.clock()	
-	if profiling:
+	if settings['profiling']:
 		cProfile.run("scenario.run()")
 	else:
 		scenario.run()
 	
 	total_time = time.clock() - pretime
-	print "Collision count:", agent.collisions
-	#print "Travelled distance:", w.tracked_unit.total_distance, "units"
-	print "World Time:", world.runtime, "s"
-	print "Real Time:", total_time, "s"
-	print "Average iteration time:", total_time/world.iterations, "s"
 	
+	# record.collisions = agent.collisions
+	# 	record.avg_iteration_time = total_time/world.iterations
+	# 	
+	# 	record.save()
+	# 	
+	# 	print record
+	
+	# print "Collision count:", 
+	# #print "Travelled distance:", w.tracked_unit.total_distance, "units"
+	# print "World Time:", world.runtime, "s"
+	# print "Real Time:", total_time, "s"
+	# print "Average iteration time:", total_time/world.iterations, "s"
 

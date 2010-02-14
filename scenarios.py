@@ -1,5 +1,5 @@
 from units import *
-from physics import Vec2d
+from fast.physics import Vec2d
 
 class ScenarioRegistrar (type):
 	"""Registers all scenarios that are declared, to let the user choose"""
@@ -16,11 +16,14 @@ class Scenario(object):
 	def __init__(self, world, agent):
 		self.world = world
 		self.agent = agent
-		self.world.addUnit(agent)
+		self.world.addunit(agent)
 		self.world.addcallback(self)
 		
 	def update(self, dt):
 		pass
+		
+	def request_stop(self):
+		return self.agent.position == self.agent.goal
 		
 	def run(self):
 		self.world.run()
@@ -36,14 +39,17 @@ class RandomWalkers(Scenario):
 			init_position = self.agent.position
 			while init_position.distance_to(self.agent.position) < 20:
 				init_position = Vec2d(random.randrange(self.world.size[0]), random.randrange(self.world.size[1]))
-			self.world.addUnit(RandomWalker(init_position))
+			u = RandomWalker()
+			u.position = init_position
+			self.world.addunit(u)
 
-class Spawner(Scenario):
+class Spawner(Scenario): #abstract
 	def __init__(self, world, agent, crowd_rate):
 		Scenario.__init__(self, world, agent)
 		self.crowd_rate = crowd_rate
 
 	def update(self, dt):
+		Scenario.update(dt)
 		exact = dt*self.crowd_rate
 		numtospawn = int(exact)
 		exact-=numtospawn
@@ -69,7 +75,7 @@ class TheFlood(Spawner):
 		for i in xrange(num_units):		
 			spawn_pos = Vec2d(self.world.size[0],random.randrange(self.world.size[1]))
 			goal = Vec2d(-10,random.randrange(self.world.size[1]))
-			self.world.addUnit(Stubborn(spawn_pos, goal))
+			self.world.addunit(Stubborn(spawn_pos, goal))
 
 class Crossing(Spawner):
 	def __init__(self, world, agent, crowd_rate):
@@ -95,4 +101,4 @@ class Crossing(Spawner):
 				spawn_pos = goal
 				goal = tmp
 					
-			self.world.addUnit(Stubborn(spawn_pos, goal))
+			self.world.addunit(Stubborn(spawn_pos, goal))

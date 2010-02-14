@@ -1,9 +1,8 @@
 from world import *
 import math
 import random
-import graphutils
+from fast import graphutils, physics
 import graphs
-import physics
 
 class UnitRegistrar(type):
 	register = {}
@@ -15,11 +14,11 @@ class UnitRegistrar(type):
 		
 class Unit(Particle):
 	__metaclass__ = UnitRegistrar
-	
+
 	color = (255, 255, 0)
 	view_range = 0
-	def __init__(self, position, direction):
-		Particle.__init__(self, position[0], position[1], direction)
+	def __init__(self):
+		Particle.__init__(self)
 		self.radius = 5
 		self.speed = 30
 		self.turningspeed = 2*math.pi/3
@@ -43,8 +42,8 @@ class Unit(Particle):
 class RandomWalker(Unit):
 	step_mean = 20
 	view_range = 15
-	def __init__(self, position):
-		Unit.__init__(self, position, 0)
+	def __init__(self):
+		Unit.__init__(self)
 	def think(self, dt, view):
 		if self.waypoint_len() == 0:
 			a = random.random()*math.pi*2
@@ -56,37 +55,32 @@ class RandomWalker(Unit):
 				self.waypoint_clear()
 
 class Stubborn(Unit):
-	def __init__(self, position, goal):
-		Unit.__init__(self, position, (goal-position).angle())
+	def __init__(self):
+		Unit.__init__(self)
 		self.last_view = ()
-		self.goal = goal
-		self.waypoint_push(goal)
 	
 	def think(self, dt, view):
 		self.last_view = view
+		if not self.goal:
+			return
+		self.waypoint_clear()
+		self.waypoint_push(self.goal)
 
 	def render(self, screen):
 		Unit.render(self, screen)
 		
-def path_angle(start_angle, path):
-	"""how much is the robot turning to reach the goal using this path"""
-	a = abs(physics.angle_diff(start_angle, (Vec2d(*path[1])-Vec2d(*path[0])).angle()))
-	for i in xrange(len(path)-2):
-		a += abs((Vec2d(*path[i+1])-Vec2d(*path[i])).angle(Vec2d(*path[i+2])-Vec2d(*path[i+1])))
-	return a
-	
-				
 class AStarer(Stubborn):
 	view_range = 75
-	def __init__(self, position, goal):
-		Stubborn.__init__(self, position, goal)
-		self.goal = goal
+	def __init__(self):
+		Stubborn.__init__(self)
 		self.last_view = ()
 		self.cdist = 10000000
 		self.color = (255, 0,0)
 		
 	def think(self, dt, view):
 		self.last_view = view
+		if not self.goal:
+			return
 		ccourse = False
 		last = self.position
 		for i in xrange(self.waypoint_len()):
@@ -97,7 +91,6 @@ class AStarer(Stubborn):
 			last = self.waypoint(i).position
 			if ccourse: break
 
-		#result = graphs.random_roadmap(self, self.goal, view, graphs.SimpleGraphBuilder())
 		result = graphs.random_roadmap(self, self.goal, view, graphs.GraphBuilder(self.speed, self.turningspeed))
 	
 		if ccourse is True:
@@ -122,13 +115,15 @@ class AStarer(Stubborn):
 
 class Arty(AStarer):
 	view_range = 75
-	def __init__(self, position, goal):
-		Stubborn.__init__(self, position, goal)
+	def __init__(self):
+		Stubborn.__init__(self)
 		self.goal = goal
 		self.last_view = ()
 		self.color = (255, 0,0)
 		
 	def think(self, dt, view):
+		if not self.goal:
+			return
 		self.last_view = view
 		path = graphs.ARTBuilder().build(self, self.goal, view, 100)
 		self.waypoint_clear()

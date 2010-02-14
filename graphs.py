@@ -1,6 +1,6 @@
 from random import random
-from physics import Vec2d, linesegdist2, angle_diff
-from graphutils import *
+from fast.physics import Vec2d, linesegdist2, angle_diff
+from fast.graphutils import *
 import math
 
 def free_path(p1, p2, obstacles, safe_distance = 0):

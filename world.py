@@ -3,22 +3,24 @@ import random
 import pygame
 import sys
 import math
-from physics import Vec2d, Particle, World as PhysicsWorld
+
+from fast.physics import Vec2d, Particle, World as PhysicsWorld
 
 class World(PhysicsWorld):
-	def __init__(self, size):
+	def __init__(self, size, settings):
 		PhysicsWorld.__init__(self);
-		self.units = [];
 		self.size = Vec2d(*size)
+		self.norender = not settings['render']
+		self.draw_fps = settings['draw_fps']
+		self.timestep = settings['timestep']
+				
+		self.units = [];
 		self.clock = pygame.time.Clock()
-		self.RENDER = True
-		self.PRINT_FPS = False
-		self.timestep = 0.1
 		self.iterations = 0
 		self.runtime = 0
 		self.callbacks = []
 			
-	def addUnit(self, unit):
+	def addunit(self, unit):
 		self.units.append(unit)
 		self.bind(unit);
 	
@@ -60,13 +62,15 @@ class World(PhysicsWorld):
 					view = ()
 				u.think(dt, view)
 					
-			if self.PRINT_FPS:
+			if self.draw_fps:
 				sys.stdout.write("%f fps           \r"%self.clock.get_fps())
 				sys.stdout.flush()
-			if self.RENDER:
+			if not self.norender:
 				self.render(self.screen)
 			for o in self.callbacks:
 				o.update(dt)
+				if o.request_stop():
+					return
 			
 	def render(self, screen):
 		screen.fill((0,0,0))
