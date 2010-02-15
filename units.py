@@ -34,10 +34,10 @@ class Unit(Particle):
 			pygame.draw.line(screen, (250, 100, 100), last, last, 1)
 		
 		pygame.draw.circle(screen, self.color, 
-			self.position, self.radius, 1)	
+			map(int, self.position), int(self.radius), 1)	
 		pygame.draw.line(screen, self.color,
-			self.position, 
-			(self.position.x + math.cos(self.angle)*self.radius, self.position.y + math.sin(self.angle)*self.radius))
+			map(int, self.position), 
+			map(int, (self.position.x + math.cos(self.angle)*self.radius, self.position.y + math.sin(self.angle)*self.radius)))
 
 class RandomWalker(Unit):
 	step_mean = 20
@@ -108,10 +108,10 @@ class AStarer(Stubborn):
 				self.goal + Vec2d(10,-10), self.goal + Vec2d(-10,10), 1)
 		Stubborn.render(self, screen)
 		pygame.draw.circle(screen, (255, 150, 150), 
-			self.position, self.view_range, 1)
+			map(int, self.position), int(self.view_range), 1)
 		for p in self.last_view:
 			pygame.draw.circle(screen, (150, 255, 150),
-				p.position, p.radius, 0)
+				map(int, p.position), int(p.radius), 0)
 
 class Arty(AStarer):
 	view_range = 75

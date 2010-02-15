@@ -43,7 +43,7 @@ class World(PhysicsWorld):
 	def run(self):
 		pygame.init()
 		pygame.display.set_caption("Crowd Navigation")
-		self.screen = pygame.display.set_mode(self.size)
+		self.screen = pygame.display.set_mode(map(int, self.size))
 		
 		self.update(0) #so we have no initial collisions
 		self.runtime = 0
