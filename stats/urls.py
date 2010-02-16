@@ -1,10 +1,12 @@
 from django.conf.urls.defaults import *
-
+from statsapp import models
+import django
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
 # admin.autodiscover()
 
 urlpatterns = patterns('',
+	(r'^/?$', 'django.views.generic.list_detail.object_list', {'queryset': models.Run.objects.all()})
     # Example:
     # (r'^stats/', include('stats.foo.urls')),
 

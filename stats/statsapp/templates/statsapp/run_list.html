@@ -1,0 +1,58 @@
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<title>Simulations statistics</title>
+	<style type="text/css" media="screen">
+		body {
+			font-family: Verdana;
+			font-size: 0.8em;
+		}
+		h2 {
+			font-size: 1.5em;
+		}
+		table td, table th{
+			border: 1px solid black;
+			padding: 5px;
+		}
+		table th {
+			background: #555555;
+			color: white;
+		}
+		tr.odd {
+			background: #dddde5;
+		}
+		table {
+			border-spacing: 0px;
+			border-collapse: collapse;
+			width: 95%;
+			margin: auto;
+		}
+	</style>
+</head>
+	<body>
+	{% block content %}
+	    <h2>Runs ({{ object_list|length }})</h2>
+		<table>
+			<tr>
+				<th>id</th>
+				<th>Date</th>
+				<th>Scenario</th>
+				<th>Agent</th>
+				<th>Timestep</th>
+				<th>Avg.Iter.Time</th>
+				<th>Max.Iter.Time</th>
+			</tr>
+		{% for o in object_list %}
+			<tr class="{% cycle 'odd' 'even' %}">
+				<td>{{o.id}}</td>
+				<td>{{o.date}}</td>
+				<td>{{o.scenario_name}}</td>
+				<td>{{o.ai_name}}</td>
+				<td>{{o.timestep}}</td>
+				<td>{{o.avg_iteration_time}}</td>
+				<td>N/A</td>
+			</tr>
+        {% endfor %}
+	{% endblock %}
+	</body>
+</html>

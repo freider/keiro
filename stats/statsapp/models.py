@@ -1,6 +1,7 @@
 from django.db import models
 import datetime
 class Run(models.Model):
+	date = models.DateTimeField()
 	scenario_name = models.CharField(max_length = 100)
 	seed = models.IntegerField()
 	ai_name = models.CharField(max_length = 100)
