@@ -20,7 +20,8 @@ class World(PhysicsWorld):
 		self.iterations = 0
 		self.runtime = 0
 		self.callbacks = []
-			
+		self.settings = settings
+		
 	def addunit(self, unit):
 		self.units.append(unit)
 		self.bind(unit);
@@ -88,4 +89,7 @@ class World(PhysicsWorld):
 		for u in self.units:
 			u.render(screen)
 		pygame.display.flip()
-		
+		if self.settings["capture"]:
+			frame_filename = "video/capture_%05d.bmp"%self.iterations
+			#print "Would print image " + frame_filename
+			pygame.image.save(screen, frame_filename)

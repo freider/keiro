@@ -25,14 +25,15 @@ settings = dict(
 	profiling = False,
 	render = True,
 	verbose = False,
-	world_size = (640,480)
+	world_size = (640,480),
+	capture = False
 	)
 
 def print_options():
 	print pickle.dump(scenarios.ScenarioRegistrar.register, sys.stdout)
 
 if __name__ == "__main__":
-	opts, argv = getopt(sys.argv[1:], "n:fpt:s:l", ["num-people=", "fps", "profiling", "timestep=", "scenario=", "list-options", "norender"])
+	opts, argv = getopt(sys.argv[1:], "n:fpt:s:lc", ["num-people=", "fps", "profiling", "timestep=", "scenario=", "list-options", "norender", "capture"])
 	
 	for opt,arg in opts:
 		if opt in ("--norender",):
@@ -49,6 +50,8 @@ if __name__ == "__main__":
 			settings['scenario_name'] = arg
 		elif opt in ("--verbose", "-v"):
 			settings["verbose"] = True
+		elif opt in ("--capture", "-c"):
+			settings["capture"] = True
 		else:
 			print_options()
 			quit()
