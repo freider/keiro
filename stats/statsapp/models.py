@@ -5,9 +5,8 @@ class Run(models.Model):
 	scenario_name = models.CharField(max_length = 100)
 	seed = models.IntegerField()
 	ai_name = models.CharField(max_length = 100)
-	crowd_size = models.IntegerField()
-	collisions = models.IntegerField()
 	timestep = models.FloatField()
+	collisions = models.IntegerField()
 	avg_iteration_time = models.FloatField()
 	
 	# time to completion
@@ -15,5 +14,5 @@ class Run(models.Model):
 	# max_iteration_time = models.FloatField()
 	# travelled_distance = models.FloatField()
 	def __unicode__(self):
-		return "Scenario %s with crowd_size = %d"%(self.scenario, self.crowd_size)
+		return "Scenario %s with agent %s"%(self.scenario_name, self.ai_name)
 	

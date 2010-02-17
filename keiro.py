@@ -10,10 +10,12 @@ import sys
 import scenarios
 import pickle
 import os
+from datetime import datetime
+
 #import psyco
 #psyco.full()
 os.environ["DJANGO_SETTINGS_MODULE"] = "stats.settings"
-from stats.statsapp.models import Run
+from stats.statsapp import models
 
 settings = dict(
 	seed = 2,
@@ -73,12 +75,16 @@ if __name__ == "__main__":
 	
 	total_time = time.clock() - pretime
 	
-	# record.collisions = agent.collisions
-	# 	record.avg_iteration_time = total_time/world.iterations
-	# 	
-	# 	record.save()
-	# 	
-	# 	print record
+	record = models.Run()
+	record.date = datetime.now()
+	record.scenario_name = settings['scenario_name']
+	record.seed = settings['seed']
+	record.ai_name = settings['ai_name']
+	record.timestep = settings['timestep']
+	record.collisions = agent.collisions
+	record.avg_iteration_time = total_time/world.iterations
+	
+	record.save()
 	
 	# print "Collision count:", 
 	# #print "Travelled distance:", w.tracked_unit.total_distance, "units"
