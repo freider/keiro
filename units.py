@@ -7,8 +7,6 @@ import graphs
 class UnitRegistrar(type):
 	register = {}
 	def __new__(cls, name, bases, dct):
-		if name != "Unit":
-			print "Defining unit %s"%(name,)
 		ret = UnitRegistrar.register[name] = type.__new__(cls, name, bases, dct)
 		return ret
 		

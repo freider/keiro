@@ -6,8 +6,6 @@ class ScenarioRegistrar (type):
 	"""Registers all scenarios that are declared, to let the user choose"""
 	register = {}
 	def __new__(cls, name, bases, dct):
-		if name != "Scenario":
-			print "Defining scenario %s"%(name,)
 		ret = ScenarioRegistrar.register[name] = type.__new__(cls, name, bases, dct)
 		return ret
 

@@ -5,90 +5,49 @@ import math
 import random
 import time
 import cProfile
-from getopt import getopt
+from optparse import OptionParser
 import sys
 import scenarios
 import pickle
 import os
 from datetime import datetime
 
-#import psyco
-#psyco.full()
 os.environ["DJANGO_SETTINGS_MODULE"] = "stats.settings"
 from stats.statsapp import models
 
-settings = dict(
-	seed = 2,
-	crowd_size = 10,
-	timestep = 0.1,
-	scenario_name = "RandomWalkers",
-	ai_name = "Stubborn",
-	draw_fps = False,
-	profiling = False,
-	render = True,
-	verbose = False,
-	world_size = (640,480),
-	capture = False
-	)
-
-def print_options():
-	print pickle.dump(scenarios.ScenarioRegistrar.register, sys.stdout)
-
 if __name__ == "__main__":
-	opts, argv = getopt(sys.argv[1:], "n:fpt:s:lc", ["num-people=", "fps", "profiling", "timestep=", "scenario=", "list-options", "norender", "capture"])
+	parser = OptionParser()
+	parser.add_option("-s", "--scenario", default="RandomWalkers")
+	parser.add_option("-a", "--agent", default="Stubborn")
+	parser.add_option("-r", "--seed", type="int", default=1)
+	parser.add_option("-t", "--timestep", type="float", default=0.1)
 	
-	for opt,arg in opts:
-		if opt in ("--norender",):
-			settings['render'] = False
-		elif opt in ("--num-people", "-n"):
-			settings['crowd_size'] = int(arg)
-		elif opt in ("--fps", "-f"):
-			settings['draw_fps'] = True
-		elif opt in ("--profiling", "-p"):
-			settings['profiling'] = True
-		elif opt in ("--timestep", "-t"):
-			settings['timestep'] = float(arg)
-		elif opt in ("--scenario", "-s"):
-			settings['scenario_name'] = arg
-		elif opt in ("--verbose", "-v"):
-			settings["verbose"] = True
-		elif opt in ("--capture", "-c"):
-			settings["capture"] = True
-		else:
-			print_options()
-			quit()
+	parser.add_option("-f", "--fps", action="store_true", default=False)
+	parser.add_option("-p", "--profile", action="store_true", default=False)
+	parser.add_option("--no-render", action="store_true", default=False)
+	parser.add_option("-c", "--capture", metavar="PATH")
 	
+	(opts, args) = parser.parse_args()
 	
-	random.seed(settings['seed'])
+	random.seed(opts["seed"])
+	ScenarioClass = scenarios.ScenarioRegistrar.register[otps["scenario"]]
+	AgentClass = UnitRegistrar.register[opts["agent"]]
+	agent = AgentClass()
+	world = World((640, 480), settings)
+	scenario = ScenarioClass(world, agent)
 	
-	world = World(settings['world_size'], settings)
-	agent_class = UnitRegistrar.register[settings['ai_name']]
-	agent = agent_class()
-	scenario_class = scenarios.ScenarioRegistrar.register[settings['scenario_name']]
-	scenario = scenario_class(world, agent, settings['crowd_size'])
-		
-	pretime = time.clock()	
-	if settings['profiling']:
+	if opts["profile"]:
 		cProfile.run("scenario.run()")
 	else:
 		scenario.run()
 	
-	total_time = time.clock() - pretime
-	
 	record = models.Run()
 	record.date = datetime.now()
-	record.scenario_name = settings['scenario_name']
-	record.seed = settings['seed']
-	record.ai_name = settings['ai_name']
-	record.timestep = settings['timestep']
+	record.scenario_name = settings["scenario_name"]
+	record.seed = opts["seed"]
+	record.ai_name = opts["agent"]
+	record.timestep = opts["timestep"]
 	record.collisions = agent.collisions
 	record.avg_iteration_time = total_time/world.iterations
 	
 	record.save()
-	
-	# print "Collision count:", 
-	# #print "Travelled distance:", w.tracked_unit.total_distance, "units"
-	# print "World Time:", world.runtime, "s"
-	# print "Real Time:", total_time, "s"
-	# print "Average iteration time:", total_time/world.iterations, "s"
-
