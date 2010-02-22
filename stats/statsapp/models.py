@@ -1,7 +1,7 @@
 from django.db import models
 import datetime
 
-class Run(models.Model):
+class Record(models.Model):
 	date = models.DateTimeField()
 	scenario = models.CharField(max_length = 100)
 	agent = models.CharField(max_length = 100)

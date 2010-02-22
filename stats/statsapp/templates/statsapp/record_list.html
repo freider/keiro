@@ -39,6 +39,7 @@
 				<th>Scenario</th>
 				<th>Agent</th>
 				<th>Timestep</th>
+				<th>Collisions</th>
 				<th>Avg.Iter.Time</th>
 				<th>Max.Iter.Time</th>
 			</tr>
@@ -46,11 +47,12 @@
 			<tr class="{% cycle 'odd' 'even' %}">
 				<td>{{o.id}}</td>
 				<td>{{o.date}}</td>
-				<td>{{o.scenario_name}}</td>
-				<td>{{o.ai_name}}</td>
+				<td>{{o.scenario}}</td>
+				<td>{{o.agent}}</td>
 				<td>{{o.timestep}}</td>
+				<td>{{o.collisions}}</td>
 				<td>{{o.avg_iteration_time}}</td>
-				<td>N/A</td>
+				<td>{{o.max_iteration_time}}</td>
 			</tr>
         {% endfor %}
 	{% endblock %}

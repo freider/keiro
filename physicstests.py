@@ -34,7 +34,7 @@ class ParticleTest(unittest.TestCase):
 		pass
 
 	def testAccess(self):
-		p = Particle(1,2,0.5);
+		p = Particle(1,2,0.5)
 		self.assert_(p.angle == 0.5)
 		self.assert_(p.position == Vec2d(1,2))
 		self.assert_(p.waypoint_len() == 0)
@@ -78,7 +78,7 @@ class ParticleTest(unittest.TestCase):
 		"""Deleted particles are removed from the World they are bound to"""
 		p = Particle(0,0)
 		w = World()
-		w.bind(p);
+		w.bind(p)
 		self.assert_(w.num_particles() == 1)
 		del p
 		self.assert_(w.num_particles() == 0)
