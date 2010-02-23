@@ -4,20 +4,21 @@ import pygame
 import sys
 import math
 import os
+import Image
 
 from fast.physics import Vec2d, Particle, World as PhysicsWorld
 
 class World(PhysicsWorld):
 	def __init__(self, size, opts):
 		PhysicsWorld.__init__(self)
-		self.size = Vec2d(*size)		
+		self.size = size		
 		self.units = []
 		self.obstacles = []
 
 		self.clock = pygame.time.Clock()
 		self.timestep = opts.timestep
-		self.capture = opts.capture
 		self.fps = opts.fps
+		self.encoders = []
 		
 	def add_unit(self, unit):
 		self.units.append(unit)
@@ -35,10 +36,13 @@ class World(PhysicsWorld):
 		self.obstacles.remove(obstacle)
 		self.unbind(obstacle)
 		
+	def add_encoder(self, encoder):
+		self.encoders.append(encoder)
+		
 	def init(self):
 		pygame.init()
 		pygame.display.set_caption("Crowd Navigation")
-		self._screen = pygame.display.set_mode(map(int, self.size))
+		self._screen = pygame.display.set_mode(self.size)
 		self._time = 0
 		self._iterations = 0
 		self.update(0) #so we have no initial collisions
@@ -80,6 +84,10 @@ class World(PhysicsWorld):
 			u.render(screen)
 		pygame.display.flip()
 		
-		if self.capture is not None:
-			frame_filename = os.path.join((self.capture, "capture_%05d.bmp"%self._iterations))
-			pygame.image.save(screen, frame_filename)
+		if len(self.encoders) > 0:
+			mode = "RGB"
+			imagestring = pygame.image.tostring(screen, mode)
+			image = Image.fromstring(mode, self.size, imagestring)
+			
+			for enc in self.encoders:
+				enc.add_frame(image)

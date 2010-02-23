@@ -9,6 +9,7 @@ import cProfile
 from optparse import OptionParser
 from datetime import datetime
 from iterations import IterationRegister
+import mencoder
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "stats.settings"
 from stats.statsapp import models
@@ -18,7 +19,7 @@ if __name__ == "__main__":
 	parser.add_option("-s", "--scenario", default="RandomWalkers50")
 	parser.add_option("-a", "--agent", default="Stubborn")
 	parser.add_option("-r", "--seed", type="int", default=1)
-	parser.add_option("-t", "--timestep", type="float", default=0.1)
+	parser.add_option("-t", "--timestep", type="float", default=0.05)
 	
 	parser.add_option("-f", "--fps", action="store_true", default=False)
 	parser.add_option("-p", "--profile", action="store_true", default=False)
@@ -35,6 +36,11 @@ if __name__ == "__main__":
 	agent.add_iteration_listener(iterations)
 	
 	world = World((640, 480), opts) #TODO: move world creation to scenarios
+	
+	if opts.capture != None:
+		encoder = mencoder.Encoder()
+		world.add_encoder(encoder)
+		
 	world.init()
 	
 	scenario = ScenarioClass(world, agent)
@@ -58,3 +64,7 @@ if __name__ == "__main__":
 			print("Saved record to database")
 		else:
 			print("User triggered quit, no record saved to database")
+			
+	if opts.capture != None and opts.timestep != 0:
+		encoder.encode(int(1/opts.timestep), opts.capture)
+		encoder.cleanup()
