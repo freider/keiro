@@ -3,10 +3,22 @@ import math
 import random
 from fast import graphutils, physics
 import graphs
+from functools import wraps
 
+def iteration(f):
+	@wraps(f)
+	def wrapper(self, dt, visible_particles):
+		for il in self.iteration_listeners:
+			il.start_iteration()
+		f(self, dt, visible_particles)
+		for il in self.iteration_listeners:
+			il.end_iteration()
+	return wrapper
+	
 class UnitRegistrar(type):
 	register = {}
 	def __new__(cls, name, bases, dct):
+		dct["think"] = iteration(dct["think"])
 		ret = UnitRegistrar.register[name] = type.__new__(cls, name, bases, dct)
 		return ret
 		
@@ -25,19 +37,9 @@ class Unit(Particle):
 	
 	def add_iteration_listener(self, listener):
 		self.iteration_listeners.append(listener)
-		
-	def _pre_think(self):
-		for il in self.iteration_listeners:
-			il.start_iteration()
-
-	def _post_think(self):
-		for il in self.iteration_listeners:
-			il.end_iteration()
 			
 	def think(self, dt, visible_particles):
-		self._pre_think()
 		pass
-		self._post_think()
 		
 	def render(self, screen):
 		last = self.position
@@ -58,9 +60,7 @@ class RandomWalker(Unit):
 	view_range = 15
 	def __init__(self):
 		Unit.__init__(self)
-	def think(self, dt, view):
-		self._pre_think()
-		
+	def think(self, dt, view):		
 		if self.waypoint_len() == 0:
 			a = random.random()*math.pi*2
 			step = random.gauss(self.step_mean, self.step_mean/3)
@@ -70,23 +70,18 @@ class RandomWalker(Unit):
 			if (self.waypoint().position - self.position).angle(p.position - self.position) < math.pi/2:
 				self.waypoint_clear()
 				
-		self._post_think()
 
 class Stubborn(Unit):
 	def __init__(self):
 		Unit.__init__(self)
 		self.last_view = ()
 	
-	def think(self, dt, view):
-		self._pre_think()
-		
+	def think(self, dt, view):		
 		self.last_view = view
 		if not self.goal:
 			return
 		self.waypoint_clear()
 		self.waypoint_push(self.goal)
-		
-		self._post_think()
 
 	def render(self, screen):
 		Unit.render(self, screen)
@@ -99,9 +94,7 @@ class AStarer(Stubborn):
 		self.cdist = 10000000
 		self.color = (255, 0,0)
 		
-	def think(self, dt, view):
-		self._pre_think()
-		
+	def think(self, dt, view):		
 		self.last_view = view
 		if not self.goal:
 			return
@@ -125,8 +118,7 @@ class AStarer(Stubborn):
 			for p in result.path:
 				self.waypoint_push(Vec2d(*p))
 			self.cdist = result.total_cost
-			
-		self._post_think()	
+	
 			
 	def render(self, screen):
 		pygame.draw.line(screen, (255, 0, 0),
@@ -149,8 +141,6 @@ class Arty(AStarer):
 		self.color = (255, 0,0)
 		
 	def think(self, dt, view):
-		self._pre_think()
-		
 		if not self.goal:
 			return
 		self.last_view = view
@@ -159,5 +149,3 @@ class Arty(AStarer):
 		if path is not False:
 			for p in path:
 				self.waypoint_push(p)
-
-		self._post_think()

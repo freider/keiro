@@ -88,10 +88,13 @@ class TheFlood5(Spawner):
 		for i in xrange(num_units):		
 			spawn_pos = Vec2d(self.world.size[0],random.randrange(self.world.size[1]))
 			goal = Vec2d(-10,random.randrange(self.world.size[1]))
-			self.world.add_unit(Stubborn(spawn_pos, goal))
+			u = Stubborn()
+			u.position = spawn_pos
+			u.goal = goal
+			self.world.add_unit(u)
 
 class Crossing5(Spawner):
-	def __init__(self, world, agent, crowd_rate):
+	def __init__(self, world, agent):
 		super(Crossing5, self).__init__(world, agent, 5)
 		
 		self.agent.position = Vec2d(10, world.size[1]/2)
@@ -114,5 +117,8 @@ class Crossing5(Spawner):
 				tmp = spawn_pos
 				spawn_pos = goal
 				goal = tmp
-					
-			self.world.add_unit(Stubborn(spawn_pos, goal))
+			
+			u = Stubborn()
+			u.position = spawn_pos
+			u.goal = goal
+			self.world.add_unit(u)

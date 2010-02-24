@@ -6,7 +6,7 @@ import django
 # admin.autodiscover()
 
 urlpatterns = patterns('',
-	(r'^/?$', 'django.views.generic.list_detail.object_list', {'queryset': models.Record.objects.all()})
+	(r'^/?$', 'django.views.generic.list_detail.object_list', {'queryset': models.Record.objects.order_by('-date')})
     # Example:
     # (r'^stats/', include('stats.foo.urls')),
 

@@ -3,12 +3,9 @@
 	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
 	<title>Simulations statistics</title>
 	<style type="text/css" media="screen">
-		body {
+		* {
 			font-family: Verdana;
-			font-size: 0.8em;
-		}
-		h2 {
-			font-size: 1.5em;
+			font-size: 10px;
 		}
 		table td, table th{
 			border: 1px solid black;
@@ -31,15 +28,21 @@
 </head>
 	<body>
 	{% block content %}
-	    <h2>Runs ({{ object_list|length }})</h2>
 		<table>
+			<tr>
+				<th colspan="2">ID</th>
+				<th colspan="4">Settings</th>
+				<th colspan="4">Results</th>
+			</tr>
 			<tr>
 				<th>id</th>
 				<th>Date</th>
 				<th>Scenario</th>
 				<th>Agent</th>
 				<th>Timestep</th>
+				<th>Random Seed</th>
 				<th>Collisions</th>
+				<th>Completion Time</th>
 				<th>Avg.Iter.Time</th>
 				<th>Max.Iter.Time</th>
 			</tr>
@@ -50,7 +53,9 @@
 				<td>{{o.scenario}}</td>
 				<td>{{o.agent}}</td>
 				<td>{{o.timestep}}</td>
+				<td>{{o.seed}}</td>
 				<td>{{o.collisions}}</td>
+				<td>{{o.completion_time}}</td>
 				<td>{{o.avg_iteration_time}}</td>
 				<td>{{o.max_iteration_time}}</td>
 			</tr>

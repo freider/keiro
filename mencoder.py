@@ -9,13 +9,12 @@ import shlex
 FRAME_FORMAT = "png"
 FRAME_EXTENSION = ".png"
 COMMAND_PATTERN = """mencoder mf://{frames} -mf w={width}:h={height}:fps={framerate}:type={format} -ovc \
-				lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o {outfile}"""
+lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o {outfile}"""
 	
 class Encoder(object):
 	"""Encodes images to a movie file. Requires a lot of temporary hard drive space"""
 	def __init__(self):
 		self._tmpdir = tempfile.mkdtemp()
-		print("Tmpdir: " + self._tmpdir)
 		self.frames = 0
 		self.dim = None
 		
@@ -46,6 +45,8 @@ class Encoder(object):
 			shutil.rmtree(self._tmpdir)
 		self._tmpdir = None
 		
+	def __del__(self):
+		self.cleanup()
 	
 class TestEncoder(unittest.TestCase):
 	def testencode(self):
