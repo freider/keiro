@@ -17,7 +17,7 @@ from stats.statsapp import models
 if __name__ == "__main__":
 	parser = OptionParser()
 	parser.add_option("-s", "--scenario", default="RandomWalkers50")
-	parser.add_option("-a", "--agent", default="Stubborn")
+	parser.add_option("-a", "--agent", default="AStarer")
 	parser.add_option("-r", "--seed", type="int", default=1)
 	parser.add_option("-t", "--timestep", type="float", default=0.1)
 	

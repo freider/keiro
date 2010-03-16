@@ -178,8 +178,11 @@ void Particle::set_state(const Vec2d &v, float angle){
 }
 
 
-LineSegment::LineSegment(const Vec2d &p1, const Vec2d &p2) : p1(p1), p2(p2) { }
-
+Obstacle::Obstacle(const Vec2d &p1, const Vec2d &p2) : p1(p1), p2(p2) { }
+Obstacle::~Obstacle(){
+	if(world != NULL)
+		world->unbind(this);
+}
 
 /********
 **WORLD**
@@ -199,7 +202,7 @@ void World::unbind(Particle *p){
 	p->world = NULL;
 }
 
-void World::unbind(LineSegment *l){
+void World::unbind(Obstacle *l){
 	for(size_t i = 0; i<obstacles.size(); ++i){
 		if(obstacles[i] == l){
 			obstacles.erase(obstacles.begin() + i);
@@ -214,7 +217,7 @@ void World::bind(Particle *p) {
 	p->world = this;
 }
 
-void World::bind(LineSegment *l) {
+void World::bind(Obstacle *l) {
 	obstacles.push_back(l);
 	l->world = this;
 }
@@ -279,6 +282,9 @@ std::vector<Particle*> World::particles_in_range(const Particle *from, float ran
 	return res;
 }
 
+std::vector<Obstacle*> World::get_obstacles() const {
+	return obstacles;
+}
 /*
 TODO: prototype in python first
 float freepath_probability(std::vector<Particle*> particles, Vec2d l1, Vec2d l2, float start_time, float speed){

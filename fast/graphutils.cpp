@@ -17,8 +17,8 @@ Path shortest_path(Node &start, Node &goal, const std::vector<Node*> &nodes){
 		pqnode n = pq.top();
 		pq.pop();
 		Node &node = *n.second;
-		if(&node == &goal)
-			break;
+		if(&node == &goal) 
+			break; //this is only valid if the heuristic is consistent
 		if(n.first >= node._best_expanded)
 			continue; //we have done better
 		node._best_expanded = n.first;

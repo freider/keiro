@@ -8,6 +8,11 @@ import Image
 
 from fast.physics import Vec2d, Particle, World as PhysicsWorld
 
+class View(object):
+	def __init__(self, obstacles, pedestrians):
+		self.obstacles = obstacles
+		self.pedestrians = pedestrians
+		
 class World(PhysicsWorld):
 	def __init__(self, size, opts):
 		PhysicsWorld.__init__(self)
@@ -30,11 +35,13 @@ class World(PhysicsWorld):
 
 	def add_obstacle(self, obstacle):
 		self.obstacles.append(obstacle)
-		self.bind(obstacle)
+		for line in obstacle.bounds:
+			self.bind(line)
 		
 	def remove_obstacle(self, obstacle):
+		for line in obstacle.bounds:
+			self.unbind(line)
 		self.obstacles.remove(obstacle)
-		self.unbind(obstacle)
 		
 	def add_encoder(self, encoder):
 		self.encoders.append(encoder)
@@ -64,9 +71,10 @@ class World(PhysicsWorld):
 		
 		for u in self.units:
 			if u.view_range != 0:
-				view = self.particles_in_range(u, u.view_range)
+				view = View(self.get_obstacles(), self.particles_in_range(u, u.view_range))
 			else:
-				view = ()
+				view = View(self.get_obstacles(), [])
+				
 			u.think(dt, view)
 				
 		if self.fps:

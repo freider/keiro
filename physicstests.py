@@ -1,6 +1,6 @@
 import unittest
 import math
-from physics import *
+from fast.physics import *
 
 def almost_equal(a, b, epsilon = 0.001):
 	return abs(a-b)<epsilon
@@ -86,6 +86,7 @@ class ParticleTest(unittest.TestCase):
 class WorldTest(unittest.TestCase):
 	def setUp(self):
 		self.world = World()
+
 	def testRange(self):
 		p = Particle(1,0)
 		q = Particle(3,0)
@@ -97,6 +98,11 @@ class WorldTest(unittest.TestCase):
 		v = self.world.particles_in_range(p, 2)
 		self.assert_(len(v) == 1)
 		self.assert_(v[0].this == q.this) #same underlying object hopefully
-	
+
+	def testObstacles(self):
+		ls = LineSegment(Vec2d(0,0), Vec2d(1,2))
+		self.world.bind(ls)
+		self.assert_(len(self.world.get_obstacles()))
+		
 if __name__ == "__main__":
 	unittest.main()

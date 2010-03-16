@@ -1,6 +1,6 @@
 from units import *
 from fast.physics import Vec2d
-from obstacle import Obstacle
+import obstacle
 import pygame
 
 class ScenarioRegistrar (type):
@@ -42,6 +42,7 @@ class RandomWalkersBase(Scenario): #abstract
 		self.agent.angle = (self.agent.goal-self.agent.position).angle()
 		
 		#self.world.add_obstacle(Obstacle(Vec2d(450, 50), Vec2d(50, 420)))
+		self.world.add_obstacle(obstacle.Rectangle(100, 100, 300, 300))
 		
 		for i in xrange(crowd_size):
 			init_position = self.agent.position

@@ -3,12 +3,6 @@ from fast.physics import Vec2d, linesegdist2, angle_diff
 from fast.graphutils import *
 import math
 
-def free_path(p1, p2, obstacles, safe_distance = 0):
-	for o in obstacles:
-		if linesegdist2(p1, p2, o.position) <= (o.radius+safe_distance)**2:
-			return False
-	return True
-
 def line_distance2(l11, l12, l21, l22):
 	sign = lambda x:0 if x==0 else x/abs(x)
 	if sign((l21 - l11).cross(l22 - l11)) != sign((l21 - l12).cross(l22 - l12)) and \
@@ -16,6 +10,21 @@ def line_distance2(l11, l12, l21, l22):
 		return 0
 	return min(linesegdist2(l11, l12, l21), linesegdist2(l11, l12, l22),
 				linesegdist2(l21, l22, l11), linesegdist2(l21, l22, l12))
+				
+def free_path(p1, p2, view, safe_distance = 0):
+	for p in view.pedestrians:
+		safedistsquare = (safe_distance + p.radius)**2
+		if linesegdist2(p1, p2, p.position) <= safedistsquare:
+			return False
+
+	safedistsquare = safe_distance**2
+	for o in view.obstacles:
+		if line_distance2(p1, p2, o.p1, o.p2) <= safedistsquare:
+			return False
+			
+	return True
+
+
 
 class SimpleGraphBuilder(object):
 	def __init__(self):
@@ -108,18 +117,18 @@ class GraphBuilder(object):
 	def positions(self):
 		return self.graph.keys()
 
-def random_roadmap(me, target_position, obstacles, graphbuilder):
+def random_roadmap(me, target_position, view, graphbuilder):
 	safe_distance = me.radius+1
 	start = graphbuilder.node(me.position, me.angle)
 	end = graphbuilder.node(target_position, None)
 	
-	if free_path(me.position, target_position, obstacles, safe_distance):
+	if free_path(me.position, target_position, view, safe_distance):
 		graphbuilder.connect(me.position, target_position)
 	else:
 		for i in xrange(30):
 			newpos = me.position + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
 			for pos in graphbuilder.positions():
-				if free_path(Vec2d(*pos), newpos, obstacles, safe_distance):
+				if free_path(Vec2d(*pos), newpos, view, safe_distance):
 					graphbuilder.connect(pos, newpos)
 					
 	nodes = graphbuilder.all_nodes()
@@ -143,15 +152,17 @@ class ARTBuilder(object):
 	def _free_prob(self, me, me_start, start_angle, me_end, start_time):
 		diff = me_start - me_end
 		end_time = start_time + angle_diff(start_angle, diff.angle())/me.turningspeed + diff.length()/me.speed
-		for o in self.obstacles:
-			o_start = o.position + o.velocity*start_time
-			o_end = o.position + o.velocity*end_time
-			if line_distance2(me_start, me_end, o_start, o_end) <= (me.radius+o.radius+1)**2:
+		for p in self.view.pedestrians:
+			p_start = p.position + p.velocity*start_time
+			p_end = p.position + p.velocity*end_time
+			if line_distance2(me_start, me_end, p_start, p_end) <= (me.radius+p.radius)**2:
 				return (0, end_time)
+				
+		#todo: add support for obstacles
 		return (1, end_time)
 		
-	def build(self, me, target_position, obstacles, max_size):
-		self.obstacles = obstacles
+	def build(self, me, target_position, view, max_size):
+		self.view = view
 		
 		start = ARTBuilder.node(me.position, me.angle)
 		if self._free_prob(me, me.position, me.angle, target_position, 0)[0] > 0.9:
