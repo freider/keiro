@@ -26,7 +26,7 @@ class UnitRegistrar(type):
 class Unit(Particle):
 	__metaclass__ = UnitRegistrar
 
-	color = (255, 255, 0)
+	color = (100, 100, 0)
 	view_range = 0
 	
 	def __init__(self):
@@ -44,10 +44,10 @@ class Unit(Particle):
 		
 	def render(self, screen):
 		pygame.draw.circle(screen, self.color, 
-			map(int, self.position), int(self.radius), 1)	
+			map(int, self.position), int(self.radius), 1)
 			
 		#this draws a direction vector for a unit
-		pygame.draw.line(screen, self.color,
+		pygame.draw.aaline(screen, self.color,
 			map(int, self.position), 
 			map(int, (self.position.x + math.cos(self.angle)*self.radius, self.position.y + math.sin(self.angle)*self.radius)))
 			
@@ -90,26 +90,33 @@ class Agent(Unit):
 	"""Same as unit, but with some prettier renderings"""
 	def __init__(self):
 		super(Agent, self).__init__()
-		self.color = (255, 0,0)
+		self.color = (200, 50,50)
 
 	def render(self, screen):
-		pygame.draw.line(screen, (255, 0, 0),
-				self.goal + Vec2d(-10,-10), self.goal + Vec2d(10,10), 1)
-		pygame.draw.line(screen, (255, 0, 0),
-				self.goal + Vec2d(10,-10), self.goal + Vec2d(-10,10), 1)
-
-		super(Agent, self).render(screen)		
+		#draw a cross over the target
+		pygame.draw.aaline(screen, (255, 0, 0),
+				self.goal + Vec2d(-10,-10), self.goal + Vec2d(10,10))
+		pygame.draw.aaline(screen, (255, 0, 0),
+				self.goal + Vec2d(10,-10), self.goal + Vec2d(-10,10))
+				
+		#super(Agent, self).render(screen)
+		pygame.draw.circle(screen, self.color, 
+			map(int, self.position), int(self.radius), 0)
+		
+		#draw all waypoints
 		last = self.position
 		for i in xrange(self.waypoint_len()):
-			pygame.draw.line(screen, (200, 200, 250), last, self.waypoint(i).position, 1)
+			pygame.draw.aaline(screen, (100, 100, 150), last, self.waypoint(i).position)
 			last = self.waypoint(i).position
-			pygame.draw.line(screen, (250, 100, 100), last, last, 1)
+			pygame.draw.aaline(screen, (150, 50, 50), last, last)
 			
-		pygame.draw.circle(screen, (255, 150, 150), 
+		#draw viewrange
+		pygame.draw.circle(screen, (150, 150, 150), 
 			map(int, self.position), int(self.view_range), 1)
 
+		#mark pedestrians in view range
 		for p in self.last_view.pedestrians:
-			pygame.draw.circle(screen, (150, 255, 150),
+			pygame.draw.circle(screen, (100, 200, 100),
 				map(int, p.position), int(p.radius), 0)
 	
 	@iteration	

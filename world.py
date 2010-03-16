@@ -85,7 +85,7 @@ class World(PhysicsWorld):
 		return dt
 			
 	def render(self, screen):
-		screen.fill((0,0,0))
+		screen.fill((255,255,255))
 		for o in self.obstacles:
 			o.render(screen)
 		for u in self.units:

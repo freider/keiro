@@ -41,9 +41,6 @@ class RandomWalkersBase(Scenario): #abstract
 		self.agent.goal = Vec2d(*world.size)-self.agent.position
 		self.agent.angle = (self.agent.goal-self.agent.position).angle()
 		
-		#self.world.add_obstacle(Obstacle(Vec2d(450, 50), Vec2d(50, 420)))
-		self.world.add_obstacle(obstacle.Rectangle(100, 100, 300, 300))
-		
 		for i in xrange(crowd_size):
 			init_position = self.agent.position
 			while init_position.distance_to(self.agent.position) < 20:
@@ -51,7 +48,48 @@ class RandomWalkersBase(Scenario): #abstract
 			u = RandomWalker()
 			u.position = init_position
 			self.world.add_unit(u)
+
+
+class MarketSquare(Scenario):
+	def __init__(self, world, agent):
+		super(MarketSquare, self).__init__(world, agent)
+		
+		self.agent.position = Vec2d(10, 10)
+		self.agent.goal = Vec2d(*world.size)-self.agent.position
+		self.agent.angle = (self.agent.goal-self.agent.position).angle()
+		
+		for j in xrange(2):
+			for i in xrange(4):
+				self.world.add_obstacle(obstacle.Rectangle((i+1)*50 + 100*i, (j+1)*100 + 120*j - 50, 100, 120))
+
+class CrowdedMarketSquare(Scenario):
+	def __init__(self, world, agent):
+		super(self.__class__, self).__init__(world, agent)
+
+		self.agent.position = Vec2d(10, 10)
+		self.agent.goal = Vec2d(*world.size)-self.agent.position
+		self.agent.angle = (self.agent.goal-self.agent.position).angle()
+
+		for j in xrange(2):
+			for i in xrange(4):
+				self.world.add_obstacle(obstacle.Rectangle((i+1)*50 + 100*i, (j+1)*100 + 120*j - 50, 100, 120))
+
+		for i in xrange(50):
+			good = False
+			u = RandomWalker()
 			
+			while not good: #generate random positions for pedestrians that are not inside obstacles...
+				init_position = Vec2d(random.randrange(self.world.size[0]), random.randrange(self.world.size[1]))
+				good = init_position.distance_to(self.agent.position) > 20
+				
+				for r in self.world.obstacles:
+					if not good:
+						break
+					good = good and not r._rect.inflate(u.radius*3, u.radius*3).collidepoint(init_position)
+
+			u.position = init_position
+			self.world.add_unit(u)
+		
 class RandomWalkers50(RandomWalkersBase):
 	def __init__(self, world, agent):
 		super(RandomWalkers50, self).__init__(world, agent, 50)

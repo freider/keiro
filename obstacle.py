@@ -16,15 +16,18 @@ class Line(Obstacle):
 		self.bounds = (ObstacleBase(p1, p2),)
 		
 class Rectangle(Obstacle):
-	def __init__(self, top, left, bottom, right):
+	def __init__(self, left, top, width, height):
 		super(Rectangle, self).__init__()
-		self._rect = pygame.Rect(left, top, right-left, bottom-top)#for pygame drawing
+		self._rect = pygame.Rect(left, top, width, height) #for drawing
 		
-		self.bounds = ( ObstacleBase(Vec2d(top, left), Vec2d(top, right)), 
-						ObstacleBase(Vec2d(top, right), Vec2d(bottom, right)),
-						ObstacleBase(Vec2d(bottom, right), Vec2d(bottom, left)),
-						ObstacleBase(Vec2d(bottom, left), Vec2d(top, left)) )		
+		bottom = top + height
+		right = left + width
+		
+		self.bounds = ( ObstacleBase(Vec2d(left, top), Vec2d(right, top)), 
+						ObstacleBase(Vec2d(right, top), Vec2d(right, bottom)),
+						ObstacleBase(Vec2d(right, bottom), Vec2d(left, bottom)),
+						ObstacleBase(Vec2d(left, bottom), Vec2d(left, top)) )		
 	
 	def render(self, screen):
-		color = pygame.Color("blue")
-		pygame.draw.rect(screen, color, self._rect, 1)
+		color = (130,130,130)
+		pygame.draw.rect(screen, color, self._rect, 0)

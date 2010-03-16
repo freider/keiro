@@ -125,12 +125,18 @@ def random_roadmap(me, target_position, view, graphbuilder):
 	if free_path(me.position, target_position, view, safe_distance):
 		graphbuilder.connect(me.position, target_position)
 	else:
-		for i in xrange(30):
-			newpos = me.position + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
+		for i in xrange(100): #global
+			newpos = Vec2d(640*random(), 480*random())
 			for pos in graphbuilder.positions():
 				if free_path(Vec2d(*pos), newpos, view, safe_distance):
 					graphbuilder.connect(pos, newpos)
 					
+		for i in xrange(30): #local
+			newpos = me.position + Vec2d((2*random()-1)*me.view_range, (2*random()-1)*me.view_range)
+			for pos in graphbuilder.positions():
+				if free_path(Vec2d(*pos), newpos, view, safe_distance):
+					graphbuilder.connect(pos, newpos)
+
 	nodes = graphbuilder.all_nodes()
 	result = shortest_path(start, end, nodes)
 	if result.success:
