@@ -53,6 +53,7 @@ class World(PhysicsWorld):
 		self._time = 0
 		self._iterations = 0
 		self.update(0) #so we have no initial collisions
+		self.debugsurface = pygame.Surface(self.size, masks = pygame.SRCALPHA).convert_alpha()
 	
 	def get_time(self):
 		return self._time
@@ -69,29 +70,35 @@ class World(PhysicsWorld):
 		
 		self.update(dt)
 		
+		self.debugsurface.fill((0,255,0,0))
+		
 		for u in self.units:
 			if u.view_range != 0:
 				view = View(self.get_obstacles(), self.particles_in_range(u, u.view_range))
 			else:
 				view = View(self.get_obstacles(), [])
 				
-			u.think(dt, view)
-				
+			u.think(dt, view, self.debugsurface)
+	
 		if self.fps:
 			sys.stdout.write("%f fps           \r"%self.clock.get_fps())
 			sys.stdout.flush()
-			
+		
 		self.render(self._screen)
 		return dt
 			
 	def render(self, screen):
 		screen.fill((255,255,255))
+		
+		screen.blit(self.debugsurface, (0, 0))	
+		
 		for o in self.obstacles:
 			o.render(screen)
 		for u in self.units:
 			u.render(screen)
+
 		pygame.display.flip()
-		
+	
 		if len(self.encoders) > 0:
 			mode = "RGB"
 			imagestring = pygame.image.tostring(screen, mode)

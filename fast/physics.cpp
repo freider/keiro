@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cassert>
+#include <algorithm>
 
 Vec2d::Vec2d():x(0),y(0){
 }
@@ -63,6 +64,24 @@ float linesegdist2(Vec2d l1, Vec2d l2, Vec2d p){
 	}
 }
 
+int _sign(float f) {
+	if (f == 0)
+		return 0;
+	else if (f < 0)
+		return -1;
+	else
+		return 1;
+}
+
+float line_distance2(Vec2d l11, Vec2d l12, Vec2d l21, Vec2d l22){
+	if (_sign((l21 - l11).cross(l22 - l11)) != _sign((l21 - l12).cross(l22 - l12)) &&
+		_sign((l11 - l21).cross(l12 - l21)) != _sign((l11 - l22).cross(l12 - l22)))
+		return 0;
+	float dists[] = {linesegdist2(l11, l12, l21), linesegdist2(l11, l12, l22),
+		linesegdist2(l21, l22, l11), linesegdist2(l21, l22, l12)};
+	return *std::min_element(dists, dists+4);
+}
+	
 float angle_diff(float a1, float a2){
 	float anglediff = fmod(a1 - a2, 2*M_PI);
 	if(anglediff > M_PI)
@@ -256,7 +275,7 @@ void World::update(float dt){
 			if(dist2 < safe_dist2){
 				//collision
 				particles[i]->collisions++;
-				float diff = sqrt(dist2) - sqrt(safe_dist2);
+//				float diff = sqrt(dist2) - sqrt(safe_dist2);
 				Vec2d dirv(1,0);
 				Vec2d movement = particles[i]->position - particles[i]->previous_position;
 				particles[i]->set_state(particles[i]->previous_position, particles[j]->angle); //TODO: remove

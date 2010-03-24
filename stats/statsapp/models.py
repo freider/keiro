@@ -5,6 +5,7 @@ class Record(models.Model):
 	date = models.DateTimeField()
 	scenario = models.CharField(max_length = 100)
 	agent = models.CharField(max_length = 100)
+	view_range = models.FloatField()
 	seed = models.IntegerField()
 	timestep = models.FloatField()
 	collisions = models.IntegerField()

@@ -17,7 +17,7 @@ from stats.statsapp import models
 if __name__ == "__main__":
 	parser = OptionParser()
 	parser.add_option("-s", "--scenario", default="RandomWalkers50")
-	parser.add_option("-a", "--agent", default="AStarer")
+	parser.add_option("-a", "--agent", default="RoadMap")
 	parser.add_option("-r", "--seed", type="int", default=1)
 	parser.add_option("-t", "--timestep", type="float", default=0.1)
 	
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 	iterations = IterationRegister()
 	agent.add_iteration_listener(iterations)
 	
-	world = World((640, 480), opts) #TODO: move world creation to scenarios
+	world = World((640, 480), opts) #TODO: refactor world creation to each scenario (scenario should decide world size etc.)
 	
 	if opts.capture != None:
 		encoder = mencoder.Encoder()
@@ -54,6 +54,7 @@ if __name__ == "__main__":
 			record.scenario = opts.scenario
 			record.seed = opts.seed
 			record.agent = opts.agent
+			record.view_range = agent.view_range
 			record.timestep = opts.timestep
 			record.collisions = agent.collisions
 			record.avg_iteration_time = iterations.get_avg_iterationtime()
