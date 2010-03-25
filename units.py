@@ -92,7 +92,7 @@ class Stubborn(Unit):
 		Unit.render(self, screen)
 
 class Agent(Unit):
-	view_range = 75
+	view_range = 100
 	"""Same as unit, but with some prettier renderings"""
 	def __init__(self):
 		super(Agent, self).__init__()
@@ -208,7 +208,7 @@ class Arty(Agent):
 	def think(self, dt, view, debugsurface):
 		if not self.goal:
 			return
-		path = graphs.ARTBuilder(debugsurface).build(self, self.goal, view, 1000)
+		path = graphs.ARTBuilder(debugsurface).build(self, self.goal, view, 500)
 		self.waypoint_clear()
 		if path:
 			for p in path:

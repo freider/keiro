@@ -111,9 +111,9 @@ class Spawner(Scenario): #abstract
 	def spawn(self, num_units):
 		pass
 	
-class TheFlood5(Spawner):
+class TheFlood(Spawner):
 	def __init__(self, world, agent):
-		super(TheFlood5, self).__init__(world, agent, 5)
+		super(TheFlood, self).__init__(world, agent, 3)
 		
 		self.agent.position = Vec2d(10, world.size[1]/2)
 		self.agent.goal = Vec2d(world.size[0]-10, world.size[1]/2)
@@ -125,16 +125,19 @@ class TheFlood5(Spawner):
 				self.world.remove_unit(u)
 			
 		for i in xrange(num_units):		
-			spawn_pos = Vec2d(self.world.size[0],random.randrange(self.world.size[1]))
+			spawn_pos = Vec2d(self.world.size[0], random.randrange(self.world.size[1]))
+			if spawn_pos.distance_to(self.agent.goal) < 5*self.agent.radius:
+				continue
+			
 			goal = Vec2d(-10,random.randrange(self.world.size[1]))
 			u = Stubborn()
 			u.position = spawn_pos
 			u.goal = goal
 			self.world.add_unit(u)
 
-class Crossing5(Spawner):
+class Crossing(Spawner):
 	def __init__(self, world, agent):
-		super(Crossing5, self).__init__(world, agent, 5)
+		super(Crossing, self).__init__(world, agent, 3)
 		
 		self.agent.position = Vec2d(10, world.size[1]/2)
 		self.agent.goal = Vec2d(world.size[0]-10, world.size[1]/2)
