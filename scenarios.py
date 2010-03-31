@@ -17,6 +17,10 @@ class Scenario(object):
 		self.world = world
 		self.agent = agent
 		self.world.add_unit(agent)
+		self.world.add_obstacle(obstacle.Line(Vec2d(0,0), Vec2d(0, world.size[1])))
+		self.world.add_obstacle(obstacle.Line(Vec2d(0, world.size[1]), Vec2d(world.size[0], world.size[1])))
+		self.world.add_obstacle(obstacle.Line(Vec2d(world.size[0], world.size[1]), Vec2d(world.size[0], 0)))
+		self.world.add_obstacle(obstacle.Line(Vec2d(world.size[0], 0), Vec2d(0,0)))
 		
 	def update(self, dt):
 		pass

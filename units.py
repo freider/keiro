@@ -2,6 +2,8 @@ from world import *
 import math
 import random
 from fast import graphutils, physics
+from fast.physics import Vec2d, linesegdist2, line_distance2, angle_diff
+
 import graphs
 from functools import wraps
 import pygame
@@ -10,13 +12,12 @@ import pygame
 def iteration(f):
 	"""Do not inherit the anything wrapped, or the iteration will only cover the inherited code..."""
 	@wraps(f)
-	def wrapper(self, dt, view, debugsurface):
+	def wrapper(self, *args):
 		for il in self.iteration_listeners:
 			il.start_iteration()
-		f(self, dt, view, debugsurface)
+		f(self, *args)
 		for il in self.iteration_listeners:
 			il.end_iteration()
-		self.last_view = view
 		
 	return wrapper
 	
@@ -29,7 +30,7 @@ class UnitRegistrar(type):
 class Unit(Particle):
 	__metaclass__ = UnitRegistrar
 
-	color = (100, 100, 0)
+	color = (255,255,255)
 	view_range = 0
 	
 	def __init__(self):
@@ -46,15 +47,17 @@ class Unit(Particle):
 		pass
 		
 	def render(self, screen):
-		pygame.draw.circle(screen, (255,255,255), 
-			map(int, self.position), int(self.radius), 0)
 		pygame.draw.circle(screen, self.color, 
+			map(int, self.position), int(self.radius), 0)
+		pygame.draw.circle(screen, (0,0,0), 
 			map(int, self.position), int(self.radius), 2)
 			
 		#this draws a direction vector for a unit
-		pygame.draw.aaline(screen, self.color,
+		dirvector = map(int, (self.position.x + math.cos(self.angle)*self.radius, self.position.y + math.sin(self.angle)*self.radius))
+		
+		pygame.draw.line(screen, (0,0,0),
 			map(int, self.position), 
-			map(int, (self.position.x + math.cos(self.angle)*self.radius, self.position.y + math.sin(self.angle)*self.radius)))
+			dirvector, 2)
 			
 class RandomWalker(Unit):
 	step_mean = 20
@@ -96,7 +99,7 @@ class Agent(Unit):
 	"""Same as unit, but with some prettier renderings"""
 	def __init__(self):
 		super(Agent, self).__init__()
-		self.color = (200, 50,50)
+		self.color = (100, 100,255)
 
 	def render(self, screen):
 		#draw a cross over the target
@@ -105,9 +108,9 @@ class Agent(Unit):
 		pygame.draw.aaline(screen, (255, 0, 0),
 				self.goal + Vec2d(10,-10), self.goal + Vec2d(-10,10))
 				
-		#super(Agent, self).render(screen)
-		pygame.draw.circle(screen, self.color, 
-			map(int, self.position), int(self.radius), 0)
+		super(Agent, self).render(screen)
+		#pygame.draw.circle(screen, self.color, 
+		#	map(int, self.position), int(self.radius), 0)
 		
 		#draw all waypoints
 		last = self.position
@@ -119,11 +122,6 @@ class Agent(Unit):
 		#draw viewrange
 		pygame.draw.circle(screen, (100, 100, 100), 
 			map(int, self.position), int(self.view_range), 1)
-
-		#mark pedestrians in view range
-		for p in self.last_view.pedestrians:
-			pygame.draw.circle(screen, (100, 200, 100),
-				map(int, p.position), int(p.radius), 0)
 	
 	@iteration	
 	def think():
@@ -163,6 +161,7 @@ class RoadMap(Agent):
 				for pos in graphbuilder.positions():
 					if graphs.free_path(Vec2d(*pos), newpos, view, safe_distance):
 						graphbuilder.connect(pos, newpos)
+						pygame.draw.aaline(debugsurface, (0,255,0,255), pos, newpos)
 
 			for i in xrange(10): #some extra local points to handle the crowd
 				newpos = self.position + Vec2d((2*random.random()-1)*self.view_range, (2*random.random()-1)*self.view_range)
@@ -201,15 +200,94 @@ class RandomTree(Agent):
 		pass
 		
 class Arty(Agent):
+	SAFETY_THRESHOLD = 0.9
+	class Node:
+		def __init__(self, position, angle, parent, time, freeprob):
+			self.position = position
+			self.angle = angle
+			self.time = time
+			self.parent = parent
+			self.freeprob = freeprob
+			
 	def __init__(self):
 		super(Arty, self).__init__()
 	
+	def _freeprob(self, frompos, start_angle, nextpos, start_time):
+		"""Returns probability specified path will be collision free"""
+		diff = frompos - nextpos
+		endtime = start_time + angle_diff(start_angle, diff.angle())/self.turningspeed + diff.length()/self.speed
+		for p in self.view.pedestrians:
+			p_start = p.position + p.velocity*start_time
+			p_end = p.position + p.velocity*endtime
+			if line_distance2(frompos, nextpos, p_start, p_end) <= (self.radius+p.radius)**2:
+				return (0, endtime)
+
+		for o in self.view.obstacles:
+			if line_distance2(frompos, nextpos, o.p1, o.p2) <= self.radius**2:
+				return (0, endtime)
+
+		return (1, endtime) #100% probability for now...
+	
+	def getpath(self, max_size):
+		start = Arty.Node(self.position, self.angle, parent = None, time = 0, freeprob = 1)
+		
+		if self._freeprob(self.position, self.angle, self.goal, 0)[0] > self.SAFETY_THRESHOLD:
+			return [self.position, self.goal] #direct path
+
+		nodes = [start]
+		
+		#always use the nodes from the last solution in this iterations so they are kept if still good enough
+		#TODO: if using last path, check if a better one can be found to refine previous bad paths
+		
+		trypos = [self.waypoint(i).position for i in xrange(self.waypoint_len())]
+		while len(trypos) < max_size: 
+			trypos.append(Vec2d(random.random()*640, random.random()*480)) #FIXME: hardcoded world dimensions
+
+		for nextpos in trypos:
+			best = None
+			for n in nodes:
+				frompos = n.position
+				freeprob, endtime = self._freeprob(frompos, n.angle, nextpos, n.time)
+				newprob = freeprob * n.freeprob
+				#if newprob > self.SAFETY_THRESHOLD:
+				if best is None or best[1] > endtime:
+					best = (newprob, endtime, n)
+
+			if best is not None:
+				newprob, new_time, parent = best[0], best[1], best[2]
+				if newprob < self.SAFETY_THRESHOLD:
+					#don't add paths below the safety threshold
+					pygame.draw.line(self.debugsurface, (255,0,0), parent.position, nextpos)
+					continue
+				else:
+					pygame.draw.line(self.debugsurface, (0,255,0), parent.position, nextpos)
+
+				newnode = Arty.Node(nextpos, (nextpos - n.position).angle(), parent = parent, time = new_time, freeprob = newprob)
+				nodes.append(newnode)
+
+				#always check if the new node has a good enough path to the goal
+				freeprob, endtime = self._freeprob(newnode.position, newnode.angle, self.goal, new_time)
+				target_prob = freeprob*newprob
+				if target_prob > self.SAFETY_THRESHOLD:
+					path = [self.goal]
+					n = newnode
+					while n != None:
+						path.append(n.position)
+						n = n.parent
+					path.reverse()
+					return path
+					
 	@iteration	
 	def think(self, dt, view, debugsurface):
 		if not self.goal:
 			return
-		path = graphs.ARTBuilder(debugsurface).build(self, self.goal, view, 500)
+		self.view = view
+		self.debugsurface = debugsurface
+		path = self.getpath(500)
 		self.waypoint_clear()
+		
 		if path:
 			for p in path:
 				self.waypoint_push(p)
+
+			
