@@ -5,6 +5,7 @@ import math
 import pygame
 				
 def free_path(p1, p2, view, safe_distance = 0):
+	"""Returns if a path is free to traverse assuming that the view is complete and static"""
 	for p in view.pedestrians:
 		safedistsquare = (safe_distance + p.radius)**2
 		if linesegdist2(p1, p2, p.position) <= safedistsquare:
@@ -49,13 +50,14 @@ class SimpleGraphBuilder(object):
 		return self.graph.keys()
 		
 class GraphBuilder(object):
-	"""Builds a graph for navigating R2 with penalties for distance and turning"""
+	"""Builds a graph for navigating R^2 with penalties for distance and turning"""
 	def __init__(self, speed, turning_speed):
 		self.graph = {} # position => angle => nodes
 		self.speed = speed
 		self.turning_speed = turning_speed
 		
 	def connect(self, p1, p2):
+		"""Connects two positions in the graph, adding nodes and edges as needed"""
 		p1 = tuple(p1)
 		p2 = tuple(p2)
 		v1 = Vec2d(*p1)
@@ -68,11 +70,10 @@ class GraphBuilder(object):
 		diff = v2-v1
 		cost = diff.length()/self.speed
 		angle = diff.angle()
-		comp_angle = angle_diff(angle, math.pi)
+		rev_angle = angle_diff(angle, math.pi)
 		
-		#print cost
 		self.node(p1, angle).connect(cost, self.node(p2, angle))
-		self.node(p2, comp_angle).connect(cost, self.node(p1, comp_angle))
+		self.node(p2, rev_angle).connect(cost, self.node(p1, rev_angle))
 						
 	def node(self, position, angle):
 		position = tuple(position)

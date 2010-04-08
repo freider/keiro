@@ -41,9 +41,9 @@ if __name__ == "__main__":
 		encoder = mencoder.Encoder()
 		world.add_encoder(encoder)
 		
-	world.init()
-	
 	scenario = ScenarioClass(world, agent)
+	world.init()
+	agent.init(View(world.get_obstacles(), []))
 	
 	if opts.profile:
 		cProfile.run("scenario.run()")

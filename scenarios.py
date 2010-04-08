@@ -74,19 +74,22 @@ class CrowdedMarketSquare(Scenario):
 		self.agent.goal = Vec2d(*world.size)-self.agent.position
 		self.agent.angle = (self.agent.goal-self.agent.position).angle()
 
+		rects = []
 		for j in xrange(2):
 			for i in xrange(4):
-				self.world.add_obstacle(obstacle.Rectangle((i+1)*50 + 100*i, (j+1)*100 + 120*j - 50, 100, 120))
-
+				r = obstacle.Rectangle((i+1)*50 + 100*i, (j+1)*100 + 120*j - 50, 100, 120)
+				rects.append(r)
+				self.world.add_obstacle(r)
+				
 		for i in xrange(50):
 			good = False
 			u = RandomWalker()
 			
 			while not good: #generate random positions for pedestrians that are not inside obstacles...
-				init_position = Vec2d(random.randrange(self.world.size[0]), random.randrange(self.world.size[1]))
+				init_position = Vec2d(random.randrange(u.radius+1, self.world.size[0]-u.radius-1), random.randrange(u.radius + 1, self.world.size[1] - u.radius - 1))
 				good = init_position.distance_to(self.agent.position) > 20
 				
-				for r in self.world.obstacles:
+				for r in rects:
 					if not good:
 						break
 					good = good and not r._rect.inflate(u.radius*3, u.radius*3).collidepoint(init_position)
@@ -119,24 +122,27 @@ class TheFlood(Spawner):
 	def __init__(self, world, agent):
 		super(TheFlood, self).__init__(world, agent, 3)
 		
-		self.agent.position = Vec2d(10, world.size[1]/2)
-		self.agent.goal = Vec2d(world.size[0]-10, world.size[1]/2)
-		self.agent.angle = (self.agent.goal-self.agent.position).angle()
+		agent.position = Vec2d(agent.radius*2, world.size[1]/2)
+		agent.goal = Vec2d(world.size[0]-agent.radius*2, world.size[1]/2)
+		agent.angle = (agent.goal-agent.position).angle()
+		
+		self.agent = agent
 		
 	def spawn(self, num_units):
 		for u in self.world.units:
-			if u.position.x<=0:
+			if u.position.distance_to(u.goal) < 1:
 				self.world.remove_unit(u)
 			
-		for i in xrange(num_units):		
-			spawn_pos = Vec2d(self.world.size[0], random.randrange(self.world.size[1]))
-			if spawn_pos.distance_to(self.agent.goal) < 5*self.agent.radius:
-				continue
+		for i in xrange(num_units):	
+			u = Stubborn()	
 			
-			goal = Vec2d(-10,random.randrange(self.world.size[1]))
-			u = Stubborn()
-			u.position = spawn_pos
-			u.goal = goal
+			u.position = Vec2d(self.world.size[0]-u.radius-1, random.randrange(u.radius, self.world.size[1]-u.radius))
+			while u.position.distance_to(self.agent.goal) < 5*self.agent.radius:
+				u.position = Vec2d(self.world.size[0]-u.radius-1, random.randrange(u.radius, self.world.size[1]-u.radius))
+				
+			u.goal = Vec2d(u.radius+1,random.randrange(u.radius, self.world.size[1]-u.radius))
+			u.angle = (u.goal - u.position).angle()
+			
 			self.world.add_unit(u)
 
 class Crossing(Spawner):

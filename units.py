@@ -39,7 +39,7 @@ class Unit(Particle):
 		self.speed = 30
 		self.turningspeed = 2*math.pi/3
 		self.iteration_listeners = []
-	
+			
 	def add_iteration_listener(self, listener):
 		self.iteration_listeners.append(listener)
 			
@@ -123,10 +123,14 @@ class Agent(Unit):
 		pygame.draw.circle(screen, (100, 100, 100), 
 			map(int, self.position), int(self.view_range), 1)
 	
+	def init(self, view):
+		"""Called before simulation starts with the initial information available to the agent"""
+		pass
+	
 	@iteration	
 	def think():
 		pass
-		
+	
 class RoadMap(Agent):
 	def __init__(self):
 		super(RoadMap, self).__init__()
@@ -198,11 +202,13 @@ class RandomTree(Agent):
 	@iteration
 	def think(self, dt, view, debugsurface):
 		pass
-		
+	
 class Arty(Agent):
 	SAFETY_THRESHOLD = 0.9
+	GLOBALNODES = 300
+	GLOBALMINEDGE = 50
 	class Node:
-		def __init__(self, position, angle, parent, time, freeprob):
+		def __init__(self, position, angle, parent, time = None, freeprob = None):
 			self.position = position
 			self.angle = angle
 			self.time = time
@@ -212,8 +218,50 @@ class Arty(Agent):
 	def __init__(self):
 		super(Arty, self).__init__()
 	
+	def init(self, view):
+		"""Builds the static obstacle map, global roadmap"""
+		#RRT from goal
+		nodes = [self.Node(self.goal, None, None)]
+		for i in xrange(self.GLOBALNODES):
+			newpos = Vec2d(random.randrange(640), random.randrange(480)) #TODO: remove hardcoded world size
+			besttime = None
+			bestnode = None
+			for tonode in nodes:
+				topos = tonode.position
+				connectable = True
+				for o in view.obstacles:
+					if line_distance2(topos, newpos, o.p1, o.p2) <= self.radius:
+						connectable = False
+						break
+						
+				if connectable:
+					dist = topos.distance_to(newpos)
+					if tonode.parent is None:
+						turndist = 0 #goal node
+					else:
+						turndist = angle_diff((topos - newpos).angle(), tonode.angle)
+					time = dist/self.speed + turndist/self.turningspeed
+					
+					if bestnode is None or time < besttime:
+						besttime = time
+						bestnode = tonode
+			if bestnode:
+				topos = bestnode.position
+				diff = topos - newpos
+				angle = diff.angle()
+				vdir = diff.norm()
+				difflen = diff.length()
+				div = 1
+				while difflen/div > self.GLOBALMINEDGE:
+					div += 1
+				#subdivide the new edge
+				for d in xrange(div):
+					nodes.append(self.Node(newpos + vdir*d*difflen/div, angle, bestnode))
+		self.globalnodes = nodes
+		print "Done building global RRT"		
+		
 	def _freeprob(self, frompos, start_angle, nextpos, start_time):
-		"""Returns probability specified path will be collision free"""
+		"""Returns probability that specified path will be collision free"""
 		diff = frompos - nextpos
 		endtime = start_time + angle_diff(start_angle, diff.angle())/self.turningspeed + diff.length()/self.speed
 		for p in self.view.pedestrians:
@@ -276,18 +324,22 @@ class Arty(Agent):
 						n = n.parent
 					path.reverse()
 					return path
-					
+				
 	@iteration	
 	def think(self, dt, view, debugsurface):
 		if not self.goal:
 			return
 		self.view = view
 		self.debugsurface = debugsurface
-		path = self.getpath(500)
-		self.waypoint_clear()
+		for n in self.globalnodes:
+			if n.parent:
+				pygame.draw.line(debugsurface, pygame.Color("black"), n.position, n.parent.position)
+				pygame.draw.circle(debugsurface, pygame.Color("red"), n.position, 2, 0)
+		#path = self.getpath(500)
+		#self.waypoint_clear()
 		
-		if path:
-			for p in path:
-				self.waypoint_push(p)
+		#if path:
+		#	for p in path:
+		#		self.waypoint_push(p)
 
 			
