@@ -239,7 +239,7 @@ class Arty(Agent):
 					if tonode.parent is None:
 						turndist = 0 #goal node
 					else:
-						turndist = angle_diff((topos - newpos).angle(), tonode.angle)
+						turndist = abs(angle_diff((topos - newpos).angle(), tonode.angle))
 					time = dist/self.speed + turndist/self.turningspeed
 					
 					if bestnode is None or time < besttime:
@@ -260,22 +260,43 @@ class Arty(Agent):
 		self.globalnodes = nodes
 		print "Done building global RRT"		
 		
-	def _freeprob(self, frompos, start_angle, nextpos, start_time):
-		"""Returns probability that specified path will be collision free"""
-		diff = frompos - nextpos
-		endtime = start_time + angle_diff(start_angle, diff.angle())/self.turningspeed + diff.length()/self.speed
-		for p in self.view.pedestrians:
-			p_start = p.position + p.velocity*start_time
-			p_end = p.position + p.velocity*endtime
-			if line_distance2(frompos, nextpos, p_start, p_end) <= (self.radius+p.radius)**2:
-				return (0, endtime)
-
-		for o in self.view.obstacles:
-			if line_distance2(frompos, nextpos, o.p1, o.p2) <= self.radius**2:
-				return (0, endtime)
-
-		return (1, endtime) #100% probability for now...
+	def freeprob(self, position, view, time):
+		"""Returns probability that specified position will be collision free at specified time"""
+		POSITIVE = 1
+		NEGATIVE = 0
+		
+		for o in view.obstacles:
+			if linesegdist2(o.p1, o.p2, position) <= self.radius**2:
+				return 0 #collision with static obstacle
+				
+		for p in view.pedestrians:
+ 			pedestrianpos = p.position + p.velocity*time #extrapolated position
+			if position.distance_to(pedestrianpos) < (self.radius + p.radius):
+				return NEGATIVE
+		return POSITIVE
 	
+	def path_eta(self, path, view):
+		"""Returns ETA for the current plan.
+
+		Assumes static obstacles don't change"""
+		if not (path[0] == self.position and path[-1] == self.goal):
+			return None #must go between current position and goal
+		ctime = 0
+		freeprob = 1.0
+		a1 = self.angle
+		p1 = self.position
+
+		for p2 in path[1:]:
+			a2 = (p2 - p1).angle()
+			ctime += abs(angle_diff(a1, a2))/self.turningspeed + p1.distance_to(p2)/self.speed
+			p1 = p2
+			a1 = a2
+			freeprob *= self.freeprob(p2, view, ctime)
+			if freeprob < self.SAFETY_THRESHOLD:
+				return None
+				
+		return ctime
+			
 	def getpath(self, max_size):
 		start = Arty.Node(self.position, self.angle, parent = None, time = 0, freeprob = 1)
 		
@@ -316,6 +337,7 @@ class Arty(Agent):
 				#always check if the new node has a good enough path to the goal
 				freeprob, endtime = self._freeprob(newnode.position, newnode.angle, self.goal, new_time)
 				target_prob = freeprob*newprob
+				
 				if target_prob > self.SAFETY_THRESHOLD:
 					path = [self.goal]
 					n = newnode
@@ -324,22 +346,72 @@ class Arty(Agent):
 						n = n.parent
 					path.reverse()
 					return path
-				
+		
 	@iteration	
 	def think(self, dt, view, debugsurface):
 		if not self.goal:
 			return
 		self.view = view
 		self.debugsurface = debugsurface
-		for n in self.globalnodes:
-			if n.parent:
-				pygame.draw.line(debugsurface, pygame.Color("black"), n.position, n.parent.position)
-				pygame.draw.circle(debugsurface, pygame.Color("red"), n.position, 2, 0)
-		#path = self.getpath(500)
-		#self.waypoint_clear()
+		#for n in self.globalnodes:
+		#	if n.parent:
+		#		pygame.draw.line(debugsurface, pygame.Color("black"), n.position, n.parent.position)
+		#		pygame.draw.circle(debugsurface, pygame.Color("red"), n.position, 2, 0)
+		path = self.getpath(500)
+		self.waypoint_clear()
 		
-		#if path:
-		#	for p in path:
-		#		self.waypoint_push(p)
+		if path:
+			for p in path:
+				self.waypoint_push(p)
 
-			
+import unittest
+class TestPathETA(unittest.TestCase):
+	def setUp(self):
+		a = Arty()
+		a.position = Vec2d(1,0)
+		a.angle = 0
+		a.speed = 1
+		a.goal = Vec2d(3,0)
+		self.a = a
+
+	def test_success(self):
+		a = self.a
+		a.angle = 0
+		a.turningspeed = math.pi/2
+		path = [a.position, Vec2d(1,1), a.position, a.goal]
+		res = a.path_eta(path, View([],[]))
+		self.assertFalse(res is None)
+		self.assertAlmostEqual(res, 8, places = 5)
+		a.angle = math.pi/2
+		res = a.path_eta(path, View([],[]))
+		self.assertFalse(res is None)
+		self.assertAlmostEqual(res, 7, places = 5)
+		a.angle = -math.pi/4
+		res = a.path_eta(path, View([],[]))
+		self.assertFalse(res is None)
+		self.assertAlmostEqual(res, 8.5, places = 5)
+		a.angle = -math.pi*3/4
+		res = a.path_eta(path, View([],[]))
+		self.assertFalse(res is None)
+		self.assertAlmostEqual(res, 8.5, places = 5)
+		
+	def test_fail_pedestrian(self):
+		a = self.a
+		path = [a.position, a.goal]
+		p = Unit()
+		p.position = Vec2d(1,0)
+		view = View([], [p])
+		res = a.path_eta(path, view)
+		self.assertTrue(res is None)
+		
+	def test_fail_wall(self):
+		import obstacle
+		a = self.a
+		path = [a.position, a.goal]
+		o = obstacle.Line(Vec2d(2,1), Vec2d(2,-1))
+		view = View(o.bounds, [])
+		res = a.path_eta(path, view)
+		self.assertTrue(res is None)
+		
+if __name__ == "__main__":
+	unittest.main()

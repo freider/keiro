@@ -190,14 +190,13 @@ void Particle::update(float dt){
 	}
 }
 
-
 void Particle::set_state(const Vec2d &v, float angle){
 	position = v;
 	angle = angle;
 }
 
 
-Obstacle::Obstacle(const Vec2d &p1, const Vec2d &p2) : p1(p1), p2(p2) { }
+Obstacle::Obstacle(const Vec2d &p1, const Vec2d &p2) : p1(p1), p2(p2), world(NULL) { }
 Obstacle::~Obstacle(){
 	if(world != NULL)
 		world->unbind(this);
