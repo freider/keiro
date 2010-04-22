@@ -60,7 +60,7 @@ class Unit(Particle):
 			dirvector, 2)
 			
 class RandomWalker(Unit):
-	step_mean = 20
+	step_mean = 200
 	view_range = 25
 	def __init__(self):
 		Unit.__init__(self)
@@ -205,8 +205,9 @@ class RandomTree(Agent):
 	
 class Arty(Agent):
 	SAFETY_THRESHOLD = 0.9
-	GLOBALNODES = 300
+	GLOBALNODES = 100
 	GLOBALMINEDGE = 50
+	LOCALMINEDGE = 50
 	class Node:
 		def __init__(self, position, angle, parent, time = None, freeprob = None):
 			self.position = position
@@ -218,11 +219,10 @@ class Arty(Agent):
 	def __init__(self):
 		super(Arty, self).__init__()
 	
-	def init(self, view):
-		"""Builds the static obstacle map, global roadmap"""
+	def globaltree(self, view):
 		#RRT from goal
 		nodes = [self.Node(self.goal, None, None)]
-		for i in xrange(self.GLOBALNODES):
+		while len(nodes) < self.GLOBALNODES:
 			newpos = Vec2d(random.randrange(640), random.randrange(480)) #TODO: remove hardcoded world size
 			besttime = None
 			bestnode = None
@@ -247,18 +247,32 @@ class Arty(Agent):
 						bestnode = tonode
 			if bestnode:
 				topos = bestnode.position
-				diff = topos - newpos
+				diff = newpos - topos
 				angle = diff.angle()
 				vdir = diff.norm()
 				difflen = diff.length()
-				div = 1
-				while difflen/div > self.GLOBALMINEDGE:
-					div += 1
+				div = int(math.ceil(difflen/self.GLOBALMINEDGE))
+				prev = bestnode
 				#subdivide the new edge
-				for d in xrange(div):
-					nodes.append(self.Node(newpos + vdir*d*difflen/div, angle, bestnode))
+				for d in xrange(1, div+1):
+					newnode = self.Node(topos + diff*d/div, angle, prev)
+					nodes.append(newnode)
+					prev = newnode
+		
+		#db
+		poss = []
+		for n in nodes:
+			poss.append((n.position[0], n.position[1]))
+		poss.sort()
+		for p in poss:
+			print p
+		
 		self.globalnodes = nodes
-		print "Done building global RRT"		
+		print "Done building global RRT", len(self.globalnodes)
+		
+	def init(self, view):
+		"""Builds the static obstacle map, global roadmap"""
+		self.globaltree(view)
 		
 	def freeprob(self, position, view, time):
 		"""Returns probability that specified position will be collision free at specified time"""
@@ -301,13 +315,8 @@ class Arty(Agent):
 		
 		return freeprob
 	
-	def freeprob_path(self, path, view, startangle = None):
-		raise NotImplementedError
-		
 	def path_valid(self, path, view):
-		"""Returns if a path is safe still valid (i.e. deemed collision free)"""
-		if not (path[0] == self.position and path[-1] == self.goal):
-			return None #must go between current position and goal
+		"""Returns if a path is safe (i.e. deemed collision free)"""
 		ctime = 0
 		freeprob = 1.0
 		a1 = self.angle
@@ -320,8 +329,8 @@ class Arty(Agent):
 			p1 = p2
 			a1 = a2
 			if freeprob < self.SAFETY_THRESHOLD:
-				return None	
-		return ctime
+				return False	
+		return True
 		
 	def segment_time(self, a1, p1, p2):
 		"""Returns time to get from a state (a1, p1) to ((p2-p1).angle(), p2)"""
@@ -358,40 +367,51 @@ class Arty(Agent):
 			trypos.append(Vec2d(random.random()*640, random.random()*480)) #FIXME: hardcoded world dimensions
 		
 		for nextpos in trypos:
-			best = None
+			bestparent = None
 			for n in nodes:
 				freeprob = self.freeprob_linesegment(n.position, n.angle, nextpos, view, n.time)
 				endtime = n.time + self.segment_time(n.angle, n.position, nextpos)
 				
 				newprob = freeprob * n.freeprob
 				#TODO: invalidate if probability is too low, pruning tree early
-				if best is None or best[1] > endtime:
-					best = (newprob, endtime, n)
-
-			if best is not None:
-				newprob, new_time, parent = best[0], best[1], best[2]
 				if newprob < self.SAFETY_THRESHOLD:
+					continue
+				if bestparent is None or bestparent[1] > endtime:
+					bestparent = (newprob, endtime, n)
+
+			if bestparent is not None:
+				newprob, newtime, parent = bestparent[0], bestparent[1], bestparent[2]
+				if newprob < self.SAFETY_THRESHOLD: 
+					assert(False) #This is never triggered anymore
 					#don't add paths below the safety threshold
 					pygame.draw.line(self.debugsurface, (255,0,0), parent.position, nextpos)
 					continue
 				else:
 					pygame.draw.line(self.debugsurface, (0,255,0), parent.position, nextpos)
 
-				newnode = Arty.Node(nextpos, (nextpos - n.position).angle(), parent = parent, time = new_time, freeprob = newprob)
-				nodes.append(newnode)
+				#subdivide long paths
+				diff = nextpos - parent.position
+				angle = diff.angle()
+				difflen = diff.length()
+				vdir = diff/difflen
+				div = int(math.ceil(difflen/self.LOCALMINEDGE))
+				#subdivide the new edge
+				for d in xrange(1, div+1):
+					newnode = self.Node(parent.position + diff*d/div, angle, parent = parent, time = newtime, freeprob = newprob)
+					nodes.append(newnode)
 
-				#always check if the new node has a good enough path to the goal
-				freeprob = self.freeprob_linesegment(newnode.position, newnode.angle, self.goal, view, new_time)
-				target_prob = freeprob*newprob
+					#always check if the new node has a good enough path to the goal
+					freeprob = self.freeprob_linesegment(newnode.position, newnode.angle, self.goal, view, newtime)
+					target_prob = freeprob*newprob
 				
-				if target_prob > self.SAFETY_THRESHOLD:
-					path = [self.goal]
-					n = newnode
-					while n != None:
-						path.append(n.position)
-						n = n.parent
-					path.reverse()
-					return path
+					if target_prob > self.SAFETY_THRESHOLD:
+						path = [self.goal]
+						n = newnode
+						while n != None:
+							path.append(n.position)
+							n = n.parent
+						path.reverse()
+						return path
 		
 	@iteration	
 	def think(self, dt, view, debugsurface):
@@ -399,10 +419,11 @@ class Arty(Agent):
 			return
 		self.view = view
 		self.debugsurface = debugsurface
-		#for n in self.globalnodes:
-		#	if n.parent:
-		#		pygame.draw.line(debugsurface, pygame.Color("black"), n.position, n.parent.position)
-		#		pygame.draw.circle(debugsurface, pygame.Color("red"), n.position, 2, 0)
+		for n in self.globalnodes:
+			if n.parent:
+				pygame.draw.line(debugsurface, pygame.Color("black"), n.position, n.parent.position)
+			pygame.draw.circle(debugsurface, pygame.Color("red"), n.position, 2, 0)
+
 		path = self.getpath(view, 50)
 		self.waypoint_clear()
 		
