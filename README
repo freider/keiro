@@ -3,4 +3,12 @@
 
 * Dependencies
   Keiro was written for Python 2.6
-  It depends on pygame and django, which can be conveniently installed by macports.
+  It depends on pygame and pil, and django which can be conveniently installed by macports:
+
+* Building
+  sudo port install py26-game py26-pil py26-django
+  cd keiro/fast
+  make
+  cd keiro
+  python2.6 keiro.py
+  
