@@ -3,13 +3,34 @@
 
 * Dependencies
   Keiro was written for Python 2.6
-  It depends on pygame and pil, and django which can be conveniently installed by macports:
+  It depends on pygame and pil, and django which can be conveniently installed by macports.
+  Optionally, mencoder can be installed for video recording.
 
 * Building
   sudo port install py26-game py26-pil py26-django
+  # for video recording
+  sudo port install mplayer-devel +mencoder_extras
   cd keiro/fast
   make
   cd keiro/stats
   python2.6 manage.py syncdb
   cd keiro
+
+* Running
+  # for a simulation
   python2.6 keiro.py
+
+  # a simulation with the arty algorithm
+  python2.6 keiro.py -a Arty
+
+  # different scenarios
+  python2.6 keiro.py -s MarketSquare
+  # Try one of: {MarketSquare | CrowdedMarketSquare | TheFlood | Crossing}
+
+  # recoding a movie with mencoder
+  python keiro.py -c myawesomemovie.avi
+
+  # check stats
+  cd stats
+  python2.6 manage.py runserver
+  # browse to localhost:8000
