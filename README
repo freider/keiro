@@ -9,6 +9,7 @@
   sudo port install py26-game py26-pil py26-django
   cd keiro/fast
   make
+  cd keiro/stats
+  python2.6 manage.py syncdb
   cd keiro
   python2.6 keiro.py
-  
