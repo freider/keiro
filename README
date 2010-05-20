@@ -1,0 +1,6 @@
+* What is Keiro
+  Keiro is a simulator for path planning in the presence of crowds of dynamic obstacles.
+
+* Dependencies
+  Keiro was written for Python 2.6
+  It depends on pygame and django, which can be conveniently installed by macports.
