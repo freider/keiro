@@ -208,6 +208,7 @@ class Arty(Agent):
 	GLOBALNODES = 100
 	GLOBALMINEDGE = 50
 	LOCALMINEDGE = 50
+	
 	class Node:
 		def __init__(self, position, angle, parent, time = None, freeprob = None):
 			self.position = position
@@ -245,6 +246,7 @@ class Arty(Agent):
 					if bestnode is None or time < besttime:
 						besttime = time
 						bestnode = tonode
+						
 			if bestnode:
 				topos = bestnode.position
 				diff = newpos - topos
@@ -259,13 +261,13 @@ class Arty(Agent):
 					nodes.append(newnode)
 					prev = newnode
 		
-		#db
-		poss = []
-		for n in nodes:
-			poss.append((n.position[0], n.position[1]))
-		poss.sort()
-		for p in poss:
-			print p
+		#DEBUG
+		# poss = []
+		# 		for n in nodes:
+		# 			poss.append((n.position[0], n.position[1]))
+		# 		poss.sort()
+		# 		for p in poss:
+		# 			print p
 		
 		self.globalnodes = nodes
 		print "Done building global RRT", len(self.globalnodes)
@@ -283,21 +285,19 @@ class Arty(Agent):
 		for p in view.pedestrians:
  			pedestrianpos = p.position + p.velocity*time #extrapolated position
 			if position.distance_to(pedestrianpos) < (self.radius + p.radius):
-				return 0
+				return 0 #collision with pedestrian
 		return 1
 	
 	def freeprob_turn(self, position, a1, a2, view, starttime):
 		dur = angle_diff(a1, a2)/self.turningspeed
-		timeresolution = self.radius/self.speed
-			
 		for p in view.pedestrians:
 			p1 = p.position
-			p2 = p1 + dur*p1.velocity #extrapolate
+			p2 = p1 + p.velocity*dur #extrapolate
 			if linesegdist2(p1, p2, position) < (self.radius + p.radius)**2:
 				return 0	
 		return 1
 	
-	def freeprob_linesegment(self, p1, a1, p2, view, starttime):
+	def freeprob_line(self, p1, p2, view, starttime):
 		if p1 == p2:
 			return self.freeprob(p1, view, starttime)
 			
@@ -315,6 +315,14 @@ class Arty(Agent):
 		
 		return freeprob
 	
+	def freeprob_turn_line(self, p1, a1, p2, view, starttime):
+		"""Free probability for turning and then walking on a straight line"""
+		a2 = (p2-p1).angle()
+		dt = abs(angle_diff(a1, a2))/self.turningspeed
+		free = self.freeprob_turn(p1, a1, a2, view, starttime)
+		free *= self.freeprob_line(p1, p2, view, starttime + dt)
+		return free
+		
 	def path_valid(self, path, view):
 		"""Returns if a path is safe (i.e. deemed collision free)"""
 		ctime = 0
@@ -324,7 +332,7 @@ class Arty(Agent):
 
 		for p2 in path[1:]:
 			a2 = (p2 - p1).angle()
-			freeprob *= self.freeprob_linesegment(p1, p2, view, ctime)
+			freeprob *= self.freeprob_turn_line(p1, a1, p2, view, ctime)
 			ctime += abs(angle_diff(a1, a2))/self.turningspeed + p1.distance_to(p2)/self.speed
 			p1 = p2
 			a1 = a2
@@ -353,9 +361,13 @@ class Arty(Agent):
 		return tottime
 			
 	def getpath(self, view, max_size):
+		testpath = self.find_globaltree(self.position, self.angle, view, 0, 1)
+		if testpath:
+			return testpath
+		
 		start = Arty.Node(self.position, self.angle, parent = None, time = 0, freeprob = 1)
 		
-		if self.freeprob_linesegment(self.position, self.angle, self.goal, view, 0) >= self.SAFETY_THRESHOLD:
+		if self.freeprob_turn_line(self.position, self.angle, self.goal, view, 0) >= self.SAFETY_THRESHOLD:
 			return [self.position, self.goal] #direct path
 
 		nodes = [start]
@@ -369,7 +381,7 @@ class Arty(Agent):
 		for nextpos in trypos:
 			bestparent = None
 			for n in nodes:
-				freeprob = self.freeprob_linesegment(n.position, n.angle, nextpos, view, n.time)
+				freeprob = self.freeprob_turn_line(n.position, n.angle, nextpos, view, n.time)
 				endtime = n.time + self.segment_time(n.angle, n.position, nextpos)
 				
 				newprob = freeprob * n.freeprob
@@ -381,13 +393,7 @@ class Arty(Agent):
 
 			if bestparent is not None:
 				newprob, newtime, parent = bestparent[0], bestparent[1], bestparent[2]
-				if newprob < self.SAFETY_THRESHOLD: 
-					assert(False) #This is never triggered anymore
-					#don't add paths below the safety threshold
-					pygame.draw.line(self.debugsurface, (255,0,0), parent.position, nextpos)
-					continue
-				else:
-					pygame.draw.line(self.debugsurface, (0,255,0), parent.position, nextpos)
+				pygame.draw.line(self.debugsurface, (0,255,0), parent.position, nextpos)
 
 				#subdivide long paths
 				diff = nextpos - parent.position
@@ -401,10 +407,10 @@ class Arty(Agent):
 					nodes.append(newnode)
 
 					#always check if the new node has a good enough path to the goal
-					freeprob = self.freeprob_linesegment(newnode.position, newnode.angle, self.goal, view, newtime)
+					freeprob = self.freeprob_turn_line(newnode.position, newnode.angle, self.goal, view, newtime)
 					target_prob = freeprob*newprob
 				
-					if target_prob > self.SAFETY_THRESHOLD:
+					if target_prob >= self.SAFETY_THRESHOLD:
 						path = [self.goal]
 						n = newnode
 						while n != None:
@@ -412,7 +418,40 @@ class Arty(Agent):
 							n = n.parent
 						path.reverse()
 						return path
+	
+	def find_globaltree(self, p1, a1, view, time, startprob):
+		"""Tries to reach global tree from position/angle
 		
+			Returns (path, time) to get to goal"""
+			
+			
+		print "Calling globaltree"
+		bestpath = None
+			
+		for n in self.globalnodes:
+			a2 = (n.position - p1).angle()
+			free = startprob * self.freeprob_turn(p1, a1, a2, view, time)
+			time += abs(angle_diff(a1, a2))/self.turningspeed
+			free *= self.freeprob_turn_line(p1, a1, n.position, view, time)
+			
+			if free >= self.SAFETY_THRESHOLD:
+				path = []
+				cur = n
+				while cur.parent != None:
+					path.append(cur.position)
+					free *= self.freeprob_turn_line(cur.position, cur.angle, cur.parent.position, view, time)
+					time += self.segment_time(cur.angle, cur.position, cur.parent.position)
+					cur = cur.parent
+					
+				path.append(cur.position)
+				
+				if bestpath is None or time < besttime:
+					bestpath = path
+					besttime = time
+		print "Returning from globaltree"
+		return bestpath
+			
+			
 	@iteration	
 	def think(self, dt, view, debugsurface):
 		if not self.goal:
