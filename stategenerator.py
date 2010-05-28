@@ -29,9 +29,9 @@ class PrependedGenerator(StateGenerator):
 		self.biaspoints.append(point)
 		
 	def generate(self):
-		if len(biasponts) > 0:
-			ret = biasponts[0]
-			del biasponts[0]
+		if len(self.biaspoints) > 0:
+			ret = self.biaspoints[0]
+			del self.biaspoints[0]
 			return ret
 		else:
 			return super(PrependedGenerator, self).generate()
@@ -51,6 +51,17 @@ class TestGenerators(unittest.TestCase):
 		for pos in self.sg.generate_n(100):
 			self.assertTrue(pos.x >= self.minx and pos.x <= self.maxx)
 			self.assertTrue(pos.y >= self.miny and pos.y <= self.maxy)
-
+			
+	def test_pg(self):
+		bias = self.sg.generate()
+		self.assertTrue(self.pg.generate() != bias)
+		self.pg.prepend(bias)		
+		self.assertTrue(self.pg.generate() == bias)
+		self.assertTrue(self.pg.generate() != bias)
+		bias2 = self.sg.generate()
+		self.pg.prepend(bias)
+		self.pg.prepend(bias2)
+		self.assertTrue(self.pg.generate() == bias and self.pg.generate() == bias2)
+		
 if __name__ == "__main__":
 	unittest.main()
