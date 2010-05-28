@@ -364,20 +364,24 @@ class Arty(Agent):
 		testpath = self.find_globaltree(self.position, self.angle, view, 0, 1)
 		if testpath:
 			return testpath
-		print "Cannot find global path from current, extending"
+		print "Cannot find global path from current, extending search tree"
 		
 		start = Arty.Node(self.position, self.angle, parent = None, time = 0, freeprob = 1)
-		
-		if self.freeprob_turn_line(self.position, self.angle, self.goal, view, 0) >= self.SAFETY_THRESHOLD:
-			return [self.position, self.goal] #direct path
-
 		nodes = [start]
+
+		#fill this vector with positions to try		
+		trypos = []
 		
 		#always use the nodes from the last solution in this iterations so they are kept if still good enough
-		#TODO: if using last path, check if a better one can be found to refine previous bad paths
-		trypos = [self.waypoint(i).position for i in xrange(self.waypoint_len())]
+		for i in xrange(self.waypoint_len()):
+			pos = self.waypoint(i).position
+			if pos.length() <= self.radius:
+				trypos.append(pos)
+		
 		while len(trypos) < max_size: 
-			trypos.append(Vec2d(random.random()*640, random.random()*480)) #FIXME: hardcoded world dimensions
+			pos = Vec2d(random.random()*self.view_range, random.random()*self.view_range)
+			if pos.length() <= self.radius:
+				trypos.append(pos)
 		
 		for nextpos in trypos:
 			bestparent = None
