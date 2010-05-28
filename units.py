@@ -205,7 +205,7 @@ class RandomTree(Agent):
 	
 class Arty(Agent):
 	SAFETY_THRESHOLD = 0.9
-	GLOBALNODES = 100
+	GLOBALNODES = 30
 	GLOBALMINEDGE = 50
 	LOCALMINEDGE = 50
 	
@@ -364,6 +364,7 @@ class Arty(Agent):
 		testpath = self.find_globaltree(self.position, self.angle, view, 0, 1)
 		if testpath:
 			return testpath
+		print "Cannot find global path from current, extending"
 		
 		start = Arty.Node(self.position, self.angle, parent = None, time = 0, freeprob = 1)
 		
@@ -424,8 +425,6 @@ class Arty(Agent):
 		
 			Returns (path, time) to get to goal"""
 			
-			
-		print "Calling globaltree"
 		bestpath = None
 			
 		for n in self.globalnodes:
@@ -448,7 +447,6 @@ class Arty(Agent):
 				if bestpath is None or time < besttime:
 					bestpath = path
 					besttime = time
-		print "Returning from globaltree"
 		return bestpath
 			
 			

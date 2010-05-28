@@ -130,7 +130,7 @@ class TheFlood(Spawner):
 		
 	def spawn(self, num_units):
 		for u in self.world.units:
-			if u.position.distance_to(u.goal) < 1:
+			if u is not self.agent and u.position.distance_to(u.goal) < 1:
 				self.world.remove_unit(u)
 			
 		for i in xrange(num_units):	
@@ -153,24 +153,36 @@ class Crossing(Spawner):
 		self.agent.goal = Vec2d(world.size[0]-10, world.size[1]/2)
 		self.agent.angle = (self.agent.goal-self.agent.position).angle()
 		
+	def random_xpos(self, unit):
+		return random.randrange(unit.radius+1, self.world.size[0]-unit.radius-1)
+
+	def random_ypos(self, unit):
+		return random.randrange(unit.radius+1, self.world.size[1]-unit.radius-1)
+		
 	def spawn(self, num_units):
 		for u in self.world.units:
-			if u is not self.agent and u.position == u.goal:
+			if u is not self.agent and u.position.distance_to(u.goal) < 1:
 				self.world.remove_unit(u)
 			
 		for i in xrange(num_units):
-			if random.random() < 0.5:
-				spawn_pos = Vec2d(self.world.size[0]+10, random.randrange(self.world.size[1]))
-				goal = Vec2d(-10,random.randrange(self.world.size[1]))
-			else:
-				spawn_pos = Vec2d(random.randrange(self.world.size[0]), self.world.size[1]+10)
-				goal = Vec2d(random.randrange(self.world.size[0]), -10)
-			if random.random() < 0.5:
-				tmp = spawn_pos
-				spawn_pos = goal
-				goal = tmp
-			
 			u = Stubborn()
-			u.position = spawn_pos
-			u.goal = goal
+			
+			if random.random() < 0.5: # coin toss
+				# "horizontal" movement
+				p1 = Vec2d( u.radius+1, self.random_ypos(u) )
+				p2 = Vec2d( self.world.size[0]-u.radius-1, self.random_ypos(u) )
+			else:
+				# "vertical" movement
+				p1 = Vec2d(self.random_xpos(u), u.radius+1)
+				p2 = Vec2d(self.random_xpos(u), self.world.size[1]-u.radius-1)
+				
+			if random.random() < 0.5: # coin toss
+				u.position = p1
+				u.goal = p2
+				u.angle = (p2-p1).angle()
+			else:
+				u.position = p2
+				u.goal = p1
+				u.angle = (p1-p2).angle()
+				
 			self.world.add_unit(u)
