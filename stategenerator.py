@@ -1,4 +1,6 @@
 import random
+import unittest
+from fast.physics import Vec2d
 
 class StateGenerator(object):
 	"""Generate 2d vectors within supplied rectangle"""
@@ -10,10 +12,13 @@ class StateGenerator(object):
 		
 	def generate(self):
 		posx = self.minx + random.random()*(self.maxx - self.minx)
-		posx = self.miny + random.random()*(self.maxy - self.miny)
+		posy = self.miny + random.random()*(self.maxy - self.miny)
 		return Vec2d(posx, posy)
 		
-		
+	def generate_n(self, n):
+		for i in xrange(n):
+			yield self.generate()
+			
 class PrependedGenerator(StateGenerator):
 	"""Allows bias of the generator by prepending the random queue with non-random points"""
 	def __init__(self, minx, maxx, miny, maxy):
@@ -31,3 +36,21 @@ class PrependedGenerator(StateGenerator):
 		else:
 			return super(PrependedGenerator, self).generate()
 		
+		
+import unittest
+class TestGenerators(unittest.TestCase):
+	def setUp(self):
+		self.minx = 100
+		self.maxx = 200
+		self.miny = -200
+		self.maxy = -100
+		self.sg = StateGenerator(100, 200, -200, -100)
+		self.pg = PrependedGenerator(100, 200, -200, -100)
+
+	def test_sg(self):
+		for pos in self.sg.generate_n(100):
+			self.assertTrue(pos.x >= self.minx and pos.x <= self.maxx)
+			self.assertTrue(pos.y >= self.miny and pos.y <= self.maxy)
+
+if __name__ == "__main__":
+	unittest.main()
