@@ -3,7 +3,7 @@ import math
 import random
 from fast import graphutils, physics
 from fast.physics import Vec2d, linesegdist2, line_distance2, angle_diff
-
+from stategenerator import PrependedGenerator
 import graphs
 from functools import wraps
 import pygame
@@ -208,6 +208,7 @@ class Arty(Agent):
 	GLOBALNODES = 30
 	GLOBALMINEDGE = 50
 	LOCALMINEDGE = 50
+	LOCALMAXSIZE = 50
 	
 	class Node:
 		def __init__(self, position, angle, parent, time = None, freeprob = None):
@@ -360,8 +361,11 @@ class Arty(Agent):
 			p1 = p2
 		return tottime
 			
-	def getpath(self, view, max_size):
-		testpath = self.find_globaltree(self.position, self.angle, view, 0, 1)
+	def getpath(self, view):
+		"""Use the Art algorithm to get a path to the goal"""
+		
+		#first try to find global node by local planner from current position
+		testpath, testtime = self.find_globaltree(self.position, self.angle, view, 0, 1)
 		if testpath:
 			return testpath
 		print "Cannot find global path from current, extending search tree"
@@ -369,59 +373,61 @@ class Arty(Agent):
 		start = Arty.Node(self.position, self.angle, parent = None, time = 0, freeprob = 1)
 		nodes = [start]
 
-		#fill this vector with positions to try		
-		trypos = []
+		states = PrependedGenerator(self.position.x - self.view_range, self.position.x + self.view_range,
+									self.position.y - self.view_range, self.position.y + self.view_range)
 		
-		#always use the nodes from the last solution in this iterations so they are kept if still good enough
+		#always try to use the nodes from the last solution in this iterations so they are kept if still the best
 		for i in xrange(self.waypoint_len()):
 			pos = self.waypoint(i).position
-			if pos.length() <= self.radius:
-				trypos.append(pos)
-		
-		while len(trypos) < max_size: 
-			pos = Vec2d(random.random()*self.view_range, random.random()*self.view_range)
-			if pos.length() <= self.radius:
-				trypos.append(pos)
-		
-		for nextpos in trypos:
+			if pos.distance_to(self.position) <= self.radius:
+				states.prepend(pos)
+			
+		for nextpos in states.generate_n(self.LOCALMAXSIZE):
 			bestparent = None
 			for n in nodes:
 				freeprob = self.freeprob_turn_line(n.position, n.angle, nextpos, view, n.time)
 				endtime = n.time + self.segment_time(n.angle, n.position, nextpos)
 				
 				newprob = freeprob * n.freeprob
-				#TODO: invalidate if probability is too low, pruning tree early
 				if newprob < self.SAFETY_THRESHOLD:
 					continue
-				if bestparent is None or bestparent[1] > endtime:
-					bestparent = (newprob, endtime, n)
+				if bestparent is None or besttime > endtime:
+					bestparent = n
+					besttime = endtime
 
 			if bestparent is not None:
-				newprob, newtime, parent = bestparent[0], bestparent[1], bestparent[2]
-				pygame.draw.line(self.debugsurface, (0,255,0), parent.position, nextpos)
-
-				#subdivide long paths
-				diff = nextpos - parent.position
+				pygame.draw.line(self.debugsurface, (0,255,0), bestparent.position, nextpos)
+				#subdivide the new edge
+				diff = nextpos - bestparent.position
 				angle = diff.angle()
 				difflen = diff.length()
 				vdir = diff/difflen
 				div = int(math.ceil(difflen/self.LOCALMINEDGE))
-				#subdivide the new edge
+				
+				lastnode = bestparent
+				
 				for d in xrange(1, div+1):
-					newnode = self.Node(parent.position + diff*d/div, angle, parent = parent, time = newtime, freeprob = newprob)
+					#not 100% sure everything here is correct, variable names are a bit confusing...
+					subpos = bestparent.position + diff*d/div
+					freeprob = self.freeprob_turn_line(lastnode.position, lastnode.angle, subpos, view, lastnode.time)
+					dt = self.segment_time(lastnode.angle, lastnode.position, subpos)
+					newnode = self.Node(subpos, angle, parent = lastnode, time = lastnode.time + dt, freeprob = lastnode.freeprob * freeprob)
+					lastnode = newnode
 					nodes.append(newnode)
 
-					#always check if the new node has a good enough path to the goal
-					freeprob = self.freeprob_turn_line(newnode.position, newnode.angle, self.goal, view, newtime)
-					target_prob = freeprob*newprob
-				
-					if target_prob >= self.SAFETY_THRESHOLD:
-						path = [self.goal]
+					#get the best path to the global graph on to the goal from the new node
+					gpath, gtime = self.find_globaltree(newnode.position, newnode.angle, view, newnode.time, newnode.freeprob)
+					
+					if gpath is not None:
+						path = []
 						n = newnode
 						while n != None:
 							path.append(n.position)
 							n = n.parent
 						path.reverse()
+						
+						for gpos in gpath:
+							path.append(gpos)
 						return path
 	
 	def find_globaltree(self, p1, a1, view, time, startprob):
@@ -430,7 +436,8 @@ class Arty(Agent):
 			Returns (path, time) to get to goal"""
 			
 		bestpath = None
-			
+		besttime = None
+	
 		for n in self.globalnodes:
 			a2 = (n.position - p1).angle()
 			free = startprob * self.freeprob_turn(p1, a1, a2, view, time)
@@ -438,6 +445,7 @@ class Arty(Agent):
 			free *= self.freeprob_turn_line(p1, a1, n.position, view, time)
 			
 			if free >= self.SAFETY_THRESHOLD:
+				#try to reach goal from global node
 				path = []
 				cur = n
 				while cur.parent != None:
@@ -451,7 +459,8 @@ class Arty(Agent):
 				if bestpath is None or time < besttime:
 					bestpath = path
 					besttime = time
-		return bestpath
+					
+		return (bestpath, besttime)
 			
 			
 	@iteration	
@@ -465,7 +474,7 @@ class Arty(Agent):
 				pygame.draw.line(debugsurface, pygame.Color("black"), n.position, n.parent.position)
 			pygame.draw.circle(debugsurface, pygame.Color("red"), n.position, 2, 0)
 
-		path = self.getpath(view, 50)
+		path = self.getpath(view)
 		self.waypoint_clear()
 		
 		if path:
