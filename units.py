@@ -205,9 +205,9 @@ class RandomTree(Agent):
 	
 class Arty(Agent):
 	SAFETY_THRESHOLD = 0.9
-	GLOBALNODES = 30
-	GLOBALMINEDGE = 50
-	LOCALMINEDGE = 50
+	GLOBALNODES = 70
+	GLOBALMAXEDGE = 70
+	LOCALMAXEDGE = 50
 	LOCALMAXSIZE = 50
 	
 	class Node:
@@ -254,7 +254,7 @@ class Arty(Agent):
 				angle = diff.angle()
 				vdir = diff.norm()
 				difflen = diff.length()
-				div = int(math.ceil(difflen/self.GLOBALMINEDGE))
+				div = int(math.ceil(difflen/self.GLOBALMAXEDGE))
 				prev = bestnode
 				#subdivide the new edge
 				for d in xrange(1, div+1):
@@ -262,27 +262,15 @@ class Arty(Agent):
 					nodes.append(newnode)
 					prev = newnode
 		
-		#DEBUG
-		# poss = []
-		# 		for n in nodes:
-		# 			poss.append((n.position[0], n.position[1]))
-		# 		poss.sort()
-		# 		for p in poss:
-		# 			print p
-		
 		self.globalnodes = nodes
-		print "Done building global RRT", len(self.globalnodes)
+		print "Done building global roadmap tree", len(self.globalnodes)
 		
 	def init(self, view):
 		"""Builds the static obstacle map, global roadmap"""
 		self.globaltree(view)
 		
-	def freeprob(self, position, view, time):
-		"""Returns probability that specified position will be collision free at specified time"""
-		for o in view.obstacles:
-			if linesegdist2(o.p1, o.p2, position) <= self.radius**2:
-				return 0 #collision with static obstacle
-				
+	def freeprob_pedestrians(self, position, view, time):
+		"""Returns probability that specified position will be collision free at specified time with respect to pedestrians"""		
 		for p in view.pedestrians:
  			pedestrianpos = p.position + p.velocity*time #extrapolated position
 			if position.distance_to(pedestrianpos) < (self.radius + p.radius):
@@ -300,8 +288,12 @@ class Arty(Agent):
 	
 	def freeprob_line(self, p1, p2, view, starttime):
 		if p1 == p2:
-			return self.freeprob(p1, view, starttime)
-			
+			return self.freeprob_pedestrians(p1, view, starttime)
+		
+		for o in view.obstacles:
+			if line_distance2(o.p1, o.p2, p1, p2) < self.radius**2:
+				return 0
+							
 		diff = p2 - p1
 		length = diff.length()
 		v = diff/length
@@ -312,7 +304,7 @@ class Arty(Agent):
 		
 		freeprob = 1.0
 		for i in xrange(numsegments+1):
-			freeprob *= self.freeprob(p1 + v*i*segmentlen, view, starttime + i*timediff)
+			freeprob *= self.freeprob_pedestrians(p1 + v*i*segmentlen, view, starttime + i*timediff)
 		
 		return freeprob
 	
@@ -402,7 +394,7 @@ class Arty(Agent):
 				angle = diff.angle()
 				difflen = diff.length()
 				vdir = diff/difflen
-				div = int(math.ceil(difflen/self.LOCALMINEDGE))
+				div = int(math.ceil(difflen/self.LOCALMAXEDGE))
 				
 				lastnode = bestparent
 				
@@ -473,6 +465,9 @@ class Arty(Agent):
 			if n.parent:
 				pygame.draw.line(debugsurface, pygame.Color("black"), n.position, n.parent.position)
 			pygame.draw.circle(debugsurface, pygame.Color("red"), n.position, 2, 0)
+
+		for p in view.pedestrians:
+			pygame.draw.circle(debugsurface, pygame.Color("green"), p.position, p.radius+2, 2)
 
 		path = self.getpath(view)
 		self.waypoint_clear()

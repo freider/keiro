@@ -89,13 +89,13 @@ class World(PhysicsWorld):
 			
 	def render(self, screen):
 		screen.fill((255,255,255))
-		
-		screen.blit(self.debugsurface, (0, 0))	
-		
+			
 		for o in self.obstacles:
 			o.render(screen)
 		for u in self.units:
 			u.render(screen)
+
+		screen.blit(self.debugsurface, (0, 0))
 
 		pygame.display.flip()
 	
