@@ -7,3 +7,7 @@ build/*
 *.so
 *.orig
 marcs_codebase*
+fast/graphutils.py
+fast/physics.py
+.DS_Store
+videos/*
