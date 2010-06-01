@@ -1,7 +1,8 @@
-from units import *
 from fast.physics import Vec2d
 import obstacle
 import pygame
+import random
+from pedestrians.randomwalker import RandomWalker #TODO: prettier imports
 
 class ScenarioRegistrar (type):
 	"""Registers all scenarios that are declared, to let the user choose"""

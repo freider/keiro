@@ -1,15 +1,19 @@
 #!/usr/bin/env python
-from world import *
-import units
-import scenarios
+from world import World, View
+import pedestrians
+from agents import *
+from scenarios import *
+from scenario import ScenarioRegistrar
+from agent import AgentRegistrar
+from iterations import IterationRegister
+
+import mencoder
 
 import os
 import random
 import cProfile
 from optparse import OptionParser
 from datetime import datetime
-from iterations import IterationRegister
-import mencoder
 
 os.environ["DJANGO_SETTINGS_MODULE"] = "stats.settings"
 from stats.statsapp import models
@@ -28,8 +32,8 @@ if __name__ == "__main__":
 	(opts, args) = parser.parse_args()
 
 	random.seed(opts.seed)
-	ScenarioClass = scenarios.ScenarioRegistrar.register[opts.scenario]
-	AgentClass = units.UnitRegistrar.register[opts.agent]
+	ScenarioClass = ScenarioRegistrar.register[opts.scenario]
+	AgentClass = AgentRegistrar.register[opts.agent]
 	
 	agent = AgentClass()
 	iterations = IterationRegister()
