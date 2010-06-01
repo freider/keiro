@@ -9,4 +9,3 @@ currentdir = os.path.dirname(__file__)
 modules = filter(is_module, os.listdir(currentdir))
 
 __all__ = [os.path.splitext(m)[0] for m in modules]
-print __all__

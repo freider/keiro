@@ -1,6 +1,5 @@
 from pedestrian import Pedestrian
-from fast.physics import Vec2d
-import graphs
+from fast.physics import Vec2d, line_distance2
 import math
 import random
 
@@ -23,7 +22,7 @@ class RandomWalkingAvoider(Pedestrian):
 				return
 		
 		for o in view.obstacles: #avoid obstacles
-			if graphs.line_distance2(self.position, self.waypoint().position, o.p1, o.p2) <= self.radius**2:
+			if line_distance2(self.position, self.waypoint().position, o.p1, o.p2) <= self.radius**2:
 				self.waypoint_clear()
 				return
 
@@ -42,6 +41,6 @@ class RandomWalker(Pedestrian):
 			self.waypoint_push(self.position + Vec2d(math.cos(a)*step, math.sin(a)*step))
 			
 		for o in view.obstacles: #avoid obstacles
-			if graphs.line_distance2(self.position, self.waypoint().position, o.p1, o.p2) <= self.radius**2:
+			if line_distance2(self.position, self.waypoint().position, o.p1, o.p2) <= self.radius**2:
 				self.waypoint_clear()
 				return

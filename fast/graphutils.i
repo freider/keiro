@@ -1,4 +1,4 @@
-/* graphs.i */
+/* graphutils.i */
 %module graphutils
 %include "std_vector.i"
 %{

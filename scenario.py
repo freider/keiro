@@ -3,6 +3,7 @@ import obstacle
 import pygame
 import random
 from pedestrians.randomwalker import RandomWalker #TODO: prettier imports
+from pedestrians.stubborn import Stubborn
 
 class ScenarioRegistrar (type):
 	"""Registers all scenarios that are declared, to let the user choose"""
