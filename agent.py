@@ -28,8 +28,9 @@ class Agent(Unit):
 	__metaclass__ = AgentRegistrar
 	
 	view_range = 100
-	def __init__(self):
+	def __init__(self, parameter):
 		super(Agent, self).__init__()
+		self.parameter = parameter
 		self.color = (100, 100,255)
 
 	def render(self, screen):

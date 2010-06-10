@@ -12,12 +12,13 @@ class ScenarioRegistrar (type):
 		ret = ScenarioRegistrar.register[name] = type.__new__(cls, name, bases, dct)
 		return ret
 
-class Scenario(object):
+class Scenario(object): #abstract
 	__metaclass__ = ScenarioRegistrar
 	
-	def __init__(self, world, agent):
+	def __init__(self, world, agent, parameter):
 		self.world = world
 		self.agent = agent
+		self.parameter = parameter
 		self.world.add_unit(agent)
 		self.world.add_obstacle(obstacle.Line(Vec2d(0,0), Vec2d(0, world.size[1])))
 		self.world.add_obstacle(obstacle.Line(Vec2d(0, world.size[1]), Vec2d(world.size[0], world.size[1])))
@@ -39,15 +40,17 @@ class Scenario(object):
 			dt = self.world.advance()
 			self.update(dt)
 
-class RandomWalkersBase(Scenario): #abstract
-	def __init__(self, world, agent, crowd_size):
-		super(RandomWalkersBase, self).__init__(world, agent)
-		
+class RandomWalkers(Scenario):
+	def __init__(self, world, agent, parameter):
+		if parameter is None:
+			parameter = 50
+		super(RandomWalkers, self).__init__(world, agent, parameter)
+
 		self.agent.position = Vec2d(10,10)
 		self.agent.goal = Vec2d(*world.size)-self.agent.position
 		self.agent.angle = (self.agent.goal-self.agent.position).angle()
 		
-		for i in xrange(crowd_size):
+		for i in xrange(self.parameter):
 			init_position = self.agent.position
 			while init_position.distance_to(self.agent.position) < 20:
 				init_position = Vec2d(random.randrange(self.world.size[0]), random.randrange(self.world.size[1]))
@@ -57,8 +60,8 @@ class RandomWalkersBase(Scenario): #abstract
 
 
 class MarketSquare(Scenario):
-	def __init__(self, world, agent):
-		super(MarketSquare, self).__init__(world, agent)
+	def __init__(self, world, agent, parameter):
+		super(MarketSquare, self).__init__(world, agent, parameter)
 		
 		self.agent.position = Vec2d(10, 10)
 		self.agent.goal = Vec2d(*world.size)-self.agent.position
@@ -69,8 +72,8 @@ class MarketSquare(Scenario):
 				self.world.add_obstacle(obstacle.Rectangle((i+1)*50 + 100*i, (j+1)*100 + 120*j - 50, 100, 120))
 
 class CrowdedMarketSquare(Scenario):
-	def __init__(self, world, agent):
-		super(self.__class__, self).__init__(world, agent)
+	def __init__(self, world, agent, parameter):
+		super(self.__class__, self).__init__(world, agent, parameter)
 
 		self.agent.position = Vec2d(10, 10)
 		self.agent.goal = Vec2d(*world.size)-self.agent.position
@@ -88,7 +91,8 @@ class CrowdedMarketSquare(Scenario):
 			u = RandomWalker()
 			
 			while not good: #generate random positions for pedestrians that are not inside obstacles...
-				init_position = Vec2d(random.randrange(u.radius+1, self.world.size[0]-u.radius-1), random.randrange(u.radius + 1, self.world.size[1] - u.radius - 1))
+				init_position = Vec2d(random.randrange(u.radius+1, self.world.size[0]-u.radius-1), 
+									random.randrange(u.radius + 1, self.world.size[1] - u.radius - 1))
 				good = init_position.distance_to(self.agent.position) > 20
 				
 				for r in rects:
@@ -99,14 +103,10 @@ class CrowdedMarketSquare(Scenario):
 			u.position = init_position
 			self.world.add_unit(u)
 		
-class RandomWalkers50(RandomWalkersBase):
-	def __init__(self, world, agent):
-		super(RandomWalkers50, self).__init__(world, agent, 50)
-
 class Spawner(Scenario): #abstract
-	def __init__(self, world, agent, crowd_rate):
-		super(Spawner, self).__init__(world, agent)
-		self.crowd_rate = crowd_rate
+	def __init__(self, world, agent, parameter):
+		super(Spawner, self).__init__(world, agent, parameter)
+		self.crowd_rate = parameter
 
 	def update(self, dt):
 		super(Spawner, self).update(dt)
@@ -121,8 +121,10 @@ class Spawner(Scenario): #abstract
 		pass
 	
 class TheFlood(Spawner):
-	def __init__(self, world, agent):
-		super(TheFlood, self).__init__(world, agent, 3)
+	def __init__(self, world, agent, parameter):
+		if parameter is None:
+			parameter = 3
+		super(TheFlood, self).__init__(world, agent, parameter)
 		
 		agent.position = Vec2d(agent.radius*2, world.size[1]/2)
 		agent.goal = Vec2d(world.size[0]-agent.radius*2, world.size[1]/2)
@@ -148,8 +150,10 @@ class TheFlood(Spawner):
 			self.world.add_unit(u)
 
 class Crossing(Spawner):
-	def __init__(self, world, agent):
-		super(Crossing, self).__init__(world, agent, 3)
+	def __init__(self, world, agent, parameter):
+		if parameter is None:
+			parameter = 3
+		super(Crossing, self).__init__(world, agent, parameter)
 		
 		self.agent.position = Vec2d(10, world.size[1]/2)
 		self.agent.goal = Vec2d(world.size[0]-10, world.size[1]/2)

@@ -20,8 +20,10 @@ from stats.statsapp import models
 
 if __name__ == "__main__":
 	parser = OptionParser()
-	parser.add_option("-s", "--scenario", default="RandomWalkers50")
+	parser.add_option("-s", "--scenario", default="RandomWalkers")
+	parser.add_option("-S", "--scenarioparameter")
 	parser.add_option("-a", "--agent", default="RoadMap")
+	parser.add_option("-A", "--agentparameter")
 	parser.add_option("-r", "--seed", type="int", default=1)
 	parser.add_option("-t", "--timestep", type="float", default=0.1)
 	
@@ -35,7 +37,7 @@ if __name__ == "__main__":
 	ScenarioClass = ScenarioRegistrar.register[opts.scenario]
 	AgentClass = AgentRegistrar.register[opts.agent]
 	
-	agent = AgentClass()
+	agent = AgentClass(opts.agentparameter)
 	iterations = IterationRegister()
 	agent.add_iteration_listener(iterations)
 	
@@ -45,7 +47,7 @@ if __name__ == "__main__":
 		encoder = mencoder.Encoder()
 		world.add_encoder(encoder)
 		
-	scenario = ScenarioClass(world, agent)
+	scenario = ScenarioClass(world, agent, opts.scenarioparameter)
 	world.init()
 	agent.init(View(world.get_obstacles(), []))
 	

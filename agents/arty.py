@@ -20,8 +20,11 @@ class Arty(Agent):
 			self.parent = parent
 			self.freeprob = freeprob
 			
-	def __init__(self):
-		super(Arty, self).__init__()
+	def __init__(self, parameter):
+		if parameter is None:
+			parameter = 70
+		super(Arty, self).__init__(parameter)
+		self.GLOBALNODES = parameter
 	
 	def globaltree(self, view):
 		#RRT from goal

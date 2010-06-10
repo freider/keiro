@@ -4,7 +4,9 @@ import datetime
 class Record(models.Model):
 	date = models.DateTimeField()
 	scenario = models.CharField(max_length = 100)
+	scenario_parameter = models.IntegerField()
 	agent = models.CharField(max_length = 100)
+	agent_parameter = models.IntegerField()
 	view_range = models.FloatField()
 	seed = models.IntegerField()
 	timestep = models.FloatField()
