@@ -61,8 +61,10 @@ class RandomWalkers(Scenario):
 
 class MarketSquare(Scenario):
 	def __init__(self, world, agent, parameter):
+		if parameter is None:
+			parameter = 0 #dummy
+			
 		super(MarketSquare, self).__init__(world, agent, parameter)
-		
 		self.agent.position = Vec2d(10, 10)
 		self.agent.goal = Vec2d(*world.size)-self.agent.position
 		self.agent.angle = (self.agent.goal-self.agent.position).angle()
