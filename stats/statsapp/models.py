@@ -17,5 +17,5 @@ class Record(models.Model):
 	completion_time = models.FloatField()
 	
 	def __unicode__(self):
-		return "Scenario %s with agent %s"%(self.scenario_name, self.ai_name)
+		return "Scenario %s with agent %s"%(self.scenario, self.agent)
 	
