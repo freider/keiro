@@ -3,7 +3,7 @@ import math
 import random
 from agent import Agent, iteration
 from fast.physics import Vec2d, linesegdist2, line_distance2, angle_diff
-from stategenerator import PrependedGenerator
+from stategenerator import PrependedGenerator, ExtendingGenerator
 
 class Arty(Agent):
 	SAFETY_THRESHOLD = 0.9
@@ -11,6 +11,7 @@ class Arty(Agent):
 	GLOBALMAXEDGE = 70
 	LOCALMAXEDGE = 50
 	LOCALMAXSIZE = 50
+	FREEMARGIN = 1
 	
 	class Node:
 		def __init__(self, position, angle, parent, time = None, freeprob = None):
@@ -37,7 +38,7 @@ class Arty(Agent):
 				topos = tonode.position
 				connectable = True
 				for o in view.obstacles:
-					if line_distance2(topos, newpos, o.p1, o.p2) <= self.radius:
+					if line_distance2(topos, newpos, o.p1, o.p2) < (self.radius + self.FREEMARGIN)**2:
 						connectable = False
 						break
 						
@@ -78,7 +79,7 @@ class Arty(Agent):
 		"""Returns probability that specified position will be collision free at specified time with respect to pedestrians"""		
 		for p in view.pedestrians:
  			pedestrianpos = p.position + p.velocity*time #extrapolated position
-			if position.distance_to(pedestrianpos) < (self.radius + p.radius):
+			if position.distance_to(pedestrianpos) < (self.radius + p.radius + self.FREEMARGIN):
 				return 0 #collision with pedestrian
 		return 1
 	
@@ -87,7 +88,7 @@ class Arty(Agent):
 		for p in view.pedestrians:
 			p1 = p.position
 			p2 = p1 + p.velocity*dur #extrapolate
-			if linesegdist2(p1, p2, position) < (self.radius + p.radius)**2:
+			if linesegdist2(p1, p2, position) < (self.radius + p.radius + self.FREEMARGIN)**2:
 				return 0	
 		return 1
 	
@@ -96,7 +97,7 @@ class Arty(Agent):
 			return self.freeprob_pedestrians(p1, view, starttime)
 		
 		for o in view.obstacles:
-			if line_distance2(o.p1, o.p2, p1, p2) < self.radius**2:
+			if line_distance2(o.p1, o.p2, p1, p2) < (self.radius + self.FREEMARGIN)**2:
 				return 0
 							
 		diff = p2 - p1
@@ -165,19 +166,21 @@ class Arty(Agent):
 		testpath, testtime = self.find_globaltree(self.position, self.angle, view, 0, 1)
 		if testpath:
 			return testpath
-		print "Cannot find global path from current, extending search tree"
+		#print "Cannot find global path from current, extending search tree"
 		
 		start = Arty.Node(self.position, self.angle, parent = None, time = 0, freeprob = 1)
 		nodes = [start]
 
-		states = PrependedGenerator(self.position.x - self.view_range, self.position.x + self.view_range,
-									self.position.y - self.view_range, self.position.y + self.view_range)
+		states = ExtendingGenerator((self.position.x - self.view_range, self.position.x + self.view_range,
+									self.position.y - self.view_range, self.position.y + self.view_range),
+									(0,640,0,480), #TODO: remove hardcoded world size)
+									10) #arbitrarily chosen
 		
 		#always try to use the nodes from the last solution in this iterations so they are kept if still the best
 		for i in xrange(self.waypoint_len()):
 			pos = self.waypoint(i).position
-			if pos.distance_to(self.position) <= self.radius:
-				states.prepend(pos)
+			#if pos.distance_to(self.position) <= self.radius:
+			states.prepend(pos)
 			
 		for nextpos in states.generate_n(self.LOCALMAXSIZE):
 			bestparent = None

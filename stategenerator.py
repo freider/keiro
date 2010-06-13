@@ -1,6 +1,7 @@
 import random
 import unittest
 from fast.physics import Vec2d
+from numpy import array
 
 class StateGenerator(object):
 	"""Generate 2d vectors within supplied rectangle"""
@@ -36,7 +37,25 @@ class PrependedGenerator(StateGenerator):
 		else:
 			return super(PrependedGenerator, self).generate()
 		
+class ExtendingGenerator(PrependedGenerator):
+	"""Extending the target area for each generated point"""
+	def __init__(self, startarea, endarea, steps):
+		super(ExtendingGenerator, self).__init__(*startarea)
+		self.n = 0
+		self.steps = steps
+		self.diff = (array(endarea) - array(startarea))/float(steps)
 		
+	def generate(self):
+		ret = super(ExtendingGenerator, self).generate()
+		#extend area
+		if self.n < self.steps:
+			self.minx += self.diff[0]
+			self.maxx += self.diff[1]
+			self.miny += self.diff[2]
+			self.maxy += self.diff[3]
+		self.n += 1
+		return ret
+	
 import unittest
 class TestGenerators(unittest.TestCase):
 	def setUp(self):
