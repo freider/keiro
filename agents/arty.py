@@ -76,7 +76,9 @@ class Arty(Agent):
 		self.globaltree(view)
 	
 	def future_position(self, pedestrian, time):
-		return pedestrian.position + pedestrian.velocity*time
+		pos = pedestrian.position + pedestrian.velocity*time
+		pygame.draw.line(self.debugsurface, (255,0,0), pedestrian.position, pos)
+		return pos
 		
 	def freeprob_pedestrians(self, position, view, time):
 		"""Returns probability that specified position will be collision free at specified time with respect to pedestrians"""		
@@ -87,7 +89,8 @@ class Arty(Agent):
 		return 1
 	
 	def freeprob_turn(self, position, a1, a2, view, starttime):
-		dur = angle_diff(a1, a2)/self.turningspeed
+		dur = abs(angle_diff(a1, a2))/self.turningspeed
+		print dur
 		for p in view.pedestrians:
 			p1 = p.position
 			p2 = self.future_position(p, dur) #extrapolate

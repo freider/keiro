@@ -11,7 +11,7 @@ from fast.physics import Vec2d, Particle, World as PhysicsWorld
 class View(object):
 	def __init__(self, obstacles, pedestrians):
 		self.obstacles = obstacles
-		self.pedestrians = filter(lambda x: pedestrians, 
+		self.pedestrians = pedestrians
 		
 class World(PhysicsWorld):
 	def __init__(self, size, opts):
