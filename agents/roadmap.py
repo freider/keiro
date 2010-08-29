@@ -8,6 +8,8 @@ from fast.physics import Vec2d, linesegdist2, line_distance2, angle_diff
 from stategenerator import PrependedGenerator
 
 class RoadMap(Agent):
+	FREEMARGIN = 3
+	
 	def __init__(self, parameter):
 		if parameter is None:
 			parameter = 10
@@ -24,7 +26,7 @@ class RoadMap(Agent):
 		last = self.position
 		for i in xrange(self.waypoint_len()):
 			for o in view.pedestrians:
-				if linesegdist2(last, self.waypoint(i).position, o.position) <= (self.radius + o.radius)**2:
+				if linesegdist2(last, self.waypoint(i).position, o.position) <= (self.radius + o.radius + self.FREEMARGIN)**2:
 					ccourse = True
 					break
 			last = self.waypoint(i).position
@@ -32,7 +34,7 @@ class RoadMap(Agent):
 
 		gb = graphbuilder.GraphBuilder(self.speed, self.turningspeed)
 		
-		safe_distance = self.radius+1 #some margin is nice
+		safe_distance = self.radius + self.FREEMARGIN #some margin is nice
 		start = gb.node(self.position, self.angle)
 		end = gb.node(self.goal, None)
 

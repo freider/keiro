@@ -3,15 +3,14 @@ import math
 import random
 from agent import Agent, iteration
 from fast.physics import Vec2d, linesegdist2, line_distance2, angle_diff
-from stategenerator import PrependedGenerator, ExtendingGenerator
+from stategenerator import PrependedGenerator, ExtendingGenerator, StateGenerator
 
 class Arty(Agent):
-	SAFETY_THRESHOLD = 0.9
-	GLOBALNODES = 70
+	SAFETY_THRESHOLD = 0.9 #this has practically no effect in the current implementation
 	GLOBALMAXEDGE = 70
 	LOCALMAXEDGE = 50
-	LOCALMAXSIZE = 50
-	FREEMARGIN = 1
+	LOCALMAXSIZE = 10
+	FREEMARGIN = 2
 	
 	class Node:
 		def __init__(self, position, angle, parent, time = None, freeprob = None):
@@ -23,15 +22,16 @@ class Arty(Agent):
 			
 	def __init__(self, parameter):
 		if parameter is None:
-			parameter = 70
+			parameter = 60
 		super(Arty, self).__init__(parameter)
 		self.GLOBALNODES = parameter
 	
 	def globaltree(self, view):
 		#RRT from goal
 		nodes = [self.Node(self.goal, None, None)]
-		while len(nodes) < self.GLOBALNODES:
-			newpos = Vec2d(random.randrange(640), random.randrange(480)) #TODO: remove hardcoded world size
+		sg = StateGenerator(0, 640, 0, 480) #TODO: remove hardcoded world size
+
+		for newpos in sg.generate_n(self.GLOBALNODES):
 			besttime = None
 			bestnode = None
 			for tonode in nodes:
@@ -74,11 +74,14 @@ class Arty(Agent):
 	def init(self, view):
 		"""Builds the static obstacle map, global roadmap"""
 		self.globaltree(view)
+	
+	def future_position(self, pedestrian, time):
+		return pedestrian.position + pedestrian.velocity*time
 		
 	def freeprob_pedestrians(self, position, view, time):
 		"""Returns probability that specified position will be collision free at specified time with respect to pedestrians"""		
 		for p in view.pedestrians:
- 			pedestrianpos = p.position + p.velocity*time #extrapolated position
+ 			pedestrianpos = self.future_position(p, time) #extrapolated position
 			if position.distance_to(pedestrianpos) < (self.radius + p.radius + self.FREEMARGIN):
 				return 0 #collision with pedestrian
 		return 1
@@ -87,7 +90,7 @@ class Arty(Agent):
 		dur = angle_diff(a1, a2)/self.turningspeed
 		for p in view.pedestrians:
 			p1 = p.position
-			p2 = p1 + p.velocity*dur #extrapolate
+			p2 = self.future_position(p, dur) #extrapolate
 			if linesegdist2(p1, p2, position) < (self.radius + p.radius + self.FREEMARGIN)**2:
 				return 0	
 		return 1
@@ -103,7 +106,7 @@ class Arty(Agent):
 		diff = p2 - p1
 		length = diff.length()
 		v = diff/length
-		resolution = self.radius
+		resolution = self.radius*2
 		numsegments = int(math.ceil(length/resolution))
 		segmentlen = length/numsegments
 		timediff = segmentlen/self.speed
@@ -122,23 +125,6 @@ class Arty(Agent):
 		free *= self.freeprob_line(p1, p2, view, starttime + dt)
 		return free
 		
-	def path_valid(self, path, view):
-		"""Returns if a path is safe (i.e. deemed collision free)"""
-		ctime = 0
-		freeprob = 1.0
-		a1 = self.angle
-		p1 = self.position
-
-		for p2 in path[1:]:
-			a2 = (p2 - p1).angle()
-			freeprob *= self.freeprob_turn_line(p1, a1, p2, view, ctime)
-			ctime += abs(angle_diff(a1, a2))/self.turningspeed + p1.distance_to(p2)/self.speed
-			p1 = p2
-			a1 = a2
-			if freeprob < self.SAFETY_THRESHOLD:
-				return False	
-		return True
-		
 	def segment_time(self, a1, p1, p2):
 		"""Returns time to get from a state (a1, p1) to ((p2-p1).angle(), p2)"""
 		diff = p2 - p1
@@ -146,28 +132,13 @@ class Arty(Agent):
 		movetime = diff.length()/self.speed
 		return turningtime + movetime
 		
-	def path_time(self, path, startangle = None):
-		"""Returns the time it would take to traverse a path assuming there are no collisions"""
-		if startangle is None:
-			startangle = self.angle
-		a1 = startangle
-		p1 = path[0]
-		tottime = 0
-		for p2 in path[1:]:
-			tottime += self.segment_time(a1, p1, p2)
-			a1 = (p2 - p1).angle()
-			p1 = p2
-		return tottime
-			
 	def getpath(self, view):
 		"""Use the Art algorithm to get a path to the goal"""
-		
 		#first try to find global node by local planner from current position
 		testpath, testtime = self.find_globaltree(self.position, self.angle, view, 0, 1)
 		if testpath:
 			return testpath
 		#print "Cannot find global path from current, extending search tree"
-		
 		start = Arty.Node(self.position, self.angle, parent = None, time = 0, freeprob = 1)
 		nodes = [start]
 
@@ -181,7 +152,10 @@ class Arty(Agent):
 			pos = self.waypoint(i).position
 			#if pos.distance_to(self.position) <= self.radius:
 			states.prepend(pos)
-			
+		
+		bestsolution = None
+		bestsolution_time = None
+		
 		for nextpos in states.generate_n(self.LOCALMAXSIZE):
 			bestparent = None
 			for n in nodes:
@@ -216,19 +190,22 @@ class Arty(Agent):
 					nodes.append(newnode)
 
 					#get the best path to the global graph on to the goal from the new node
-					gpath, gtime = self.find_globaltree(newnode.position, newnode.angle, view, newnode.time, newnode.freeprob)
-					
+					gpath, gtime = self.find_globaltree(newnode.position, newnode.angle, view, newnode.time, newnode.freeprob)	
 					if gpath is not None:
-						path = []
-						n = newnode
-						while n != None:
-							path.append(n.position)
-							n = n.parent
-						path.reverse()
+						if bestsolution is None or gtime < bestsolution_time:
+							path = []
+							n = newnode
+							while n != None:
+								path.append(n.position)
+								n = n.parent
+							path.reverse()
 						
-						for gpos in gpath:
-							path.append(gpos)
-						return path
+							for gpos in gpath:
+								path.append(gpos)
+							
+							bestsolution = path
+							bestsolution_time = gtime
+		return bestsolution
 	
 	def find_globaltree(self, p1, a1, view, time, startprob):
 		"""Tries to reach global tree from position/angle
@@ -283,55 +260,3 @@ class Arty(Agent):
 		if path:
 			for p in path:
 				self.waypoint_push(p)
-
-import unittest
-class TestPathTime(unittest.TestCase):
-	def setUp(self):
-		a = Arty()
-		a.position = Vec2d(1,0)
-		a.angle = 0
-		a.speed = 1
-		a.goal = Vec2d(3,0)
-		a.turningspeed = math.pi/2
-		self.path = [a.position, Vec2d(1,1), a.position, a.goal]
-		self.a = a
-
-	def test_1(self):
-		self.a.angle = 0
-		res = self.a.path_time(self.path)
-		self.assertAlmostEqual(res, 8, places = 5)
-		
-	def test_2(self):
-		res = self.a.path_time(self.path, math.pi/2)
-		self.assertAlmostEqual(res, 7, places = 5)
-		
-	def test_3(self):	
-		self.a.angle = -math.pi/4
-		res = self.a.path_time(self.path)
-		self.assertAlmostEqual(res, 8.5, places = 5)
-
-	def test_4(self):
-		self.a.angle = -math.pi*3/4
-		res = self.a.path_time(self.path)
-		self.assertAlmostEqual(res, 8.5, places = 5)
-		
-	def _test_fail_pedestrian(self):
-		a = self.a
-		path = [a.position, a.goal]
-		p = Unit()
-		p.position = Vec2d(1,0)
-		view = View([], [p])
-		res = a.path_time(path, view)
-		self.assertTrue(res is None)
-		
-	def _test_fail_wall(self):
-		import obstacle
-		a = self.a
-		path = [a.position, a.goal]
-		o = obstacle.Line(Vec2d(2,1), Vec2d(2,-1))
-		view = View(o.bounds, [])
-		res = a.path_time(path, view)
-		self.assertTrue(res is None)
-
-if __name__ == "__main__":
-	unittest.main()

@@ -2,8 +2,10 @@ from fast.physics import Vec2d
 import obstacle
 import pygame
 import random
-from pedestrians.randomwalker import RandomWalker #TODO: prettier imports
+from pedestrians.randomwalker import RandomWalker, RandomWalkingAvoider #TODO: prettier imports
 from pedestrians.stubborn import Stubborn
+from unit import Unit
+import math
 
 class ScenarioRegistrar (type):
 	"""Registers all scenarios that are declared, to let the user choose"""
@@ -54,7 +56,7 @@ class RandomWalkers(Scenario):
 			init_position = self.agent.position
 			while init_position.distance_to(self.agent.position) < 20:
 				init_position = Vec2d(random.randrange(self.world.size[0]), random.randrange(self.world.size[1]))
-			u = RandomWalker()
+			u = RandomWalkingAvoider()
 			u.position = init_position
 			self.world.add_unit(u)
 
@@ -75,6 +77,8 @@ class MarketSquare(Scenario):
 
 class CrowdedMarketSquare(Scenario):
 	def __init__(self, world, agent, parameter):
+		if parameter is None:
+			parameter = 0
 		super(self.__class__, self).__init__(world, agent, parameter)
 
 		self.agent.position = Vec2d(10, 10)
@@ -88,9 +92,9 @@ class CrowdedMarketSquare(Scenario):
 				rects.append(r)
 				self.world.add_obstacle(r)
 				
-		for i in xrange(50):
+		for i in xrange(parameter):
 			good = False
-			u = RandomWalker()
+			u = RandomWalkingAvoider()
 			
 			while not good: #generate random positions for pedestrians that are not inside obstacles...
 				init_position = Vec2d(random.randrange(u.radius+1, self.world.size[0]-u.radius-1), 
@@ -194,3 +198,20 @@ class Crossing(Spawner):
 				u.angle = (p1-p2).angle()
 				
 			self.world.add_unit(u)
+
+class Test(Scenario):
+	def __init__(self, world, agent, parameter):
+		if parameter is None:
+			parameter = 50
+		super(Test, self).__init__(world, agent, parameter)
+
+		self.agent.position = Vec2d(200,200)
+		self.agent.goal = Vec2d(400,200)
+		self.agent.angle = 0
+
+		u = Stubborn()
+		u.position = Vec2d(300, 100)
+		u.goal = Vec2d(300, 300)
+		u.angle = math.pi/2
+		
+		self.world.add_unit(u)
