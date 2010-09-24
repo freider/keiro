@@ -199,6 +199,34 @@ class Crossing(Spawner):
 				
 			self.world.add_unit(u)
 
+class Maze(Scenario):
+	def __init__(self, world, agent, parameter):
+		if parameter is None:
+			parameter = 50
+		super(Maze, self).__init__(world, agent, parameter)
+
+		self.agent.position = Vec2d(200,200)
+		self.agent.goal = Vec2d(400,200)
+		self.agent.angle = 0
+
+		self.world.add_obstacle(obstacle.Line(Vec2d(100,100),Vec2d(100,300)))
+		self.world.add_obstacle(obstacle.Line(Vec2d(100,300),Vec2d(500,300)))
+		self.world.add_obstacle(obstacle.Line(Vec2d(500,300),Vec2d(500,100)))
+		self.world.add_obstacle(obstacle.Line(Vec2d(500,100),Vec2d(100,100)))
+		self.world.add_obstacle(obstacle.Line(Vec2d(300,100),Vec2d(300,250)))
+		
+		for m in xrange(parameter):
+			good = False
+			u = RandomWalkingAvoider()
+			
+			while not good: #generate random positions for pedestrians that are not inside obstacles...
+				init_position = Vec2d(random.randrange(u.radius+1, self.world.size[0]-u.radius-1), 
+									random.randrange(u.radius + 1, self.world.size[1] - u.radius - 1))
+				good = init_position.distance_to(self.agent.position) > 20
+
+			u.position = init_position
+			self.world.add_unit(u)
+
 class Test(Scenario):
 	def __init__(self, world, agent, parameter):
 		if parameter is None:
