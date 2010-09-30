@@ -141,6 +141,25 @@ const ParticleState& Particle::waypoint(int i) const{
 }
 
 void Particle::update(float dt){
+	int FORCEFACTOR = 3; // LOWER for larger force
+
+	previous_position = position;
+	if(!waypoint_len()) return;
+	
+	Vec2d diff = waypoint().position-position;
+	Vec2d force = diff.norm() * (speed/(FORCEFACTOR*dt));
+	velocity = velocity + force * dt;
+	angle = velocity.angle();
+
+	if(velocity.length() > speed) velocity = velocity.norm() * speed; //velocity limiting
+	position = position+  velocity * dt;
+
+	diff = waypoint().position-position;
+	if(diff.length() < radius) waypoint_pop_first(); //we're there
+}
+
+/*
+void Particle::update(float dt){
 	previous_position = position;
 	while(dt>0 && waypoint_len() > 0){
 		float anglediff;
@@ -189,6 +208,7 @@ void Particle::update(float dt){
 		}
 	}
 }
+*/
 
 void Particle::set_state(const Vec2d &v, float angle){
 	position = v;

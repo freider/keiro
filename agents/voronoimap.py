@@ -46,35 +46,36 @@ class VoronoiMap(Agent):
 			vPoints = []
 			for o in view.pedestrians:
 				vPoints.append(o.position)
-			vD = computeVoronoiDiagram(vPoints)
-			vDNodes = vD[0]
-			vDEdges = vD[2]
-			for e in vDEdges:
-				if((e[1] != -1) and (e[2] != -1)): #indicates line to infinity
-					gb.connect(vDNodes[e[1]], vDNodes[e[2]])
-					pygame.draw.aaline(debugsurface, (0,255,0,255), vDNodes[e[1]], vDNodes[e[2]])
+			if len(vPoints):
+				vD = computeVoronoiDiagram(vPoints)
+				vDNodes = vD[0]
+				vDEdges = vD[2]
+				for e in vDEdges:
+					if((e[1] != -1) and (e[2] != -1)): #indicates line to infinity
+						gb.connect(vDNodes[e[1]], vDNodes[e[2]])
+						pygame.draw.aaline(debugsurface, (0,255,0,255), vDNodes[e[1]], vDNodes[e[2]])
 
-			for pos in gb.positions():
-				if(graphbuilder.free_path(self.position, Vec2d(*pos), view, safe_distance)):
-					gb.connect(self.position, pos)
-					pygame.draw.aaline(debugsurface, (0,255,0,255), self.position, pos)
-				if(graphbuilder.free_path(self.goal, Vec2d(*pos), view, safe_distance)):
-					gb.connect(self.goal, pos)
-					pygame.draw.aaline(debugsurface, (0,255,0,255), self.goal, pos)
+				for pos in gb.positions():
+					if(graphbuilder.free_path(self.position, Vec2d(*pos), view, safe_distance)):
+						gb.connect(self.position, pos)
+						pygame.draw.aaline(debugsurface, (0,255,0,255), self.position, pos)
+					if(graphbuilder.free_path(self.goal, Vec2d(*pos), view, safe_distance)):
+						gb.connect(self.goal, pos)
+						pygame.draw.aaline(debugsurface, (0,255,0,255), self.goal, pos)
 
-			for p in gb.positions():
-				pygame.draw.circle(debugsurface, (0,0,0), map(int, p), 2, 0)
-
-		nodes = gb.all_nodes()
+		
 		start = gb.node(self.position, self.angle)
 		end = gb.node(self.goal, None)
+		nodes = gb.all_nodes()
+		for p in gb.positions():
+			pygame.draw.circle(debugsurface, (0,0,0), map(int, p), 2, 0)
+
 		result = graphutils.shortest_path(start, end, nodes)
 		if result.success:
 			result.path = [tuple(self.position)]
 			for i in result.indices:
-				if result.path[-1] != nodes[i].position:
+				if result.path[-1] != nodes[i].position: # gets rid of duplicate pathpoints (?)
 					result.path.append(nodes[i].position)
-		
 	
 		if ccourse is True:
 			self.waypoint_clear()

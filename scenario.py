@@ -32,7 +32,7 @@ class Scenario(object): #abstract
 		
 	def run(self):
 		while 1:
-			if self.agent.position == self.agent.goal:
+			if self.agent.position.distance_to(self.agent.goal) <= self.agent.radius:
 				return True
 				
 			for event in pygame.event.get():

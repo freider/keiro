@@ -27,7 +27,7 @@ class Agent(Unit):
 	"""Base class for all navigational algorithms"""
 	__metaclass__ = AgentRegistrar
 	
-	view_range = 100
+	view_range = 150
 	def __init__(self, parameter):
 		super(Agent, self).__init__()
 		self.parameter = parameter
