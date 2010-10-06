@@ -68,7 +68,7 @@ class VoronoiMap(Agent):
 		if graphbuilder.free_path(self.position, self.goal - diff.norm()*self.radius, view, safe_distance):
 			gb.connect(self.position, self.goal)
 		else:
-			vPoints = []
+			vPoints = [self.position, self.goal]
 			for o in view.pedestrians:
 				vPoints.append(o.position)
 			for p in self.staticVPoints:
