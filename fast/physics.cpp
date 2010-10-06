@@ -320,6 +320,36 @@ std::vector<Particle*> World::particles_in_range(const Particle *from, float ran
 	return res;
 }
 
+std::vector<Particle*> World::particles_in_view_range(const Particle *from, float range) const{
+	float range2 = range*range;
+	std::vector<Particle*> restemp;
+	std::vector<Particle*> res;
+	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
+		if(particles[i] != from && particles[i]->position.distance_to2(from->position) <= range2)
+			restemp.push_back(particles[i]);
+	}
+
+	bool occluded;
+	for(size_t i = 0, sz = restemp.size(); i<sz; ++i){
+		if(particles[i] != from){
+			occluded = false;
+			for(size_t j = 0; j<sz; ++j){
+				if(i == j || restemp[j] == from)
+					continue;
+				else if(linesegdist2(from->position, restemp[i]->position, restemp[j]->position) <= (restemp[j]->radius)*(restemp[j]->radius)){
+					occluded = true;
+					break;
+				}
+			}
+			if(!occluded){}
+				// occluded by OBSTACLES??
+		}
+		if(!occluded)
+			res.push_back(restemp[i]);
+	}
+	return res;
+}
+
 std::vector<Obstacle*> World::get_obstacles() const {
 	return obstacles;
 }

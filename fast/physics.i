@@ -113,5 +113,6 @@ public:
 	void update(float dt);
 	int num_particles();
 	std::vector<Particle*> particles_in_range(const Particle *from, float range) const;
+	std::vector<Particle*> particles_in_view_range(const Particle *from, float range) const;
 	std::vector<Obstacle*> get_obstacles() const;
 };

@@ -8,7 +8,7 @@ from fast.physics import Vec2d, linesegdist2, line_distance2, angle_diff
 from stategenerator import PrependedGenerator
 
 class RoadMap(Agent):
-	FREEMARGIN = 3
+	FREEMARGIN = 1
 	
 	def __init__(self, parameter):
 		if parameter is None:

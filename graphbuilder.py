@@ -18,6 +18,13 @@ def free_path(p1, p2, view, safe_distance = 0):
 			
 	return True
 
+def free_path_obstacles_only(p1, p2, view, safe_distance = 0):
+	safedistsquare = safe_distance**2
+	for o in view.obstacles:
+		if line_distance2(p1, p2, o.p1, o.p2) <= safedistsquare:
+			return False		
+	return True
+
 class SimpleGraphBuilder(object):
 	def __init__(self):
 		self.graph = {} #position => node

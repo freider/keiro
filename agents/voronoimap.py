@@ -20,11 +20,35 @@ class VoronoiMap(Agent):
 		super(VoronoiMap, self).__init__(parameter)
 		self.NODES = parameter
 		self.cdist = 10000000
+		self.staticVPoints = []
 	
 	@iteration	
 	def think(self, dt, view, debugsurface):		
 		if not self.goal: #have no goal?
 			return
+
+		if len(self.staticVPoints) == 0:
+			for o in view.obstacles:
+				already = False
+				for p in self.staticVPoints:
+					if o.p1 == p:
+						already = True
+						break
+				if not already:
+					self.staticVPoints.append(o.p1)
+				already = False
+				for p in self.staticVPoints:
+					if o.p2 == p:
+						already = True
+						break
+				if not already:
+					self.staticVPoints.append(o.p2)
+
+				obstacle_length = o.p1.distance_to(o.p2)
+				num_midpoints = int(obstacle_length/(7.5*self.radius))
+				for m in xrange(num_midpoints):
+					self.staticVPoints.append(o.p1+(o.p2-o.p1)*(m+1)/(num_midpoints+1))
+
 		#debugsurface.fill((255, 0, 0, 100))
 		ccourse = False
 		last = self.position
@@ -39,27 +63,34 @@ class VoronoiMap(Agent):
 		gb = graphbuilder.GraphBuilder(self.speed, self.turningspeed)
 		
 		safe_distance = self.radius + self.FREEMARGIN #some margin is nice
-
-		if graphbuilder.free_path(self.position, self.goal, view, safe_distance):
+		
+		diff = self.goal - self.position # in order to ignore obstacles just beyond the goal
+		if graphbuilder.free_path(self.position, self.goal - diff.norm()*self.radius, view, safe_distance):
 			gb.connect(self.position, self.goal)
 		else:
 			vPoints = []
 			for o in view.pedestrians:
 				vPoints.append(o.position)
+			for p in self.staticVPoints:
+				vPoints.append(p)
+			
 			if len(vPoints):
 				vD = computeVoronoiDiagram(vPoints)
 				vDNodes = vD[0]
 				vDEdges = vD[2]
-				for e in vDEdges:
+				for e in vDEdges: # build the voronoi map
 					if((e[1] != -1) and (e[2] != -1)): #indicates line to infinity
-						gb.connect(vDNodes[e[1]], vDNodes[e[2]])
-						pygame.draw.aaline(debugsurface, (0,255,0,255), vDNodes[e[1]], vDNodes[e[2]])
+						if graphbuilder.free_path_obstacles_only(Vec2d(*vDNodes[e[1]]), Vec2d(*vDNodes[e[2]]), view, safe_distance):
+							gb.connect(vDNodes[e[1]], vDNodes[e[2]])
+							pygame.draw.aaline(debugsurface, (0,255,0,255), vDNodes[e[1]], vDNodes[e[2]])
 
-				for pos in gb.positions():
-					if(graphbuilder.free_path(self.position, Vec2d(*pos), view, safe_distance)):
+				for pos in gb.positions(): # get off the voronoi map
+					diff = self.position - Vec2d(*pos)
+					if(graphbuilder.free_path(self.position, Vec2d(*pos), view, safe_distance) and (diff.length() <= self.view_range)):
 						gb.connect(self.position, pos)
 						pygame.draw.aaline(debugsurface, (0,255,0,255), self.position, pos)
-					if(graphbuilder.free_path(self.goal, Vec2d(*pos), view, safe_distance)):
+					diff = self.goal - Vec2d(*pos)
+					if(graphbuilder.free_path(self.goal, Vec2d(*pos), view, 0) and (diff.length() <= self.view_range)):
 						gb.connect(self.goal, pos)
 						pygame.draw.aaline(debugsurface, (0,255,0,255), self.goal, pos)
 
@@ -773,6 +804,3 @@ if __name__=="__main__":
 
     sl = SiteList(pts)
     voronoi(sl,c)
-
-#---------
-computeVoronoiDiagram([Vec2d(0,0),Vec2d(0,1),Vec2d(1,0)])
