@@ -1,7 +1,7 @@
 import pygame
 import math
 from functools import wraps
-from fast.physics import Particle
+from fast.physics import Particle, Vec2d
 
 class Unit(Particle):
 	color = (255,255,255)
@@ -22,7 +22,7 @@ class Unit(Particle):
 		
 	def render(self, screen):
 		pygame.draw.circle(screen, self.color, 
-			map(int, self.position), int(self.radius), 0)
+			map(int, self.position), int(self.radius), 0) # width=0 means filled circle
 		pygame.draw.circle(screen, (0,0,0), 
 			map(int, self.position), int(self.radius), 2)
 			
@@ -32,3 +32,8 @@ class Unit(Particle):
 		pygame.draw.line(screen, (0,0,0),
 			map(int, self.position), 
 			dirvector, 2)
+
+	def render_ID(self, screen, ID):
+		myFont = pygame.font.SysFont("Arial", 8)
+		idsurface = myFont.render(str(ID), 8, pygame.Color("black"))
+		screen.blit(idsurface, map(int, self.position + Vec2d(-2,4)))

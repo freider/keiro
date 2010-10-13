@@ -331,19 +331,16 @@ std::vector<Particle*> World::particles_in_view_range(const Particle *from, floa
 
 	bool occluded;
 	for(size_t i = 0, sz = restemp.size(); i<sz; ++i){
-		if(particles[i] != from){
-			occluded = false;
-			for(size_t j = 0; j<sz; ++j){
-				if(i == j || restemp[j] == from)
-					continue;
-				else if(linesegdist2(from->position, restemp[i]->position, restemp[j]->position) <= (restemp[j]->radius)*(restemp[j]->radius)){
-					occluded = true;
-					break;
-				}
+		occluded = false;
+		for(size_t j = 0; j<sz; ++j){
+			if(i == j)
+				continue;
+			else if(linesegdist2(from->position, restemp[i]->position, restemp[j]->position) <= (restemp[j]->radius)*(restemp[j]->radius)){								occluded = true;
+				break;
 			}
-			if(!occluded){}
-				// occluded by OBSTACLES??
 		}
+		if(!occluded){}
+			// occluded by OBSTACLES??
 		if(!occluded)
 			res.push_back(restemp[i]);
 	}

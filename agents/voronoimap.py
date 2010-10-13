@@ -27,6 +27,10 @@ class VoronoiMap(Agent):
 		if not self.goal: #have no goal?
 			return
 
+		for p in view.pedestrians:
+   			pygame.draw.circle(debugsurface, pygame.Color("green"), map(int, p.position), int(p.radius+2), 2)
+			#pygame.draw.aaline(debugsurface, pygame.Color("yellow"), map(int, self.position), map(int, p.position))
+
 		if len(self.staticVPoints) == 0:
 			for o in view.obstacles:
 				already = False
@@ -71,8 +75,9 @@ class VoronoiMap(Agent):
 			vPoints = [self.position, self.goal]
 			for o in view.pedestrians:
 				vPoints.append(o.position)
-			for p in self.staticVPoints:
-				vPoints.append(p)
+			for vP in self.staticVPoints:
+				#if(self.position.distance_to(vP) <= self.view_range):
+					vPoints.append(vP)
 			
 			if len(vPoints):
 				vD = computeVoronoiDiagram(vPoints)
@@ -85,8 +90,9 @@ class VoronoiMap(Agent):
 							pygame.draw.aaline(debugsurface, (0,255,0,255), vDNodes[e[1]], vDNodes[e[2]])
 
 				for pos in gb.positions(): # get off the voronoi map
-					diff = self.position - Vec2d(*pos)
-					if(graphbuilder.free_path(self.position, Vec2d(*pos), view, safe_distance) and (diff.length() <= self.view_range)):
+					diff = Vec2d(*pos) - self.position
+					if(graphbuilder.free_path(self.position + diff.norm()*self.radius, Vec2d(*pos), view, safe_distance) and (diff.length() <= self.view_range)):
+						#so agent is not blocked by pedestrian next to it
 						gb.connect(self.position, pos)
 						pygame.draw.aaline(debugsurface, (0,255,0,255), self.position, pos)
 					diff = self.goal - Vec2d(*pos)

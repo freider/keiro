@@ -93,8 +93,11 @@ class World(PhysicsWorld):
 			
 		for o in self.obstacles:
 			o.render(screen)
+		ID = 0
 		for u in self.units:
+			u.render_ID(screen, ID)
 			u.render(screen)
+			ID = ID + 1
 
 		screen.blit(self.debugsurface, (0, 0))
 
