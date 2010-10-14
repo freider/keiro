@@ -64,7 +64,7 @@ class VoronoiMap(Agent):
 			last = self.waypoint(i).position
 			if ccourse: break
 
-		gb = graphbuilder.GraphBuilder(self.speed, self.turningspeed)
+		gb = graphbuilder.SimpleGraphBuilder()
 		
 		safe_distance = self.radius + self.FREEMARGIN #some margin is nice
 		
