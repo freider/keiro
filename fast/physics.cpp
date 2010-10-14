@@ -341,8 +341,7 @@ std::vector<Particle*> World::particles_in_view_range(const Particle *from, floa
 		}
 		if(!occluded){
 			for(size_t j = 0, oz = obstacles.size(); j<oz; ++j) {
-				if((from->position.distance_to(obstacles[j]->p1) > range) && (from->position.distance_to(obstacles[j]->p2) > range)) // endpoints out of range
-					continue;
+				if((from->position.distance_to(obstacles[j]->p1) <= range) || (from->position.distance_to(obstacles[j]->p2) <= range)) // obstacle in range
 				if(line_distance2(from->position, in_range[i]->position, obstacles[j]->p1, obstacles[j]->p2) == 0){ // behind an obstacle
 					occluded = true;
 					break;
