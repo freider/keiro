@@ -322,27 +322,35 @@ std::vector<Particle*> World::particles_in_range(const Particle *from, float ran
 
 std::vector<Particle*> World::particles_in_view_range(const Particle *from, float range) const{
 	float range2 = range*range;
-	std::vector<Particle*> restemp;
+	std::vector<Particle*> in_range;
 	std::vector<Particle*> res;
 	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
 		if(particles[i] != from && particles[i]->position.distance_to2(from->position) <= range2)
-			restemp.push_back(particles[i]);
+			in_range.push_back(particles[i]);
 	}
 
 	bool occluded;
-	for(size_t i = 0, sz = restemp.size(); i<sz; ++i){
+	for(size_t i = 0, sz = in_range.size(); i<sz; ++i){ // go through pedestrians in range
 		occluded = false;
-		for(size_t j = 0; j<sz; ++j){
+		for(size_t j = 0; j<sz; ++j){ // go through all other pedestrians in range
 			if(i == j)
 				continue;
-			else if(linesegdist2(from->position, restemp[i]->position, restemp[j]->position) <= (restemp[j]->radius)*(restemp[j]->radius)){								occluded = true;
+			else if(linesegdist2(from->position, in_range[i]->position, in_range[j]->position) <= (in_range[j]->radius)*(in_range[j]->radius)){							occluded = true;
 				break;
 			}
 		}
-		if(!occluded){}
-			// occluded by OBSTACLES??
+		if(!occluded){
+			for(size_t j = 0, oz = obstacles.size(); j<oz; ++j) {
+				if((from->position.distance_to(obstacles[j]->p1) > range) && (from->position.distance_to(obstacles[j]->p2) > range)) // endpoints out of range
+					continue;
+				if(line_distance2(from->position, in_range[i]->position, obstacles[j]->p1, obstacles[j]->p2) == 0){ // behind an obstacle
+					occluded = true;
+					break;
+				}
+			}
+		}
 		if(!occluded)
-			res.push_back(restemp[i]);
+			res.push_back(in_range[i]);
 	}
 	return res;
 }
