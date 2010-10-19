@@ -43,10 +43,10 @@ class Scenario(object): #abstract
 				if overtime == 0:
 					if(len(self.world.avg_groundspeed_list)):
 						print "Average Average Ground Speed:", sum(self.world.avg_groundspeed_list)/len(self.world.avg_groundspeed_list)
+						print "Agent Ground Speed:", self.agent.travel_length/agent_out_time
 					if(len(self.world.collision_list)):
 						print "Average Collisions:", sum(self.world.collision_list)/len(self.world.collision_list)
-					print "Agent Ground Speed:", self.agent.travel_length/agent_out_time
-					print "Agent Collisions:", self.agent.collisions
+						print "Agent Collisions:", self.agent.collisions
 					return True
 				
 			for event in pygame.event.get():
