@@ -32,6 +32,7 @@ class Agent(Unit):
 		super(Agent, self).__init__()
 		self.parameter = parameter
 		self.color = (100, 100,255)
+		self.travel_length = 0
 
 	def render(self, screen):
 		#draw a cross over the target

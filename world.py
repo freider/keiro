@@ -24,6 +24,9 @@ class World(PhysicsWorld):
 		self.timestep = opts.timestep
 		self.fps = opts.fps
 		self.encoders = []
+
+		self.collision_list = []
+		self.avg_groundspeed_list = []
 		
 	def add_unit(self, unit):
 		self.units.append(unit)
@@ -95,7 +98,7 @@ class World(PhysicsWorld):
 			o.render(screen)
 		ID = 0
 		for u in self.units:
-			u.render_ID(screen, ID)
+			#u.render_ID(screen, ID)
 			u.render(screen)
 			ID = ID + 1
 

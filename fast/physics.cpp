@@ -141,7 +141,7 @@ const ParticleState& Particle::waypoint(int i) const{
 }
 
 void Particle::update(float dt){
-	int FORCEFACTOR = 3; // LOWER for larger force
+	int FORCEFACTOR = 2; // LOWER for larger force
 
 	previous_position = position;
 	if(!waypoint_len()) return;

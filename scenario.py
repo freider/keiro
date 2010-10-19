@@ -31,9 +31,23 @@ class Scenario(object): #abstract
 		pass
 		
 	def run(self):
+		overtime = -1
+		agent_out_time = 0
 		while 1:
 			if self.agent.position.distance_to(self.agent.goal) <= self.agent.radius:
-				return True
+				## for Crossing scenario only
+				if (agent_out_time == 0):
+					self.world.remove_unit(self.agent)
+					agent_out_time = self.world._time
+				overtime = overtime + 1
+				if overtime == 0:
+					if(len(self.world.avg_groundspeed_list)):
+						print "Average Average Ground Speed:", sum(self.world.avg_groundspeed_list)/len(self.world.avg_groundspeed_list)
+					if(len(self.world.collision_list)):
+						print "Average Collisions:", sum(self.world.collision_list)/len(self.world.collision_list)
+					print "Agent Ground Speed:", self.agent.travel_length/agent_out_time
+					print "Agent Collisions:", self.agent.collisions
+					return True
 				
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
@@ -164,6 +178,9 @@ class Crossing(Spawner):
 		self.agent.position = Vec2d(10, world.size[1]/2)
 		self.agent.goal = Vec2d(world.size[0]-10, world.size[1]/2)
 		self.agent.angle = (self.agent.goal-self.agent.position).angle()
+
+		agent_travel = self.agent.goal - self.agent.position
+		agent.travel_length = agent_travel.length()
 		
 	def random_xpos(self, unit):
 		return random.randrange(unit.radius+1, self.world.size[0]-unit.radius-1)
@@ -173,8 +190,13 @@ class Crossing(Spawner):
 		
 	def spawn(self, num_units):
 		for u in self.world.units:
-			if u is not self.agent and u.position.distance_to(u.goal) < 1:
+			if u is not self.agent and u.position.distance_to(u.goal) <= u.radius:
 				self.world.remove_unit(u)
+				avg_groundspeed = u.travel_length/(self.world._time-u.spawn_time)
+				self.world.avg_groundspeed_list.append(avg_groundspeed)
+				self.world.collision_list.append(u.collisions)
+				#print ["Pedestrian Speed:", avg_groundspeed]
+				#print ["Number of collisions:", u.collisions]
 			
 		for i in xrange(num_units):
 			u = Stubborn()
@@ -197,6 +219,9 @@ class Crossing(Spawner):
 				u.goal = p1
 				u.angle = (p1-p2).angle()
 				
+			travel = u.goal - u.position
+			u.travel_length = travel.length()
+			u.spawn_time = self.world._time
 			self.world.add_unit(u)
 
 class Maze(Scenario):
