@@ -1,6 +1,11 @@
 #include <vector>
 #include <deque>
 #include <cstdio>
+//#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+//#include <CGAL/convex_hull_2.h>
+
+//typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+//typedef K::Point_2 Point_2;
 
 class Vec2d{
 public:
@@ -82,6 +87,7 @@ public:
 	void unbind(Obstacle *l);
 	void update(float dt);
 	int num_particles();
+	//std::vector<Vec2d> convex_hull_of_all_particles() const;
 	std::vector<Particle*> particles_in_range(const Particle *from, float range) const;
 	std::vector<Particle*> particles_in_view_range(const Particle *from, float range) const;
 	std::vector<Obstacle*> get_obstacles() const;

@@ -4,6 +4,11 @@
 #include <cstdio>
 #include <cassert>
 #include <algorithm>
+//#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+//#include <CGAL/convex_hull_2.h>
+
+//typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+//typedef K::Point_2 Point_2;
 
 Vec2d::Vec2d():x(0),y(0){
 }
@@ -152,7 +157,7 @@ void Particle::update(float dt){
 	angle = velocity.angle();
 
 	if(velocity.length() > speed) velocity = velocity.norm() * speed; //velocity limiting
-	position = position+  velocity * dt;
+	position = position + velocity * dt;
 
 	diff = waypoint().position-position;
 	if(diff.length() < radius) waypoint_pop_first(); //we're there
@@ -309,6 +314,20 @@ void World::update(float dt){
 int World::num_particles(){
 	return particles.size();
 }
+/*
+std::vector<Vec2d> World::convex_hull_of_all_particles() const{
+	std::vector<Point_2> ch;
+	std::vector<Point_2> points;
+	std::vector<Vec2d> result;
+	for(size_t i = 0, sz = particles.size(); i<sz; ++i){
+		points.push_back(Point_2(particles[i]->position.x, particles[i]->position.y));
+	}
+	CGAL::convex_hull_2(points.begin(), points.end(), std::back_inserter(ch));
+	for(size_t i = 0, sz = ch.size(); i<sz; ++i){
+		result.push_back(Vec2d(ch[i].x(), ch[i].y()));
+	}
+	return result;
+}*/
 
 std::vector<Particle*> World::particles_in_range(const Particle *from, float range) const{
 	float range2 = range*range;

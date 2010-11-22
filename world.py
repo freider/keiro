@@ -79,6 +79,7 @@ class World(PhysicsWorld):
 			if u.view_range != 0:
 				view = View(self.get_obstacles(), self.particles_in_view_range(u, u.view_range))
 				#view = View(self.get_obstacles(), self.particles_in_range(u, u.view_range))
+				#view.convexHull = self.convex_hull_of_all_particles();
 			else:
 				view = View(self.get_obstacles(), [])
 				

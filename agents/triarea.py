@@ -11,17 +11,17 @@ import getopt
 TOLERANCE = 1e-9
 BIG_FLOAT = 1e38
 
-class VoronoiMap(Agent):
+class TriArea(Agent):
 	FREEMARGIN = 2
 	
 	def __init__(self, parameter):
 		if parameter is None:
 			parameter = 10
-		super(VoronoiMap, self).__init__(parameter)
+		super(TriArea, self).__init__(parameter)
 		self.NODES = parameter
 		self.cdist = 10000000
 		self.speed = 20
-		self.staticVPoints = []
+		self.staticDPoints = []
 	
 	@iteration	
 	def think(self, dt, view, debugsurface):		
@@ -33,61 +33,49 @@ class VoronoiMap(Agent):
 			#pygame.draw.aaline(debugsurface, pygame.Color("yellow"), map(int, self.position), map(int, p.position))
 
 		#generating static voronoi points (only performed once)
-		if len(self.staticVPoints) == 0:
+		if len(self.staticDPoints) == 0:
 			for o in view.obstacles:
 				already = False
-				for p in self.staticVPoints:
+				for p in self.staticDPoints:
 					if o.p1 == p:
 						already = True
 						break
 				if not already:
-					self.staticVPoints.append(o.p1)
+					self.staticDPoints.append(o.p1)
 				already = False
-				for p in self.staticVPoints:
+				for p in self.staticDPoints:
 					if o.p2 == p:
 						already = True
 						break
 				if not already:
-					self.staticVPoints.append(o.p2)
+					self.staticDPoints.append(o.p2)
 
 				obstacle_length = o.p1.distance_to(o.p2)
 				num_midpoints = int(obstacle_length/(7.5*self.radius))
 				for m in xrange(num_midpoints):
-					self.staticVPoints.append(o.p1+(o.p2-o.p1)*(m+1)/(num_midpoints+1))
-
-		#convex hull test
-		#lastPos = [];
-		#for pos in view.convexHull:
-		#	pygame.draw.aaline(debugsurface, (255,0,0,255), map(int, pos), map(int, lastPos))
-		#	lastPos = pos
-
-		#debugsurface.fill((255, 0, 0, 100))
-		ccourse = False
-		last = self.position
-		for i in xrange(self.waypoint_len()):
-			for o in view.pedestrians:
-				if linesegdist2(last, self.waypoint(i).position, o.position) <= (self.radius + o.radius + self.FREEMARGIN)**2:
-					ccourse = True
-					break
-			last = self.waypoint(i).position
-			if ccourse: break
-
-		gb = graphbuilder.SimpleGraphBuilder()
+					self.staticDPoints.append(o.p1+(o.p2-o.p1)*(m+1)/(num_midpoints+1))
 		
 		safe_distance = self.radius + self.FREEMARGIN #some margin is nice
-		
+
 		diff = self.goal - self.position # in order to ignore obstacles just beyond the goal
 		if graphbuilder.free_path(self.position, self.goal - diff.norm()*self.radius, view, safe_distance):
-			gb.connect(self.position, self.goal)
+			self.waypoint_clear()
+			self.waypoint_push(self.position)
+			self.waypoint_push(self.goal)
 		else:
-			vPoints = [self.position, self.goal]
+			dPoints = [self.position, self.goal]
 			for o in view.pedestrians:
-				vPoints.append(o.position)
-			for vP in self.staticVPoints:
-				#if(self.position.distance_to(vP) <= self.view_range):
-					vPoints.append(vP)
-			
-			if len(vPoints):
+				dPoints.append(o.position)
+			for dP in self.staticDPoints:
+				if(self.position.distance_to(dP) <= self.view_range):
+					dPoints.append(dP)
+
+			if(0): # to get a global best path (avoids known obstacles)
+				vPoints = [self.position, self.goal]
+				for vP in self.staticDPoints:
+					vPoints.append(vP)		
+
+				gb = graphbuilder.SimpleGraphBuilder()
 				vD = computeVoronoiDiagram(vPoints)
 				vDNodes = vD[0]
 				vDEdges = vD[2]
@@ -96,40 +84,68 @@ class VoronoiMap(Agent):
 						if graphbuilder.free_path_obstacles_only(Vec2d(*vDNodes[e[1]]), Vec2d(*vDNodes[e[2]]), view, safe_distance):
 							gb.connect(vDNodes[e[1]], vDNodes[e[2]])
 							pygame.draw.aaline(debugsurface, (0,255,0,255), vDNodes[e[1]], vDNodes[e[2]])
-
+	
 				for pos in gb.positions(): # get off the voronoi map
 					diff = Vec2d(*pos) - self.position
 					if(graphbuilder.free_path(self.position + diff.norm()*self.radius, Vec2d(*pos), view, safe_distance) and (diff.length() <= self.view_range)):
 						#so agent is not blocked by pedestrian next to it
 						gb.connect(self.position, pos)
 						pygame.draw.aaline(debugsurface, (0,255,0,255), self.position, pos)
-					diff = self.goal - Vec2d(*pos)
+					diff = self.goal - Vec2d(*pos)			
 					if(graphbuilder.free_path(self.goal, Vec2d(*pos), view, 0) and (diff.length() <= self.view_range)):
 						gb.connect(self.goal, pos)
 						pygame.draw.aaline(debugsurface, (0,255,0,255), self.goal, pos)
-
-		
-		start = gb.node(self.position, self.angle)
-		end = gb.node(self.goal, None)
-		nodes = gb.all_nodes()
-		for p in gb.positions():
-			pygame.draw.circle(debugsurface, (0,0,0), map(int, p), 2, 0)
-
-		result = graphutils.shortest_path(start, end, nodes)
-		if result.success:
-			result.path = [tuple(self.position)]
-			for i in result.indices:
-				if result.path[-1] != nodes[i].position: # gets rid of duplicate pathpoints (?)
-					result.path.append(nodes[i].position)
 	
-		if ccourse is True:
-			self.waypoint_clear()
+				start = gb.node(self.position, self.angle)
+				end = gb.node(self.goal, None)
+				nodes = gb.all_nodes()
+				for p in gb.positions():
+					pygame.draw.circle(debugsurface, (0,0,0), map(int, p), 2, 0)	
+
+				result = graphutils.shortest_path(start, end, nodes)
+				for r in xrange(len(result.indices)-1):
+					pygame.draw.aaline(debugsurface, (255,0,255,255), nodes[result.indices[r]].position, nodes[result.indices[r+1]].position)
+				
+				if len(result.indices) > 1:
+					bestHeading = Vec2d(*nodes[result.indices[1]].position) - self.position
+				else:
+					bestHeading = self.goal - self.position
+			else:
+				bestHeading = self.goal - self.position
 			
-		if result.success is True and (self.waypoint_len() == 0 or result.total_cost < self.cdist):
+			neighborPairs = []
+			dD = computeDelaunayTriangulation(dPoints)
+			for d in dD:
+				if(d[0] == 0):
+					pygame.draw.aaline(debugsurface, (255,0,0,255), dPoints[d[0]], dPoints[d[1]])
+					pygame.draw.aaline(debugsurface, (255,0,0,255), dPoints[d[0]], dPoints[d[2]])
+					neighborPairs.append([dPoints[d[1]], dPoints[d[2]]])
+				if(d[1] == 0):
+					pygame.draw.aaline(debugsurface, (255,0,0,255), dPoints[d[1]], dPoints[d[0]])
+					pygame.draw.aaline(debugsurface, (255,0,0,255), dPoints[d[1]], dPoints[d[2]])
+					neighborPairs.append([dPoints[d[0]], dPoints[d[2]]])
+				if(d[2] == 0):
+					pygame.draw.aaline(debugsurface, (255,0,0,255), dPoints[d[2]], dPoints[d[1]])
+					pygame.draw.aaline(debugsurface, (255,0,0,255), dPoints[d[2]], dPoints[d[0]])
+					neighborPairs.append([dPoints[d[0]], dPoints[d[1]]])
+			
+			maxArea = 0
+			for n in neighborPairs:
+				A = tuple(self.position)
+				B = n[0]
+				C = n[1]
+				midPoint = [(B[0]+C[0])/2,(B[1]+C[1])/2]
+				midPointHeading = Vec2d(*midPoint) - self.position
+				area = abs(A[0]*B[1]+B[0]*C[1]+C[0]*A[1]-A[1]*B[0]-B[1]*C[0]-C[1]*A[0]) * pow((1+math.cos(bestHeading.angle(midPointHeading)))/2,1)
+							#the higher the power, the more focused the weighting is on the goalpoint
+				if area > maxArea:
+					maxArea = area
+					maxMidPoint = midPoint			
+
 			self.waypoint_clear()
-			for p in result.path:
-				self.waypoint_push(Vec2d(*p))
-			self.cdist = result.total_cost
+			self.waypoint_push(self.position)
+			self.waypoint_push(Vec2d(*maxMidPoint))
+			#pygame.draw.aaline(debugsurface, (255,0,0,255), tuple(self.position), maxMidPoint)
 
 #------------------------------------------------------------------
 class Context(object):
@@ -779,7 +795,7 @@ def computeDelaunayTriangulation(points):
     """
     siteList = SiteList(points)
     context  = Context()
-    context.triangulate = true
+    context.triangulate = True
     voronoi(siteList,context)
     return context.triangles
 

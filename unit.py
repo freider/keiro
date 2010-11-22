@@ -10,7 +10,7 @@ class Unit(Particle):
 	def __init__(self):
 		Particle.__init__(self)
 		self.radius = 8
-		self.speed = 30
+		self.speed = 20
 		self.turningspeed = 2*math.pi/3
 		self.iteration_listeners = []
 			
