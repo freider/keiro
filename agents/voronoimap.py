@@ -55,12 +55,6 @@ class VoronoiMap(Agent):
 				for m in xrange(num_midpoints):
 					self.staticVPoints.append(o.p1+(o.p2-o.p1)*(m+1)/(num_midpoints+1))
 
-		#convex hull test
-		lastPos = [];
-		for pos in view.convexHull:
-			pygame.draw.aaline(debugsurface, (255,0,0,255), map(int, pos), map(int, lastPos))
-			lastPos = pos
-
 		#debugsurface.fill((255, 0, 0, 100))
 		ccourse = False
 		last = self.position

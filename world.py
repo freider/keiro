@@ -83,7 +83,6 @@ class World(PhysicsWorld):
 			if u.view_range != 0:
 				#view = View(self.get_obstacles(), self.particles_in_range(u, u.view_range))
 				view = View(self.get_obstacles(), self.particles_in_view_range(u, u.view_range)) #(with occlusion)
-				#view.add_ch(self.chap())
 			else:
 				view = View(self.get_obstacles(), [])
 				
