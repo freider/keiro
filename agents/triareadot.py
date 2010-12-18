@@ -122,11 +122,11 @@ class TriAreaDot(Agent):
 					nbr = True
 					nbrIndexB = d[1]
 					nbrIndexC = d[2]
-				if(d[1] == 0):
+				elif(d[1] == 0):
 					nbr = True
 					nbrIndexB = d[0]
 					nbrIndexC = d[2]
-				if(d[2] == 0):
+				elif(d[2] == 0):
 					nbr = True
 					nbrIndexB = d[0]
 					nbrIndexC = d[1]
@@ -144,11 +144,11 @@ class TriAreaDot(Agent):
 					neighborData.append([dPoints[nbrIndexB], dPoints[nbrIndexC], velB, velC])
 			
 			maxAreaDot = -1e100
+			Ax = self.position.x
+			Ay = self.position.y
+			AxDot = self.velocity.x
+			AyDot = self.velocity.y
 			for n in neighborData:
-				Ax = self.position.x
-				Ay = self.position.y
-				AxDot = self.velocity.x
-				AyDot = self.velocity.y
 				Bx = n[0][0]
 				By = n[0][1]
 				BxDot = n[2][0]

@@ -12,6 +12,10 @@ class View(object):
 	def __init__(self, obstacles, pedestrians):
 		self.obstacles = obstacles
 		self.pedestrians = pedestrians
+		self.convex_hull = []
+
+	def add_ch(self, ch):
+		self.convex_hull = ch
 		
 class World(PhysicsWorld):
 	def __init__(self, size, opts):
@@ -77,9 +81,9 @@ class World(PhysicsWorld):
 		
 		for u in self.units:
 			if u.view_range != 0:
-				view = View(self.get_obstacles(), self.particles_in_view_range(u, u.view_range))
 				#view = View(self.get_obstacles(), self.particles_in_range(u, u.view_range))
-				#view.convexHull = self.convex_hull_of_all_particles();
+				view = View(self.get_obstacles(), self.particles_in_view_range(u, u.view_range)) #(with occlusion)
+				#view.add_ch(self.chap())
 			else:
 				view = View(self.get_obstacles(), [])
 				
