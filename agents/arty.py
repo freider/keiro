@@ -90,7 +90,6 @@ class Arty(Agent):
 	
 	def freeprob_turn(self, position, a1, a2, view, starttime):
 		dur = abs(angle_diff(a1, a2))/self.turningspeed
-		print dur
 		for p in view.pedestrians:
 			p1 = p.position
 			p2 = self.future_position(p, dur) #extrapolate
@@ -252,10 +251,10 @@ class Arty(Agent):
 		for n in self.globalnodes:
 			if n.parent:
 				pygame.draw.line(debugsurface, pygame.Color("black"), n.position, n.parent.position)
-			pygame.draw.circle(debugsurface, pygame.Color("red"), n.position, 2, 0)
+			pygame.draw.circle(debugsurface, pygame.Color("red"), map(int, n.position), 2, 0)
 
 		for p in view.pedestrians:
-			pygame.draw.circle(debugsurface, pygame.Color("green"), p.position, p.radius+2, 2)
+			pygame.draw.circle(debugsurface, pygame.Color("green"), map(int, p.position), int(p.radius)+2, 2)
 
 		path = self.getpath(view)
 		self.waypoint_clear()
