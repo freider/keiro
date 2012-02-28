@@ -11,3 +11,4 @@ fast/graphutils.py
 fast/physics.py
 .DS_Store
 videos/*
+env
