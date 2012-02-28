@@ -61,5 +61,5 @@ int main(void){
 	b.connect(1, c);
 	c.connect(4, d);
 	Path res = shortest_path(a, d);
-	printf("%d\n", res.total_cost);
+	printf("%lf\n", res.total_cost);
 }
