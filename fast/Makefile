@@ -1,10 +1,10 @@
 all: physics.py _physics.so graphutils.py _graphutils.so
 
 _physics.so: setup_physics.py physics_wrap.cxx physics.cpp
-	python setup_physics.py build_ext --inplace  -I/opt/local/include/ -L/opt/local/lib -lgmp
+	python setup_physics.py build_ext --inplace  -I/opt/local/include/
 
 _graphutils.so: setup_graphutils.py graphutils_wrap.cxx graphutils.cpp
-	python setup_graphutils.py build_ext --inplace -I/opt/local/include/ -L/opt/local/lib -lgmp
+	python setup_graphutils.py build_ext --inplace -I/opt/local/include/
 
 physics.py physics_wrap.cxx: physics.i physics.h
 	swig -python -c++ physics.i
