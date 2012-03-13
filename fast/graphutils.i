@@ -2,7 +2,7 @@
 %module graphutils
 %include "std_vector.i"
 %{
-#include "graphutils.h"
+#include "graphutils.hpp"
 %}
 %template(int_vector) std::vector<int>; 
 %template(node_vector) std::vector<Node*>; 

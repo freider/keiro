@@ -22,7 +22,9 @@ public:
 	std::vector<Edge> edges;
 	float cost_here;
 	float est_cost_there;
-	float cost_through_here(){return cost_here + est_cost_there;}
+	float cost_through_here() {
+		return cost_here + est_cost_there;
+	}
 	float _best_expanded; //used internally by A*
 	Node *parent;
 	int index;

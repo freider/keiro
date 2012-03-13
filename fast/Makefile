@@ -1,3 +1,21 @@
+cpp: vector2d.o particle.o geometry.o acceleratingparticle.o linearparticle.o
+
+vector2d.o: vector2d.cpp vector2d.hpp
+	g++ -c vector2d.cpp
+
+particle.o: particle.cpp particle.hpp
+	g++ -c particle.cpp
+
+geometry.o: geometry.cpp geometry.hpp
+	g++ -c geometry.cpp
+
+acceleratingparticle.o: acceleratingparticle.cpp acceleratingparticle.hpp particle.o
+	g++ -c acceleratingparticle.cpp
+
+linearparticle.o: linearparticle.cpp linearparticle.hpp particle.o
+	g++ -c linearparticle.cpp
+
+
 all: physics.py _physics.so graphutils.py _graphutils.so
 
 _physics.so: setup_physics.py physics_wrap.cxx physics.cpp
@@ -18,5 +36,6 @@ clean:
 	rm -f *~ *.pyc *.pyo
 	rm -f *.so
 	rm -rf build
-	
 
+cleancpp:
+	rm -f *.o
