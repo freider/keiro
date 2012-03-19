@@ -1,3 +1,6 @@
+#ifndef _PARTICLE_HPP
+#define _PARTICLE_HPP
+
 #include <vector>
 #include <deque>
 #include <cstdio>
@@ -31,7 +34,7 @@ public:
 	void waypoint_pop_first();
 	int waypoint_len() const;
 	const ParticleState &waypoint(int i=0) const;
-	void update(float dt);
+	virtual void update(float dt) = 0;
 	void set_state(const Vec2d &v, float angle);
 };
 
@@ -61,3 +64,5 @@ private:
 	std::vector<Particle*> particles;
 	std::vector<Obstacle*> obstacles;
 };
+
+#endif

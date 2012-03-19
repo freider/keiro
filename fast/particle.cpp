@@ -50,6 +50,10 @@ const ParticleState& Particle::waypoint(int i) const{
     return path[i];
 }
 
+void Particle::set_state(const Vec2d &v, float angle_){
+    position = v;
+    angle = angle_;
+}
 
 Obstacle::Obstacle(const Vec2d &p1, const Vec2d &p2) :
     world(NULL),

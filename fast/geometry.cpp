@@ -4,6 +4,9 @@
 #include <cmath>
 
 float linesegdist2(Vec2d l1, Vec2d l2, Vec2d p){
+    /*
+    Squared value of the closest distance between point p and the line segment between l1 and l2
+    */
     Vec2d diff = l2-l1;
     Vec2d unit = diff.norm();
     float seglen = diff.length();
@@ -25,6 +28,9 @@ int _sign(float f) {
 }
 
 float line_distance2(Vec2d l11, Vec2d l12, Vec2d l21, Vec2d l22){
+    /*
+    Squared value of the closest distance between line segments l11-l2 and l21-l22
+    */
     if (_sign((l21 - l11).cross(l22 - l11)) != _sign((l21 - l12).cross(l22 - l12)) &&
         _sign((l11 - l21).cross(l12 - l21)) != _sign((l11 - l22).cross(l12 - l22)))
         return 0;
@@ -34,10 +40,13 @@ float line_distance2(Vec2d l11, Vec2d l12, Vec2d l21, Vec2d l22){
 }
     
 float angle_diff(float a1, float a2){
-    float anglediff = fmod(a1 - a2, 2*M_PI);
+    /*
+    Returns angle difference a1 - a2 in an interval between -2pi and 2pi regardless of the absolute value of the inputs
+    */ 
+    float anglediff = (float)fmod(a1 - a2, 2*M_PI);
     if(anglediff > M_PI)
-        anglediff -= 2*M_PI;
+        anglediff -= 2*(float)M_PI;
     else if (anglediff < -M_PI)
-        anglediff += 2*M_PI;
+        anglediff += 2*(float)M_PI;
     return anglediff;
 }
