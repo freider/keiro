@@ -1,22 +1,19 @@
 #!/usr/bin/env python
 
-"""
-setup.py file for physics and graph modules
-"""
-
 from distutils.core import setup, Extension
 
+vector2d_module = Extension('_vector2d',
+    sources=['vector2d.i', 'vector2d.cpp'],
+    swig_opts=["-c++"])
 
-physics_module = Extension('_physics',
-                           sources=['physics_wrap.cxx', 'physics.cpp'],
-                           )
+particle_module = Extension('_particle',
+    sources=['particle.i', 'particle.cpp'],
+    swig_opts=["-c++"])
 
-setup (name = 'physics',
-       version = '0.1',
-       author      = "Elias Freider",
-       description = """Particle engine.
-       Each Particle """,
-       ext_modules = [physics_module],
-       py_modules = ["physics"],
+setup(name='keiro.fast',
+       version='0.1',
+       author="Elias Freider",
+       description="""Fast and leightweight helper classes""",
+       ext_modules=[vector2d_module, particle_module],
+       #py_modules=["vector2d"],
        )
-

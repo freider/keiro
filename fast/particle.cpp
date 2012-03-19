@@ -3,11 +3,11 @@
 #include "particle.hpp"
 
 Particle::Particle(float x, float y, float dir)
-    :radius(0),
+    :world(NULL),
+    radius(0),
     speed(0),
     collisions(0),
-    velocity(0,0),
-    world(NULL)
+    velocity(0,0)
 {
     Vec2d vec(x, y);
     previous_position = position = vec;
@@ -44,14 +44,20 @@ void Particle::waypoint_pop_first(){
 }
 
 int Particle::waypoint_len() const{
-    return path.size();
+    return (int)path.size();
 }
 const ParticleState& Particle::waypoint(int i) const{
     return path[i];
 }
 
 
-Obstacle::Obstacle(const Vec2d &p1, const Vec2d &p2) : p1(p1), p2(p2), world(NULL) { }
+Obstacle::Obstacle(const Vec2d &p1, const Vec2d &p2) :
+    world(NULL),
+    p1(p1),
+    p2(p2)
+{
+}
+
 Obstacle::~Obstacle(){
     if(world != NULL)
         world->unbind(this);
@@ -108,7 +114,7 @@ void World::update(float dt){
                 //collision
                 particles[i]->collisions++;
                 particles[j]->collisions++;
-                float diff = sqrt(dist2) - sqrt(safe_dist2);
+                float diff = (float)sqrt(dist2) - (float)sqrt(safe_dist2);
                 Vec2d dirv(1,0);
                 if(dist2 != 0)
                     dirv = (particles[i]->position - particles[j]->position).norm();
@@ -140,7 +146,7 @@ void World::update(float dt){
 }
 
 int World::num_particles(){
-    return particles.size();
+    return (int)particles.size();
 }
 
 std::vector<Particle*> World::particles_in_range(const Particle *from, float range) const{

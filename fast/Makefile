@@ -1,7 +1,8 @@
-cpp: vector2d.o particle.o geometry.o acceleratingparticle.o linearparticle.o
+vector2d.py vector2d_wrap.cxx: vector2d.cpp vector2d.hpp vector2d.i
+	swig -python -c++ vector2d.i
 
-vector2d.o: vector2d.cpp vector2d.hpp
-	g++ -c vector2d.cpp
+_vector2d.so: vector2d_wrap.cxx vector2d.cpp setup_physics.py
+	python setup_physics.py build_ext --inplace
 
 particle.o: particle.cpp particle.hpp
 	g++ -c particle.cpp

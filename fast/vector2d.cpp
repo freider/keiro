@@ -9,7 +9,7 @@ float Vec2d::length2() const{
     return x*x + y*y;
 }
 float Vec2d::length() const{
-    return sqrt(length2());
+    return (float)sqrt(length2());
 }
 Vec2d Vec2d::norm() const{
     return operator/(length());
@@ -30,7 +30,7 @@ bool Vec2d::operator==(const Vec2d &v) const{
     return x==v.x && y==v.y;
 }
 float Vec2d::distance_to(const Vec2d &v) const{
-    return sqrt(distance_to2(v));
+    return (float)sqrt(distance_to2(v));
 }
 float Vec2d::distance_to2(const Vec2d &v) const{
     return (x-v.x)*(x-v.x)+(y-v.y)*(y-v.y);
@@ -42,8 +42,8 @@ float Vec2d::cross(const Vec2d &v) const{
     return x*v.y - v.x*y;
 }
 float Vec2d::angle(const Vec2d &v) const{
-    return acos(this->norm().dot(v.norm()));
+    return (float)acos(this->norm().dot(v.norm()));
 }
 float Vec2d::angle() const{
-    return atan2(y,x);
+    return (float)atan2(y,x);
 }
