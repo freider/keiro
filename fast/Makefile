@@ -7,9 +7,11 @@ clean:
 	python setup.py clean
 
 clean_all: clean
-
-	rm -f *.cxx
+	for mod in $(modules); do \
+		rm -f $${mod}.py $${mod}_wrap.cpp; \
+	done
 	rm -f *~ *.pyc *.pyo
 	rm -f *.so
-	rm -rf build
 	rm -f *.o
+
+test:
