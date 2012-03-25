@@ -19,7 +19,7 @@ class Particle : public ParticleState {
 	std::deque<ParticleState> path;
 public:
 	Particle(float x=0, float y=0, float dir=1);
-	~Particle();
+	virtual ~Particle();
 	float radius;
 	float speed;
 	float turningspeed;

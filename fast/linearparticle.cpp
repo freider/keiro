@@ -4,6 +4,8 @@
 #include "vector2d.hpp"
 #include "geometry.hpp"
 
+LinearParticle::LinearParticle(float x, float y, float dir) : Particle(x, y, dir) {}
+
 void LinearParticle::update(float dt){
 	previous_position = position;
 	while(dt>0 && waypoint_len() > 0){
@@ -54,3 +56,9 @@ void LinearParticle::update(float dt){
 	}
 }
 
+int main(){
+    printf("Hej!\n");
+    LinearParticle p((float)1.0, (float)2.0, (float)0);
+    printf("%f %f\n", p.position.x, p.position.y);
+    return 0;
+}

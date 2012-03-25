@@ -1,4 +1,5 @@
 %module particle
+%include vector2d.i
 %{
     #include "particle.hpp"
     #include "linearparticle.hpp"
@@ -11,12 +12,7 @@ public:
 };
 
 class Particle : public ParticleState {
-    friend class World;
-    World *world;
-    std::deque<ParticleState> path;
 public:
-    LinearParticle(float x=0, float y=0, float dir=1);
-    ~LinearParticle();
     float radius;
     float speed;
     float turningspeed;
@@ -24,6 +20,9 @@ public:
     Vec2d previous_position;
     Vec2d velocity;
 
+    Particle(float x=0, float y=0, float dir=1);
+    virtual ~Particle();
+    
     void waypoint_clear();
     void waypoint_push(const Vec2d &v);
     void waypoint_push(const Vec2d &v, float angle);
@@ -38,5 +37,6 @@ public:
 
 class LinearParticle : public Particle {
 public:
+    LinearParticle(float x=0, float y=0, float dir=1);
     void update(float dt);
 };
