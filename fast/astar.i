@@ -1,8 +1,8 @@
-/* graphutils.i */
-%module graphutils
+/* astar.i */
+%module astar
 %include "std_vector.i"
 %{
-#include "graphutils.hpp"
+#include "astar.hpp"
 %}
 %template(int_vector) std::vector<int>; 
 %template(node_vector) std::vector<Node*>; 

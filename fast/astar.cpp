@@ -1,4 +1,4 @@
-#include "graphutils.h"
+#include "astar.hpp"
 #include <cstdio>
 
 Path shortest_path(Node &start, Node &goal, const std::vector<Node*> &nodes){
