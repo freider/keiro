@@ -8,8 +8,9 @@ build/*
 *.so
 *.orig
 marcs_codebase*
-fast/graphutils.py
-fast/physics.py
+fast/*.py
+fast/*_wrap.cpp
+*.sqlite3
 .DS_Store
 videos/*
 env
