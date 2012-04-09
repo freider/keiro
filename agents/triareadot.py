@@ -1,11 +1,8 @@
 import pygame
 import math
-import random
 from agent import Agent, iteration
 import graphbuilder
-from fast import graphutils, physics
-from fast.physics import Vec2d, linesegdist2, line_distance2, angle_diff
-from stategenerator import PrependedGenerator
+from fast import astar
 import sys
 import getopt
 TOLERANCE = 1e-9
@@ -103,7 +100,7 @@ class TriAreaDot(Agent):
 				for p in gb.positions():
 					pygame.draw.circle(debugsurface, (0,0,0), map(int, p), 2, 0)	
 
-				result = graphutils.shortest_path(start, end, nodes)
+				result = astar.shortest_path(start, end, nodes)
 				for r in xrange(len(result.indices)-1):
 					pygame.draw.aaline(debugsurface, (255,0,255,255), nodes[result.indices[r]].position, nodes[result.indices[r+1]].position)
 				

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from world import World, View
-import pedestrians
+import pedestrians  # imported to register available pedestrians
 from agents import *
 from scenarios import *
 from scenario import ScenarioRegistrar
@@ -8,7 +8,6 @@ from agent import AgentRegistrar
 from iterations import IterationRegister
 
 import mencoder
-
 import os
 import random
 import cProfile
