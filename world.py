@@ -9,15 +9,11 @@ class View(object):
     def __init__(self, obstacles, pedestrians):
         self.obstacles = obstacles
         self.pedestrians = pedestrians
-        self.convex_hull = []
-
-    def add_ch(self, ch):
-        self.convex_hull = ch
 
 
 class World(PhysicsWorld):
     def __init__(self, size, opts):
-        PhysicsWorld.__init__(self)
+        super(World, self).__init__()
         self.size = size
         self.units = []
         self.obstacles = []
