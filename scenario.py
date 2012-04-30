@@ -262,6 +262,7 @@ class Maze(Scenario):
 
 
 class Test(Scenario):
+    """ Test scenario where a predictive algorithm should perform better than a non-predictive """
     def __init__(self, world, agent, parameter):
         if parameter is None:
             parameter = 50
