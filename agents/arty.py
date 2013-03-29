@@ -159,12 +159,17 @@ class Arty(Agent):
         start = Arty.Node(self.position, self.angle, parent=None, time=0, freeprob=1)
         nodes = [start]
 
-        states = ExtendingGenerator((self.position.x - self.view_range, self.position.x + self.view_range,
-            self.position.y - self.view_range, self.position.y + self.view_range),
+        # TODO: add unit test to see that last iteration gets reused
+        states = ExtendingGenerator(
+            (self.position.x - self.view_range,
+            self.position.x + self.view_range,
+            self.position.y - self.view_range,
+            self.position.y + self.view_range),
             (0, 640, 0, 480),  # TODO: remove hardcoded world size)
             10)  # arbitrarily chosen
 
-        #always try to use the nodes from the last solution in this iterations so they are kept if still the best
+        #always try to use the nodes from the last solution in this iterations
+        #so they are kept if still the best
         for i in xrange(self.waypoint_len()):
             pos = self.waypoint(i).position
             #if pos.distance_to(self.position) <= self.radius:
@@ -178,11 +183,11 @@ class Arty(Agent):
             besttime = None
             for n in nodes:
                 freeprob = self.freeprob_turn_line(n.position, n.angle, nextpos, view, n.time)
-                endtime = n.time + self.segment_time(n.angle, n.position, nextpos)
-
-                newprob = freeprob * n.freeprob
+                newprob = n.freeprob * freeprob
                 if newprob < self.SAFETY_THRESHOLD:
                     continue
+                endtime = n.time + self.segment_time(n.angle, n.position, nextpos)
+
                 if bestparent is None or endtime < besttime:
                     bestparent = n
                     besttime = endtime
@@ -198,7 +203,7 @@ class Arty(Agent):
                 lastnode = bestparent
 
                 for d in xrange(1, div + 1):
-                    #not 100% sure everything here is correct, variable names are a bit confusing...
+                    #add new node and subdivisions to new graph
                     subpos = bestparent.position + diff * d / div
                     freeprob = self.freeprob_turn_line(lastnode.position, lastnode.angle, subpos, view, lastnode.time)
                     dt = self.segment_time(lastnode.angle, lastnode.position, subpos)

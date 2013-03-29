@@ -6,7 +6,8 @@ Path shortest_path(Node &start, Node &goal, const std::vector<Node*> &nodes){
 	if(return_path){
 		//mark nodes with indices
 		for(int i = 0; i<(int)nodes.size(); ++i){
-			nodes[i]->index = i;		
+			nodes[i]->index = i;
+			assert(nodes[i]._best_expanded > 1e10); // make sure we get fresh graph nodes	
 		}
 	}
 	Path result;
@@ -17,10 +18,13 @@ Path shortest_path(Node &start, Node &goal, const std::vector<Node*> &nodes){
 		pqnode n = pq.top();
 		pq.pop();
 		Node &node = *n.second;
-		if(&node == &goal) 
-			break; //this is only valid if the heuristic is consistent
-		if(n.first >= node._best_expanded)
-			continue; //we have done better
+		if(&node == &goal) { 
+			printf("Breaking A* on goal");
+			break; //breaking is only valid if the heuristic is consistent!
+		}
+		if(n.first >= node._best_expanded) {
+			continue; //we have visited node before at a lower cost
+		}
 		node._best_expanded = n.first;
 		//printf("expanding %d\n", node.index);
 		for(size_t i = 0; i<node.edges.size(); i++){
