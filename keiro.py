@@ -7,7 +7,7 @@ from scenario import ScenarioRegistrar
 from agent import AgentRegistrar
 from iterations import IterationRegister
 
-import mencoder
+import ffmpeg_encode
 import os
 import random
 import cProfile
@@ -47,11 +47,17 @@ if __name__ == "__main__":
         iterations = IterationRegister()
         agent.add_iteration_listener(iterations)
 
-        world = World((640, 480), opts)  # TODO: refactor world creation to each scenario (scenario should decide world size etc.)
+        world_size = (640, 480)
+        world = World(world_size, opts)  # TODO: refactor world creation to each scenario (scenario should decide world size etc.)
 
-        if opts.capture != None:
-            encoder = mencoder.Encoder()
-            world.add_encoder(encoder)
+        video = None
+        if opts.capture != None and opts.timestep != 0:
+            approx_framerate = int(1 / opts.timestep)
+
+            video = ffmpeg_encode.Video(path=opts.capture,
+                                        frame_rate=approx_framerate,
+                                        frame_size=world_size)
+            world.add_encoder(video)
 
         scenario = ScenarioClass(world, agent, opts.scenarioparameter)
         world.init()
@@ -81,6 +87,5 @@ if __name__ == "__main__":
                 print("User triggered quit, no record saved to database")
                 quit()
 
-        if opts.capture != None and opts.timestep != 0:
-            encoder.encode(int(1 / opts.timestep), opts.capture)
-            encoder.cleanup()
+        if video:
+            video.close()
