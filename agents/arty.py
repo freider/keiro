@@ -1,6 +1,6 @@
 import pygame
 import math
-from agent import Agent, iteration
+from agent import Agent
 from fast.vector2d import Vec2d
 from fast.geometry import linesegdist2, line_distance2, angle_diff
 from stategenerator import ExtendingGenerator, StateGenerator, PrependedGenerator
@@ -263,7 +263,6 @@ class Arty(Agent):
 
         return (bestpath, besttime)
 
-    @iteration
     def think(self, dt, view, debugsurface):
         if not self.goal:
             return

@@ -80,7 +80,7 @@ class World(PhysicsWorld):
             else:
                 view = View(self.get_obstacles(), [])
 
-            u.think(dt, view, self.debugsurface)
+            u._think(dt, view, self.debugsurface)
 
         if self.fps:
             sys.stdout.write("%f fps           \r" % self.clock.get_fps())

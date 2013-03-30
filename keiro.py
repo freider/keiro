@@ -5,7 +5,6 @@ from agents import *
 from scenarios import *
 from scenario import ScenarioRegistrar
 from agent import AgentRegistrar
-from iterations import IterationRegister
 
 import ffmpeg_encode
 import os
@@ -44,8 +43,6 @@ if __name__ == "__main__":
         AgentClass = AgentRegistrar.register[opts.agent]
 
         agent = AgentClass(opts.agentparameter)
-        iterations = IterationRegister()
-        agent.add_iteration_listener(iterations)
 
         world_size = (640, 480)
         world = World(world_size, opts)  # TODO: refactor world creation to each scenario (scenario should decide world size etc.)
@@ -77,9 +74,9 @@ if __name__ == "__main__":
                 record.view_range = agent.view_range
                 record.timestep = opts.timestep
                 record.collisions = agent.collisions
-                record.avg_iteration_time = iterations.get_avg_iterationtime()
-                record.max_iteration_time = iterations.get_max_iterationtime()
-                record.min_iteration_time = iterations.get_min_iterationtime()
+                record.avg_iteration_time = agent.iterations.get_avg_iterationtime()
+                record.max_iteration_time = agent.iterations.get_max_iterationtime()
+                record.min_iteration_time = agent.iterations.get_min_iterationtime()
                 record.completion_time = world.get_time()
                 record.save()
                 print("Saved record to database")

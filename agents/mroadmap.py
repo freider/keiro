@@ -1,6 +1,6 @@
 import pygame
 import random
-from agent import Agent, iteration
+from agent import Agent
 import graphbuilder
 from fast import astar
 from fast.vector2d import Vec2d
@@ -17,7 +17,6 @@ class MRoadMap(Agent):
         self.NODES = parameter
         self.cdist = 10000000
 
-    @iteration
     def think(self, dt, view, debugsurface):
         if not self.goal:  # have no goal?
             return

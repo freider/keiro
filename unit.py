@@ -21,6 +21,9 @@ class Unit(LinearParticle):
     def think(self, dt, view, debugsurface):
         pass
 
+    def _think(self, *args, **kwargs):
+        self.think(*args, **kwargs)
+
     def render(self, screen):
         pygame.draw.circle(screen, self.color,
             map(int, self.position), int(self.radius), 0)  # width=0 means filled circle
