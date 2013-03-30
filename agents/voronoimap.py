@@ -1,6 +1,6 @@
 import pygame
 import math
-from agent import Agent, iteration
+from agent import Agent
 import graphbuilder
 from fast import astar
 import sys
@@ -8,119 +8,119 @@ import getopt
 TOLERANCE = 1e-9
 BIG_FLOAT = 1e38
 
+
 class VoronoiMap(Agent):
-	FREEMARGIN = 2
-	
-	def __init__(self, parameter):
-		if parameter is None:
-			parameter = 10
-		super(VoronoiMap, self).__init__(parameter)
-		self.NODES = parameter
-		self.cdist = 10000000
-		self.speed = 20
-		self.staticVPoints = []
-	
-	@iteration	
-	def think(self, dt, view, debugsurface):		
-		if not self.goal: #have no goal?
-			return
+    FREEMARGIN = 2
+    
+    def __init__(self, parameter):
+        if parameter is None:
+            parameter = 10
+        super(VoronoiMap, self).__init__(parameter)
+        self.NODES = parameter
+        self.cdist = 10000000
+        self.speed = 20
+        self.staticVPoints = []
+    
+    def think(self, dt, view, debugsurface):        
+        if not self.goal: #have no goal?
+            return
 
-		for p in view.pedestrians:
-   			pygame.draw.circle(debugsurface, pygame.Color("green"), map(int, p.position), int(p.radius+2), 2)
-			#pygame.draw.aaline(debugsurface, pygame.Color("yellow"), map(int, self.position), map(int, p.position))
+        for p in view.pedestrians:
+            pygame.draw.circle(debugsurface, pygame.Color("green"), map(int, p.position), int(p.radius+2), 2)
+            #pygame.draw.aaline(debugsurface, pygame.Color("yellow"), map(int, self.position), map(int, p.position))
 
-		#generating static voronoi points (only performed once)
-		if len(self.staticVPoints) == 0:
-			for o in view.obstacles:
-				already = False
-				for p in self.staticVPoints:
-					if o.p1 == p:
-						already = True
-						break
-				if not already:
-					self.staticVPoints.append(o.p1)
-				already = False
-				for p in self.staticVPoints:
-					if o.p2 == p:
-						already = True
-						break
-				if not already:
-					self.staticVPoints.append(o.p2)
+        #generating static voronoi points (only performed once)
+        if len(self.staticVPoints) == 0:
+            for o in view.obstacles:
+                already = False
+                for p in self.staticVPoints:
+                    if o.p1 == p:
+                        already = True
+                        break
+                if not already:
+                    self.staticVPoints.append(o.p1)
+                already = False
+                for p in self.staticVPoints:
+                    if o.p2 == p:
+                        already = True
+                        break
+                if not already:
+                    self.staticVPoints.append(o.p2)
 
-				obstacle_length = o.p1.distance_to(o.p2)
-				num_midpoints = int(obstacle_length/(7.5*self.radius))
-				for m in xrange(num_midpoints):
-					self.staticVPoints.append(o.p1+(o.p2-o.p1)*(m+1)/(num_midpoints+1))
+                obstacle_length = o.p1.distance_to(o.p2)
+                num_midpoints = int(obstacle_length/(7.5*self.radius))
+                for m in xrange(num_midpoints):
+                    self.staticVPoints.append(o.p1+(o.p2-o.p1)*(m+1)/(num_midpoints+1))
 
-		#debugsurface.fill((255, 0, 0, 100))
-		ccourse = False
-		last = self.position
-		for i in xrange(self.waypoint_len()):
-			for o in view.pedestrians:
-				if linesegdist2(last, self.waypoint(i).position, o.position) <= (self.radius + o.radius + self.FREEMARGIN)**2:
-					ccourse = True
-					break
-			last = self.waypoint(i).position
-			if ccourse: break
+        #debugsurface.fill((255, 0, 0, 100))
+        ccourse = False
+        last = self.position
+        for i in xrange(self.waypoint_len()):
+            for o in view.pedestrians:
+                if linesegdist2(last, self.waypoint(i).position, o.position) <= (self.radius + o.radius + self.FREEMARGIN)**2:
+                    ccourse = True
+                    break
+            last = self.waypoint(i).position
+            if ccourse: break
 
-		gb = graphbuilder.SimpleGraphBuilder()
-		
-		safe_distance = self.radius + self.FREEMARGIN #some margin is nice
-		
-		diff = self.goal - self.position # in order to ignore obstacles just beyond the goal
-		if graphbuilder.free_path(self.position, self.goal - diff.norm()*self.radius, view, safe_distance):
-			gb.connect(self.position, self.goal)
-		else:
-			vPoints = [self.position, self.goal]
-			for o in view.pedestrians:
-				vPoints.append(o.position)
-			for vP in self.staticVPoints:
-				#if(self.position.distance_to(vP) <= self.view_range):
-					vPoints.append(vP)
-			
-			if len(vPoints):
-				vD = computeVoronoiDiagram(vPoints)
-				vDNodes = vD[0]
-				vDEdges = vD[2]
-				for e in vDEdges: # build the voronoi map
-					if((e[1] != -1) and (e[2] != -1)): #indicates line to infinity
-						if graphbuilder.free_path_obstacles_only(Vec2d(*vDNodes[e[1]]), Vec2d(*vDNodes[e[2]]), view, safe_distance):
-							gb.connect(vDNodes[e[1]], vDNodes[e[2]])
-							pygame.draw.aaline(debugsurface, (0,255,0,255), vDNodes[e[1]], vDNodes[e[2]])
+        gb = graphbuilder.SimpleGraphBuilder()
+        
+        safe_distance = self.radius + self.FREEMARGIN #some margin is nice
+        
+        diff = self.goal - self.position # in order to ignore obstacles just beyond the goal
+        if graphbuilder.free_path(self.position, self.goal - diff.norm()*self.radius, view, safe_distance):
+            gb.connect(self.position, self.goal)
+        else:
+            vPoints = [self.position, self.goal]
+            for o in view.pedestrians:
+                vPoints.append(o.position)
+            for vP in self.staticVPoints:
+                #if(self.position.distance_to(vP) <= self.view_range):
+                    vPoints.append(vP)
+            
+            if len(vPoints):
+                vD = computeVoronoiDiagram(vPoints)
+                vDNodes = vD[0]
+                vDEdges = vD[2]
+                for e in vDEdges: # build the voronoi map
+                    if((e[1] != -1) and (e[2] != -1)): #indicates line to infinity
+                        if graphbuilder.free_path_obstacles_only(Vec2d(*vDNodes[e[1]]), Vec2d(*vDNodes[e[2]]), view, safe_distance):
+                            gb.connect(vDNodes[e[1]], vDNodes[e[2]])
+                            pygame.draw.aaline(debugsurface, (0,255,0,255), vDNodes[e[1]], vDNodes[e[2]])
 
-				for pos in gb.positions(): # get off the voronoi map
-					diff = Vec2d(*pos) - self.position
-					if(graphbuilder.free_path(self.position + diff.norm()*self.radius, Vec2d(*pos), view, safe_distance) and (diff.length() <= self.view_range)):
-						#so agent is not blocked by pedestrian next to it
-						gb.connect(self.position, pos)
-						pygame.draw.aaline(debugsurface, (0,255,0,255), self.position, pos)
-					diff = self.goal - Vec2d(*pos)
-					if(graphbuilder.free_path(self.goal, Vec2d(*pos), view, 0) and (diff.length() <= self.view_range)):
-						gb.connect(self.goal, pos)
-						pygame.draw.aaline(debugsurface, (0,255,0,255), self.goal, pos)
+                for pos in gb.positions(): # get off the voronoi map
+                    diff = Vec2d(*pos) - self.position
+                    if(graphbuilder.free_path(self.position + diff.norm()*self.radius, Vec2d(*pos), view, safe_distance) and (diff.length() <= self.view_range)):
+                        #so agent is not blocked by pedestrian next to it
+                        gb.connect(self.position, pos)
+                        pygame.draw.aaline(debugsurface, (0,255,0,255), self.position, pos)
+                    diff = self.goal - Vec2d(*pos)
+                    if(graphbuilder.free_path(self.goal, Vec2d(*pos), view, 0) and (diff.length() <= self.view_range)):
+                        gb.connect(self.goal, pos)
+                        pygame.draw.aaline(debugsurface, (0,255,0,255), self.goal, pos)
 
-		
-		start = gb.node(self.position, self.angle)
-		end = gb.node(self.goal, None)
-		nodes = gb.all_nodes()
-		for p in gb.positions():
-			pygame.draw.circle(debugsurface, (0,0,0), map(int, p), 2, 0)
+        
+        start = gb.node(self.position, self.angle)
+        end = gb.node(self.goal, None)
+        nodes = gb.all_nodes()
+        for p in gb.positions():
+            pygame.draw.circle(debugsurface, (0,0,0), map(int, p), 2, 0)
 
-		result = astar.shortest_path(start, end, nodes)
-		if result.success:
-			result.path = [tuple(self.position)]
-			for i in result.indices:
-				if result.path[-1] != nodes[i].position: # gets rid of duplicate pathpoints (?)
-					result.path.append(nodes[i].position)
-	
-		if ccourse is True:
-			self.waypoint_clear()
-			
-		if result.success is True and (self.waypoint_len() == 0 or result.total_cost < self.cdist):
-			self.waypoint_clear()
-			for p in result.path:
-				self.waypoint_push(Vec2d(*p))
-			self.cdist = result.total_cost
+        result = astar.shortest_path(start, end, nodes)
+        if result.success:
+            result.path = [tuple(self.position)]
+            for i in result.indices:
+                if result.path[-1] != nodes[i].position: # gets rid of duplicate pathpoints (?)
+                    result.path.append(nodes[i].position)
+    
+        if ccourse is True:
+            self.waypoint_clear()
+            
+        if result.success is True and (self.waypoint_len() == 0 or result.total_cost < self.cdist):
+            self.waypoint_clear()
+            for p in result.path:
+                self.waypoint_push(Vec2d(*p))
+            self.cdist = result.total_cost
 
 #------------------------------------------------------------------
 class Context(object):
