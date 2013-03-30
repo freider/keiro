@@ -1,5 +1,3 @@
-syntax: glob
-
 *~
 *.pyc
 *.cxx
@@ -13,4 +11,3 @@ fast/*_wrap.cpp
 *.sqlite3
 .DS_Store
 videos/*
-env
