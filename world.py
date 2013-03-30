@@ -1,6 +1,5 @@
 import pygame
 import sys
-import Image
 
 from fast.particle import World as PhysicsWorld
 
@@ -108,7 +107,5 @@ class World(PhysicsWorld):
         if len(self.encoders) > 0:
             mode = "RGB"
             imagestring = pygame.image.tostring(screen, mode)
-            image = Image.fromstring(mode, self.size, imagestring)
-
             for enc in self.encoders:
-                enc.add_frame(image)
+                enc.add_frame(imagestring)
