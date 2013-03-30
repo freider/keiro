@@ -1,5 +1,6 @@
 #include "astar.hpp"
 #include <cstdio>
+#include <cassert>
 
 Path shortest_path(Node &start, Node &goal, const std::vector<Node*> &nodes){
 	bool return_path = (nodes.size() != 0);
