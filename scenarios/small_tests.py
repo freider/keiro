@@ -9,6 +9,7 @@ class CrossingPaths(Scenario):
 
     A predictive algorithm should perform better than a non-predictive
     """
+
     def init(self):
         self.agent.position = Vec2d(200, 200)
         self.agent.goal = Vec2d(400, 200)

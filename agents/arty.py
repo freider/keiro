@@ -162,9 +162,10 @@ class Arty(Agent):
         # TODO: add unit test to see that last iteration gets reused
         states = ExtendingGenerator(
             (self.position.x - self.view_range,
-            self.position.x + self.view_range,
-            self.position.y - self.view_range,
-            self.position.y + self.view_range),
+             self.position.x + self.view_range,
+             self.position.y - self.view_range,
+             self.position.y + self.view_range
+             ),
             (0, 640, 0, 480),  # TODO: remove hardcoded world size)
             10)  # arbitrarily chosen
 
@@ -217,7 +218,7 @@ class Arty(Agent):
                         if bestsolution is None or gtime < bestsolution_time:
                             path = []
                             n = newnode
-                            while n != None:
+                            while n is not None:
                                 path.append(n.position)
                                 n = n.parent
                             path.reverse()
@@ -244,7 +245,7 @@ class Arty(Agent):
             #try to reach goal from global node
             path = []
             cur = n
-            while cur.parent != None and free >= self.SAFETY_THRESHOLD:
+            while cur.parent is not None and free >= self.SAFETY_THRESHOLD:
                 path.append(cur.position)
                 free *= self.freeprob_turn_line(cur.position, a2, cur.parent.position, view, t)
                 t += self.segment_time(a2, cur.position, cur.parent.position)
