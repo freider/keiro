@@ -119,11 +119,12 @@ void World::update(float dt){
                 particles[i]->collisions++;
                 particles[j]->collisions++;
                 float diff = (float)sqrt(dist2) - (float)sqrt(safe_dist2);
-                Vec2d dirv(1,0);
+                Vec2d dirv(1,0); // dummy bounce-vector when units stack exactly on top of each other
                 if(dist2 != 0)
                     dirv = (particles[i]->position - particles[j]->position).norm();
-                particles[j]->set_state(particles[j]->position + dirv*diff, particles[j]->angle);
-                particles[i]->set_state(particles[i]->position - dirv*diff, particles[i]->angle);
+                float bounce = diff / 2;  // TODO: introduce 'weight' to guide how much each particle bounces
+                particles[j]->set_state(particles[j]->position + dirv*bounce, particles[j]->angle);
+                particles[i]->set_state(particles[i]->position - dirv*bounce, particles[i]->angle);
             }
         }
     }
