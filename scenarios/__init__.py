@@ -2,10 +2,12 @@
 import os
 import re
 
+
 def is_module(filename):
-	return (re.match(r".*\.py$", filename) and filename != "__init__.py")
+    return (re.match(r".*\.py$", filename) and filename != "__init__.py")
 
 currentdir = os.path.dirname(__file__)
-modules = filter(is_module, os.listdir(currentdir))
+module_files = filter(is_module, os.listdir(currentdir))
+module_names = [os.path.splitext(m)[0] for m in module_files]
 
-__all__ = [os.path.splitext(m)[0] for m in modules]
+modules = [__import__(m, locals(), globals(), True) for m in module_names]

@@ -11,19 +11,34 @@ class View(object):
 
 
 class World(PhysicsWorld):
-    def __init__(self, size, opts):
+    def __init__(self, size):
         super(World, self).__init__()
         self.size = size
         self.units = []
         self.obstacles = []
 
         self.clock = pygame.time.Clock()
-        self.timestep = opts.timestep
-        self.fps = opts.fps
+        self.timestep = 0  # default: real time
+        self.show_fps = False
         self.encoders = []
 
         self.collision_list = []
         self.avg_groundspeed_list = []
+
+    def init(self):
+        pygame.init()
+        pygame.display.set_caption("Crowd Navigation")
+        self._screen = pygame.display.set_mode(self.size)
+        self._time = 0
+        self._iterations = 0
+        self.update(0)  # so we have no initial collisions
+        self.debugsurface = pygame.Surface(self.size, masks=pygame.SRCALPHA).convert_alpha()
+
+    def set_timestep(self, timestep):
+        self.timestep = timestep
+
+    def set_show_fps(self, show=True):
+        self.show_fps = show
 
     def add_unit(self, unit):
         self.units.append(unit)
@@ -45,15 +60,6 @@ class World(PhysicsWorld):
 
     def add_encoder(self, encoder):
         self.encoders.append(encoder)
-
-    def init(self):
-        pygame.init()
-        pygame.display.set_caption("Crowd Navigation")
-        self._screen = pygame.display.set_mode(self.size)
-        self._time = 0
-        self._iterations = 0
-        self.update(0)  # so we have no initial collisions
-        self.debugsurface = pygame.Surface(self.size, masks=pygame.SRCALPHA).convert_alpha()
 
     def get_time(self):
         return self._time
@@ -82,7 +88,7 @@ class World(PhysicsWorld):
 
             u._think(dt, view, self.debugsurface)
 
-        if self.fps:
+        if self.show_fps:
             sys.stdout.write("%f fps           \r" % self.clock.get_fps())
             sys.stdout.flush()
 

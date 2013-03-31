@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-from world import World, View
-import pedestrians  # imported to register available pedestrians
+from world import View
 from agents import *
 from scenarios import *
 from scenario import ScenarioRegistrar
@@ -25,7 +24,7 @@ if __name__ == "__main__":
     parser.add_option("-r", "--seed", type="string", default="1")
     parser.add_option("-t", "--timestep", type="float", default=0.1)
 
-    parser.add_option("-f", "--fps", action="store_true", default=False)
+    parser.add_option("-f", "--show-fps", action="store_true", default=False)
     parser.add_option("-p", "--profile", action="store_true", default=False)
     parser.add_option("-c", "--capture", metavar="PATH")
 
@@ -43,22 +42,22 @@ if __name__ == "__main__":
         AgentClass = AgentRegistrar.register[opts.agent]
 
         agent = AgentClass(opts.agentparameter)
+        scenario = ScenarioClass(opts.scenarioparameter, agent)
 
-        world_size = (640, 480)
-        world = World(world_size, opts)  # TODO: refactor world creation to each scenario (scenario should decide world size etc.)
+        world = scenario.world
+        world.set_timestep(opts.timestep)
+        world.set_show_fps(opts.show_fps)
+
+        agent.init(View(world.get_obstacles(), []))
 
         video = None
-        if opts.capture != None and opts.timestep != 0:
+        if opts.capture is not None and opts.timestep != 0:
             approx_framerate = int(1 / opts.timestep)
 
             video = ffmpeg_encode.Video(path=opts.capture,
                                         frame_rate=approx_framerate,
-                                        frame_size=world_size)
+                                        frame_size=world.size)
             world.add_encoder(video)
-
-        scenario = ScenarioClass(world, agent, opts.scenarioparameter)
-        world.init()
-        agent.init(View(world.get_obstacles(), []))
 
         if opts.profile:
             cProfile.run("scenario.run()")
