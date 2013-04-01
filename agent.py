@@ -1,7 +1,7 @@
 import time
 import pygame
-from functools import wraps
 from fast.vector2d import Vec2d
+from fast.geometry import linesegdist2
 from unit import Unit
 
 
@@ -38,7 +38,6 @@ class IterationStats(object):
         return sum(self._times) / len(self._times)
 
 
-
 class Agent(Unit):
     """Base class for all navigational algorithms"""
     __metaclass__ = AgentRegistrar
@@ -53,11 +52,19 @@ class Agent(Unit):
         self.iterations = IterationStats()
 
     def render(self, screen):
-        #draw a cross over the target
-        pygame.draw.aaline(screen, (255, 0, 0),
-                self.goal + Vec2d(-10, -10), self.goal + Vec2d(10, 10))
-        pygame.draw.aaline(screen, (255, 0, 0),
-                self.goal + Vec2d(10, -10), self.goal + Vec2d(-10, 10))
+        #draw a cross over the goal
+        pygame.draw.aaline(
+            screen,
+            (255, 0, 0),
+            self.goal + Vec2d(-10, -10),
+            self.goal + Vec2d(10, 10)
+        )
+        pygame.draw.aaline(
+            screen,
+            (255, 0, 0),
+            self.goal + Vec2d(10, -10),
+            self.goal + Vec2d(-10, 10)
+        )
 
         super(Agent, self).render(screen)
         #pygame.draw.circle(screen, self.color,
@@ -71,21 +78,44 @@ class Agent(Unit):
             pygame.draw.aaline(screen, (0, 0, 0), last, last)
 
         #draw viewrange
-        pygame.draw.circle(screen, (100, 100, 100),
-            map(int, self.position), int(self.view_range), 1)
+        pygame.draw.circle(
+            screen,
+            (100, 100, 100),
+            map(int, self.position),
+            int(self.view_range),
+            1
+        )
 
     def init(self, view):
         """Called before simulation starts with the initial information available to the agent
 
-        Allows for agent initialization using information about of the surroundings
+        Allows for agent initialization using information about of static obstacles
         """
         pass
 
-    def _think(self, *args, **kwargs):
+    def _think(self, dt, view, debugsurface):
+        if self.goal_occupied(view):
+            print "Goal occupied"
         self.iterations.start_iteration()
-        self.think(*args, **kwargs)
+        self.think(dt, view, debugsurface)
         self.iterations.end_iteration()
 
     def think(self, dt, view, debugsurface):
         raise NotImplementedError('An Agent needs to have a brain! Implement the `think()` method')
 
+    def goal_occupied(self, view):
+        """Returns if goal is currently occupied by obstacle/unit that isn't moving
+
+        Convenience method that can be used to fallback to a nearby goal or similar
+        """
+        for o in view.obstacles:
+            for line in o.bounds:
+                if linesegdist2(line.p1, line.p2, self.goal) < self.radius ** 2:
+                    return True
+
+        for p in view.pedestrians:
+            if p.velocity.length2() == 0.0:
+                if p.position.distance_to2(self.goal) < p.radius:
+                    return True
+
+        return False

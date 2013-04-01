@@ -151,6 +151,8 @@ class Arty(Agent):
 
     def getpath(self, view):
         """Use the ART algorithm to get a path to the goal"""
+        if self.goal_occupied(view):
+            return
         #first try to find global node by local planner from current position
         testpath, testtime = self.find_globaltree(self.position, self.angle, view, 0.0, 1.0)
         if testpath:

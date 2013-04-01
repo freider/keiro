@@ -18,27 +18,29 @@ class ScenarioRegistrar (type):
 class Scenario(object):  # abstract
     __metaclass__ = ScenarioRegistrar
     world_size = (640, 480)  # Override this to customize world size
+    walls = True
 
     def __init__(self, parameter, agent):
         self.parameter = parameter
         self.agent = agent
         self.world = World(self.world_size)
-        self.init()
         self.world.init()
-        self.world.add_unit(agent)
+        self.init()
 
-    def init(self):
-        self.add_walls()
+        if self.walls:
+            self.add_walls()
+
+        self.world.add_unit(agent)
 
     def add_walls(self):
         """ Convenience method to add obstacles along all borders of the rendered world.
 
         Call this when setting up the world to prevent units from "escaping"
         """
-        self.world.add_obstacle(obstacle.Line(Vec2d(0, 0), Vec2d(0, self.size[1])))
-        self.world.add_obstacle(obstacle.Line(Vec2d(0, self.world.size[1]), Vec2d(self.world.size[0], self.world.size[1])))
-        self.world.add_obstacle(obstacle.Line(Vec2d(self.world.size[0], self.world.size[1]), Vec2d(self.world.size[0], 0)))
-        self.world.add_obstacle(obstacle.Line(Vec2d(self.world.size[0], 0), Vec2d(0, 0)))
+        self.world.add_obstacle(obstacle.Line(Vec2d(0, 0), Vec2d(0, self.world_size[1])))
+        self.world.add_obstacle(obstacle.Line(Vec2d(0, self.world_size[1]), Vec2d(self.world_size[0], self.world_size[1])))
+        self.world.add_obstacle(obstacle.Line(Vec2d(self.world_size[0], self.world_size[1]), Vec2d(self.world_size[0], 0)))
+        self.world.add_obstacle(obstacle.Line(Vec2d(self.world_size[0], 0), Vec2d(0, 0)))
 
     def update(self, dt):
         pass
