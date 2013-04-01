@@ -1,7 +1,7 @@
 import unittest
 import math
-from particle import World, LinearParticle
-from vector2d import Vec2d
+from fast.particle import World, LinearParticle
+from fast.vector2d import Vec2d
 
 
 class VectorTest(unittest.TestCase):

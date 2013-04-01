@@ -8,6 +8,9 @@ LinearParticle::LinearParticle(float x, float y, float dir) : Particle(x, y, dir
 
 void LinearParticle::update(float dt){
 	previous_position = position;
+	if(waypoint_len() == 0) {
+		velocity = Vec2d(0, 0);
+	}
 	while(dt>0 && waypoint_len() > 0){
 		float anglediff;
 		float waypoint_direction;

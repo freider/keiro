@@ -19,6 +19,7 @@ public:
     float distance_to(const Vec2d &v) const;
     float distance_to2(const Vec2d &v) const;
     float length() const;
+    float length2() const;
     Vec2d norm() const;
     float dot(const Vec2d &v) const;
     float cross(const Vec2d &v) const;

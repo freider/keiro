@@ -1,10 +1,11 @@
 import unittest
 import math
 from fast.vector2d import Vec2d
-from fast.particle import Particle, World
+from fast.particle import LinearParticle, World, Obstacle
 
-def almost_equal(a, b, epsilon = 0.001):
-    return abs(a-b)<epsilon
+
+def almost_equal(a, b, epsilon=0.001):
+    return abs(a-b) < epsilon
 
 
 class Vec2dTest(unittest.TestCase):
@@ -36,18 +37,8 @@ class ParticleTest(unittest.TestCase):
     def setUp(self):
         pass
 
-    def testAccess(self):
-        p = Particle(1, 2, 0.5)
-        self.assert_(p.angle == 0.5)
-        self.assert_(p.position == Vec2d(1, 2))
-        self.assert_(p.waypoint_len() == 0)
-        p.waypoint_push(Vec2d(10, 10))
-        self.assert_(p.waypoint(0).position == Vec2d(10, 10))
-        p.waypoint(0).position = Vec2d(5, 5)
-        self.assert_(p.waypoint(0).position == Vec2d(10, 10))
-
     def testWaypointing(self):
-        p = Particle(10, 5, 0)
+        p = LinearParticle(10, 5, 0)
         p.speed = 5
         p.turningspeed = math.pi / 2
         waypoints = (Vec2d(15, 5), Vec2d(10, 5), Vec2d(10, 10))
@@ -79,7 +70,7 @@ class ParticleTest(unittest.TestCase):
 
     def testMemory(self):
         """Deleted particles are removed from the World they are bound to"""
-        p = Particle(0, 0)
+        p = LinearParticle(0, 0)
         w = World()
         w.bind(p)
         self.assert_(w.num_particles() == 1)
@@ -92,8 +83,8 @@ class WorldTest(unittest.TestCase):
         self.world = World()
 
     def testRange(self):
-        p = Particle(1, 0)
-        q = Particle(3, 0)
+        p = LinearParticle(1, 0)
+        q = LinearParticle(3, 0)
         self.world.bind(p)
         self.world.bind(q)
         self.assert_(self.world.num_particles() == 2)
@@ -104,7 +95,7 @@ class WorldTest(unittest.TestCase):
         self.assert_(v[0].this == q.this)  # same underlying object hopefully
 
     def testObstacles(self):
-        ls = LineSegment(Vec2d(0, 0), Vec2d(1, 2))
+        ls = Obstacle(Vec2d(0, 0), Vec2d(1, 2))
         self.world.bind(ls)
         self.assert_(len(self.world.get_obstacles()))
 

@@ -5,9 +5,9 @@
 Particle::Particle(float x, float y, float dir)
     :world(NULL),
     radius(0),
+    velocity(0,0),
     speed(0),
-    collisions(0),
-    velocity(0,0)
+    collisions(0)
 {
     Vec2d vec(x, y);
     previous_position = position = vec;
@@ -122,7 +122,7 @@ void World::update(float dt){
                 Vec2d dirv(1,0); // dummy bounce-vector when units stack exactly on top of each other
                 if(dist2 != 0)
                     dirv = (particles[i]->position - particles[j]->position).norm();
-                float bounce = diff / 2;  // TODO: introduce 'weight' to guide how much each particle bounces
+                float bounce = diff / 2;  // TODO: introduce particle 'weight' to guide how much each particle bounces in collisions
                 particles[j]->set_state(particles[j]->position + dirv*bounce, particles[j]->angle);
                 particles[i]->set_state(particles[i]->position - dirv*bounce, particles[i]->angle);
             }
@@ -138,13 +138,10 @@ void World::update(float dt){
             if(dist2 < safe_dist2){
                 //collision
                 particles[i]->collisions++;
-//              float diff = sqrt(dist2) - sqrt(safe_dist2);
-                Vec2d dirv(1,0);
-                Vec2d movement = particles[i]->position - particles[i]->previous_position;
-                particles[i]->set_state(particles[i]->previous_position, particles[j]->angle); //TODO: remove
-//              if(movement.length2() != 0)
-//                  dirv = (particles[i]->position - particles[j]->position).norm();
-                //particles[j]->set_state(particles[j]->position + dirv*diff, particles[j]->angle);
+                // Vec2d dirv(1,0);
+                // Vec2d movement = particles[i]->position - particles[i]->previous_position;
+                particles[i]->set_state(particles[i]->previous_position, particles[j]->angle); 
+                //　TODO: use the last movement vector to reverse the precice amount needed
             }
         }
     }
@@ -165,13 +162,8 @@ std::vector<Particle*> World::particles_in_range(const Particle *from, float ran
 }
 
 std::vector<Particle*> World::particles_in_view_range(const Particle *from, float range) const{
-    float range2 = range*range;
-    std::vector<Particle*> in_range;
+    std::vector<Particle*> in_range = particles_in_range(from, range);
     std::vector<Particle*> res;
-    for(size_t i = 0, sz = particles.size(); i<sz; ++i){
-        if(particles[i] != from && particles[i]->position.distance_to2(from->position) <= range2)
-            in_range.push_back(particles[i]);
-    }
 
     bool occluded;
     for(size_t i = 0, sz = in_range.size(); i<sz; ++i){ // go through pedestrians in range
@@ -179,15 +171,20 @@ std::vector<Particle*> World::particles_in_view_range(const Particle *from, floa
         for(size_t j = 0; j<sz; ++j){ // go through all other pedestrians in range
             if(i == j)
                 continue;
-            else if(linesegdist2(from->position, in_range[i]->position, in_range[j]->position) <= (in_range[j]->radius)*(in_range[j]->radius)){
+            float vis_line_dist = linesegdist2(from->position, in_range[i]->position, in_range[j]->position);
+            float coverer_r2 = in_range[j]->radius * in_range[j]->radius;
+            if(vis_line_dist <= coverer_r2) {
                 occluded = true;
                 break;
             }
         }
         if(!occluded){
             for(size_t j = 0, oz = obstacles.size(); j<oz; ++j) {
-                if((from->position.distance_to(obstacles[j]->p1) <= range) || (from->position.distance_to(obstacles[j]->p2) <= range)) // obstacle in range
-                if(line_distance2(from->position, in_range[i]->position, obstacles[j]->p1, obstacles[j]->p2) == 0){ // behind an obstacle
+                if(line_distance2(from->position,
+                                  in_range[i]->position,
+                                  obstacles[j]->p1,
+                                  obstacles[j]->p2)
+                   == 0) { // behind an obstacle
                     occluded = true;
                     break;
                 }
