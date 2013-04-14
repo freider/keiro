@@ -32,6 +32,9 @@ class Scenario(object):  # abstract
 
         self.world.add_unit(agent)
 
+    def __repr__(self):
+        return "{0}({1})".format(self.__class__.__name__, self.parameter)
+
     def add_walls(self):
         """ Convenience method to add obstacles along all borders of the rendered world.
 

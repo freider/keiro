@@ -51,6 +51,12 @@ class Agent(Unit):
         self.travel_length = 0
         self.iterations = IterationStats()
 
+    def __repr__(self):
+        return "{0}({1})".format(
+            self.__class__.__name__,
+            self.parameter
+        )
+
     def render(self, screen):
         #draw a cross over the goal
         pygame.draw.aaline(

@@ -1,4 +1,14 @@
 import subprocess
+import os
+
+
+def available():
+    with open(os.devnull, 'w') as devnull:
+        try:
+            subprocess.Popen(["ffmpeg", "-version"], stderr=subprocess.STDOUT, stdout=devnull)
+        except OSError:
+            return False
+    return True
 
 
 class Video(object):
@@ -8,7 +18,7 @@ class Video(object):
         """Create a new Video output stream
 
         Adding frames using `add_frame()` and make sure to close the
-        video stream using `close()` when finished to make sure the 
+        video stream using `close()` when finished to make sure the
         video file isn't corrupted.
         """
         self.path = path

@@ -9,6 +9,7 @@ from keiro import ffmpeg_encode
 import os
 import random
 import cProfile
+import warnings
 from optparse import OptionParser
 from datetime import datetime
 
@@ -26,7 +27,8 @@ if __name__ == "__main__":
 
     parser.add_option("-f", "--show-fps", action="store_true", default=False)
     parser.add_option("-p", "--profile", action="store_true", default=False)
-    parser.add_option("-c", "--capture", metavar="PATH")
+    parser.add_option("-n", "--no-video", action="store_true", default=False)
+    parser.add_option("-c", "--capture-path", metavar="PATH")
 
     (opts, args) = parser.parse_args()
 
@@ -51,13 +53,24 @@ if __name__ == "__main__":
         agent.init(View(world.get_obstacles(), []))
 
         video = None
-        if opts.capture is not None and opts.timestep != 0:
-            approx_framerate = int(1 / opts.timestep)
+        if (not opts.no_video) and ffmpeg_encode.available():
+            if opts.timestep == 0:
+                warnings.warn("Can't use realtime simulations with video capture. Use a non-zero timestep when recording videos.")
+            else:
+                if opts.capture_path:
+                    capture_path = opts.capture_path
+                else:
+                    filename = "{0}_{1}.mp4".format(
+                        scenario,
+                        agent
+                    )
+                    capture_path = os.path.join("videos", filename)
 
-            video = ffmpeg_encode.Video(path=opts.capture,
-                                        frame_rate=approx_framerate,
-                                        frame_size=world.size)
-            world.add_encoder(video)
+                approx_framerate = int(1 / opts.timestep)
+                video = ffmpeg_encode.Video(path=capture_path,
+                                            frame_rate=approx_framerate,
+                                            frame_size=world.size)
+                world.add_encoder(video)
 
         if opts.profile:
             cProfile.run("scenario.run()")
