@@ -98,6 +98,7 @@ class Arty(Agent):
         for p in view.pedestrians:
             pedestrianpos = self.future_position(p, time)  # extrapolated position
             if position.distance_to(pedestrianpos) < (self.radius + p.radius + self.FREEMARGIN):
+                self.freeprob_fail_pedestrian = p
                 return 0  # collision with pedestrian
         return 1
 
@@ -108,6 +109,7 @@ class Arty(Agent):
             p1 = p.position
             p2 = self.future_position(p, dur)  # extrapolate
             if linesegdist2(p1, p2, position) < (self.radius + p.radius + self.FREEMARGIN) ** 2:
+                self.freeprob_fail_pedestrian = p
                 return 0
         return 1
 
@@ -242,6 +244,9 @@ class Arty(Agent):
 
         for n in self.globalnodes:
             free = startprob * self.freeprob_turn_line(p1, a1, n.position, view, time)
+            if free < self.SAFETY_THRESHOLD:
+                pygame.draw.circle(self.debugsurface, pygame.Color("blue"), map(int, n.position), 8, 2)
+
             t = time + self.segment_time(a1, p1, n.position)
             a2 = (n.position - p1).angle()
             #try to reach goal from global node
@@ -249,7 +254,32 @@ class Arty(Agent):
             cur = n
             while cur.parent is not None and free >= self.SAFETY_THRESHOLD:
                 path.append(cur.position)
+                self.freeprob_fail_pedestrian = None
                 free *= self.freeprob_turn_line(cur.position, a2, cur.parent.position, view, t)
+                if free < self.SAFETY_THRESHOLD:
+                    pygame.draw.aaline(
+                        self.debugsurface,
+                        pygame.Color("pink"),
+                        n.position,
+                        cur.position,
+                        3
+                    )
+                    if self.freeprob_fail_pedestrian:
+                        pygame.draw.aaline(
+                            self.debugsurface,
+                            pygame.Color("pink"),
+                            cur.position,
+                            self.freeprob_fail_pedestrian.position,
+                            3
+                        )
+                        pygame.draw.circle(
+                            self.debugsurface,
+                            pygame.Color("red"),
+                            map(int, self.freeprob_fail_pedestrian.position),
+                            10,
+                            2
+                        )
+
                 t += self.segment_time(a2, cur.position, cur.parent.position)
                 a2 = (cur.parent.position - cur.position).angle()
                 cur = cur.parent

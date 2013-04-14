@@ -76,7 +76,7 @@ class World(PhysicsWorld):
 
         self.update(dt)
 
-        self.debugsurface.fill((0, 255, 0, 0))
+        self.debugsurface.fill((0, 0, 0, 0))  # transparent
 
         for u in self.units:
             if u.view_range != 0:

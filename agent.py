@@ -108,10 +108,9 @@ class Agent(Unit):
 
         Convenience method that can be used to fallback to a nearby goal or similar
         """
-        for o in view.obstacles:
-            for line in o.bounds:
-                if linesegdist2(line.p1, line.p2, self.goal) < self.radius ** 2:
-                    return True
+        for line in view.obstacles:
+            if linesegdist2(line.p1, line.p2, self.goal) < self.radius ** 2:
+                return True
 
         for p in view.pedestrians:
             if p.velocity.length2() == 0.0:
