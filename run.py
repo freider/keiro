@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-from world import View
+from keiro.world import View
 from agents import *
 from scenarios import *
-from scenario import ScenarioRegistrar
-from agent import AgentRegistrar
+from keiro.scenario import ScenarioRegistrar
+from keiro.agent import AgentRegistrar
 
-import ffmpeg_encode
+from keiro import ffmpeg_encode
 import os
 import random
 import cProfile

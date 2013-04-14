@@ -1,9 +1,9 @@
 import pygame
 import math
-from agent import Agent
+from keiro.agent import Agent
 from fast.vector2d import Vec2d
 from fast.geometry import linesegdist2, line_distance2, angle_diff
-from stategenerator import ExtendingGenerator, StateGenerator, PrependedGenerator
+from keiro.stategenerator import ExtendingGenerator, StateGenerator, PrependedGenerator
 
 
 class TestGenerator(PrependedGenerator):

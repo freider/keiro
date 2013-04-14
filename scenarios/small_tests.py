@@ -1,8 +1,8 @@
 import math
-from scenario import Scenario
+from keiro.scenario import Scenario
 from fast.vector2d import Vec2d
 from pedestrians.stubborn import Stubborn
-from unit import Unit
+from keiro.unit import Unit
 
 
 class CrossingPaths(Scenario):

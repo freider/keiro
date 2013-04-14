@@ -1,7 +1,7 @@
 import random
-from scenario import Scenario
+from keiro.scenario import Scenario
 from fast.vector2d import Vec2d
-import obstacle
+from keiro import obstacle
 from pedestrians.randomwalker import RandomWalkingAvoider
 
 

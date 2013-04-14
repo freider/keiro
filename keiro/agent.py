@@ -2,7 +2,7 @@ import time
 import pygame
 from fast.vector2d import Vec2d
 from fast.geometry import linesegdist2
-from unit import Unit
+from keiro.unit import Unit
 
 
 class AgentRegistrar(type):

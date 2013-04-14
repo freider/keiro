@@ -1,7 +1,7 @@
 import pygame
 import math
-from agent import Agent
-import graphbuilder
+from keiro.agent import Agent
+from keiro import graphbuilder
 from fast import astar
 from fast.vector2d import Vec2d
 

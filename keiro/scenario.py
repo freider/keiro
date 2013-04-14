@@ -1,5 +1,5 @@
 from fast.vector2d import Vec2d
-import obstacle
+from keiro import obstacle
 import pygame
 import random
 from world import World

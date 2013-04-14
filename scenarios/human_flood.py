@@ -1,5 +1,5 @@
 import random
-from scenario import Spawner
+from keiro.scenario import Spawner
 from fast.vector2d import Vec2d
 from pedestrians.stubborn import Stubborn
 
