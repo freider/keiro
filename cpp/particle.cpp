@@ -128,19 +128,18 @@ void World::update(float dt){
             }
         }
     }
-    
     //collision detection between particles and obstacles
     for (size_t i = 0, sz = particles.size(); i<sz; ++i) {
         for(size_t j = 0, oz = obstacles.size(); j<oz; ++j) {
             float dist2 = linesegdist2(obstacles[j]->p1, obstacles[j]->p2, particles[i]->position);
             float safe_dist = particles[i]->radius;
-            float safe_dist2 = safe_dist*safe_dist;
+            float safe_dist2 = safe_dist * safe_dist;
             if(dist2 < safe_dist2){
                 //collision
                 particles[i]->collisions++;
                 // Vec2d dirv(1,0);
                 // Vec2d movement = particles[i]->position - particles[i]->previous_position;
-                particles[i]->set_state(particles[i]->previous_position, particles[j]->angle); 
+                particles[i]->set_state(particles[i]->previous_position, particles[i]->angle); 
                 //　TODO: use the last movement vector to reverse the precice amount needed
             }
         }
