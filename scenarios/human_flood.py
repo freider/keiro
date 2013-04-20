@@ -1,4 +1,3 @@
-import random
 from keiro.scenario import Spawner
 from keiro.vector2d import Vec2d
 from pedestrians.stubborn import Stubborn
@@ -24,18 +23,18 @@ class TheFlood(Spawner):
 
             u.position = Vec2d(
                 self.world.size[0] - u.radius - 1,
-                random.randrange(u.radius, self.world.size[1] - u.radius)
+                self.random.randrange(u.radius, self.world.size[1] - u.radius)
             )
 
             while u.position.distance_to(self.agent.goal) < 5 * self.agent.radius:
                 u.position = Vec2d(
                     self.world.size[0] - u.radius - 1,
-                    random.randrange(u.radius, self.world.size[1] - u.radius)
+                    self.random.randrange(u.radius, self.world.size[1] - u.radius)
                 )
 
             u.goal = Vec2d(
                 u.radius + 1,
-                random.randrange(u.radius, self.world.size[1] - u.radius)
+                self.random.randrange(u.radius, self.world.size[1] - u.radius)
             )
             u.angle = (u.goal - u.position).angle()
 

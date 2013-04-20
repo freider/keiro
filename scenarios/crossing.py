@@ -1,4 +1,3 @@
-import random
 from keiro.scenario import Spawner
 from keiro.vector2d import Vec2d
 from pedestrians.stubborn import Stubborn
@@ -17,13 +16,13 @@ class Crossing(Spawner):
         self.agent.travel_length = agent_travel.length()
 
     def random_xpos(self, unit):
-        return random.randrange(
+        return self.random.randrange(
             unit.radius + 1,
             self.world.size[0] - unit.radius - 1
         )
 
     def random_ypos(self, unit):
-        return random.randrange(
+        return self.random.randrange(
             unit.radius + 1,
             self.world.size[1] - unit.radius - 1
         )
@@ -41,7 +40,7 @@ class Crossing(Spawner):
         for i in xrange(num_units):
             u = Stubborn()
 
-            if random.random() < 0.5:  # coin toss
+            if self.random.random() < 0.5:  # coin toss
                 # "horizontal" movement
                 p1 = Vec2d(u.radius + 1, self.random_ypos(u))
                 p2 = Vec2d(
@@ -56,7 +55,7 @@ class Crossing(Spawner):
                     self.world.size[1] - u.radius - 1
                 )
 
-            if random.random() < 0.5:  # coin toss
+            if self.random.random() < 0.5:  # coin toss
                 u.position = p1
                 u.goal = p2
                 u.angle = (p2 - p1).angle()

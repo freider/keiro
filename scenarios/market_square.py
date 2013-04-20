@@ -1,4 +1,3 @@
-import random
 from keiro.scenario import Scenario
 from keiro.vector2d import Vec2d
 from keiro import obstacle
@@ -45,8 +44,8 @@ class CrowdedMarketSquare(Scenario):
             u = RandomWalkingAvoider()
 
             while not good:  # generate random positions for pedestrians that are not inside obstacles...
-                init_position = Vec2d(random.randrange(u.radius + 1, self.world.size[0] - u.radius - 1),
-                                      random.randrange(u.radius + 1, self.world.size[1] - u.radius - 1))
+                init_position = Vec2d(self.random.randrange(u.radius + 1, self.world.size[0] - u.radius - 1),
+                                      self.random.randrange(u.radius + 1, self.world.size[1] - u.radius - 1))
                 good = init_position.distance_to(self.agent.position) > 20
 
                 for r in rects:

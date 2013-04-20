@@ -20,9 +20,15 @@ class Scenario(object):  # abstract
     world_size = (640, 480)  # Override this to customize world size
     walls = True
 
-    def __init__(self, parameter, agent):
+    def __init__(self, parameter, agent, random_seed=None):
         self.parameter = parameter
         self.agent = agent
+        # all scenarios should use self.random instead of
+        # the global random module so they are not affected
+        # by how much randomness is in the agents
+        self.random = random.Random()
+        if random_seed:
+            self.random.seed(random_seed)
         self.world = World(self.world_size)
         self.world.init()
         self.init()

@@ -1,4 +1,3 @@
-import random
 from keiro.scenario import Scenario
 from keiro.vector2d import Vec2d
 from pedestrians.randomwalker import RandomWalkingAvoider
@@ -20,8 +19,8 @@ class RandomWalkers(Scenario):
         for i in xrange(self.parameter):
             init_position = self.agent.position
             while init_position.distance_to(self.agent.position) < 20:
-                init_position = Vec2d(random.randrange(self.world.size[0]),
-                                      random.randrange(self.world.size[1]))
+                init_position = Vec2d(self.random.randrange(self.world.size[0]),
+                                      self.random.randrange(self.world.size[1]))
             u = RandomWalkingAvoider()
             u.position = init_position
             self.world.add_unit(u)

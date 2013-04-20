@@ -44,7 +44,11 @@ if __name__ == "__main__":
         AgentClass = AgentRegistrar.register[opts.agent]
 
         agent = AgentClass(opts.agentparameter)
-        scenario = ScenarioClass(opts.scenarioparameter, agent)
+        scenario = ScenarioClass(
+            opts.scenarioparameter,
+            agent,
+            random_seed=currentseed+1
+        )
 
         world = scenario.world
         world.set_timestep(opts.timestep)
@@ -60,9 +64,10 @@ if __name__ == "__main__":
                 if opts.capture_path:
                     capture_path = opts.capture_path
                 else:
-                    filename = "{0}_{1}.mp4".format(
+                    filename = "{0}_{1}_{2}.mp4".format(
                         scenario,
-                        agent
+                        agent,
+                        currentseed
                     )
                     capture_path = os.path.join("videos", filename)
 
