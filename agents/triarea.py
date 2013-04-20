@@ -2,8 +2,8 @@ import pygame
 import math
 from keiro.agent import Agent
 from keiro import graphbuilder
-from fast import astar
-from fast.vector2d import Vec2d
+from keiro import astar
+from keiro.vector2d import Vec2d
 import sys
 import getopt
 TOLERANCE = 1e-9

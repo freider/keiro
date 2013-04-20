@@ -1,7 +1,7 @@
 import unittest
 import math
-from fast.vector2d import Vec2d
-from fast.particle import LinearParticle, World, Obstacle
+from keiro.vector2d import Vec2d
+from keiro.particle import LinearParticle, World, Obstacle
 
 
 def almost_equal(a, b, epsilon=0.001):

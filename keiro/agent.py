@@ -1,7 +1,7 @@
 import time
 import pygame
-from fast.vector2d import Vec2d
-from fast.geometry import linesegdist2
+from vector2d import Vec2d
+from geometry import linesegdist2
 from keiro.unit import Unit
 
 

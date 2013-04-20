@@ -1,7 +1,7 @@
 import pygame
 import math
-from fast.vector2d import Vec2d
-from fast.particle import LinearParticle
+from vector2d import Vec2d
+from particle import LinearParticle
 
 
 class Unit(LinearParticle):

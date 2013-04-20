@@ -1,6 +1,6 @@
 from pedestrian import Pedestrian
-from fast.vector2d import Vec2d
-from fast.geometry import line_distance2
+from keiro.vector2d import Vec2d
+from keiro.geometry import line_distance2
 import math
 import random
 

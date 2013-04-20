@@ -1,7 +1,7 @@
 import pygame
 import sys
 
-from fast.particle import World as PhysicsWorld
+from particle import World as PhysicsWorld
 
 
 class View(object):

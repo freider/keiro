@@ -5,9 +5,11 @@ build/*
 *.o
 *.so
 *.orig
-marcs_codebase*
-fast/*.py
-fast/*_wrap.cpp
+cpp/*_wrap.cpp
 *.sqlite3
 .DS_Store
 videos/*
+keiro/astar.py
+keiro/geometry.py
+keiro/particle.py
+keiro/vector2d.py

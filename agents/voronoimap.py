@@ -2,11 +2,11 @@ import pygame
 import math
 from keiro.agent import Agent
 from keiro import graphbuilder
-from fast import astar
+from keiro import astar
 import sys
 import getopt
-from fast.vector2d import Vec2d
-from fast.geometry import linesegdist2
+from keiro.vector2d import Vec2d
+from keiro.geometry import linesegdist2
 TOLERANCE = 1e-9
 BIG_FLOAT = 1e38
 

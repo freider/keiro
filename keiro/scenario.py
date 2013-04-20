@@ -1,4 +1,4 @@
-from fast.vector2d import Vec2d
+from vector2d import Vec2d
 from keiro import obstacle
 import pygame
 import random

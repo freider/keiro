@@ -1,6 +1,6 @@
 import math
 from keiro.scenario import Scenario
-from fast.vector2d import Vec2d
+from keiro.vector2d import Vec2d
 from pedestrians.stubborn import Stubborn
 from keiro.unit import Unit
 

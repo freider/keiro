@@ -1,6 +1,6 @@
-from fast.vector2d import Vec2d
-from fast.geometry import linesegdist2, line_distance2, angle_diff
-from fast.astar import *
+from vector2d import Vec2d
+from geometry import linesegdist2, line_distance2, angle_diff
+from astar import *
 import math
 
 

@@ -1,8 +1,8 @@
 import pygame
 import math
 from keiro.agent import Agent
-from fast.vector2d import Vec2d
-from fast.geometry import linesegdist2, line_distance2, angle_diff
+from keiro.vector2d import Vec2d
+from keiro.geometry import linesegdist2, line_distance2, angle_diff
 from keiro.stategenerator import ExtendingGenerator, StateGenerator, PrependedGenerator
 
 

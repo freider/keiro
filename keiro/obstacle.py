@@ -1,5 +1,5 @@
-from fast.vector2d import Vec2d
-from fast.particle import Obstacle as ObstacleBase
+from vector2d import Vec2d
+from particle import Obstacle as ObstacleBase
 import pygame
 
 

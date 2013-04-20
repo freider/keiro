@@ -1,6 +1,6 @@
 import random
 import unittest
-from fast.vector2d import Vec2d
+from vector2d import Vec2d
 from numpy import array
 
 

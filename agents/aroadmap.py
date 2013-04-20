@@ -2,9 +2,9 @@ import pygame
 import random
 from keiro.agent import Agent
 from keiro import graphbuilder
-from fast import astar
-from fast.vector2d import Vec2d
-from fast.geometry import linesegdist2
+from keiro import astar
+from keiro.vector2d import Vec2d
+from keiro.geometry import linesegdist2
 
 
 class ARoadMap(Agent):
