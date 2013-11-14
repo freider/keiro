@@ -19,20 +19,95 @@ class TestGenerator(PrependedGenerator):
             return Vec2d(300, 150)
 
 
+class Node:
+    def __init__(self, position, angle, parent, time=None, freeprob=None):
+        self.position = position
+        self.angle = angle
+        self.time = time
+        self.parent = parent
+        self.freeprob = freeprob
+
+
+class RoadMapGenerator(object):
+    """Creates roadmap that covers the static environment.
+
+    Implemented using RRT expanded from the goal.
+    Call once after a new target has been assigned.    
+    """
+
+    def __init__(self, view, goal, min_distance, speed, turningspeed, max_edge_length):
+        self.view = view
+        self.goal = goal
+        self.min_distance = min_distance
+        self.min_distance2 = min_distance ** 2
+        self.speed = speed
+        self.turningspeed = turningspeed
+        self.max_edge_length = max_edge_length
+        self.nodes = [Node(self.goal, None, None)]
+
+    def line_is_traversable(self, p1, p2):
+        """Check if traversing in p1-p2 on a straight path is possible without colliding into static obstacles"""
+        for o in self.view.obstacles:
+            if line_distance2(p1, p2, o.p1, o.p2) < self.min_distance2:
+                return False
+        return True
+
+    def _traversal_time(self, candidate_position, existing_node):
+        distance = candidate_position.distance_to(existing_node.position)
+        if existing_node.parent is None:
+            # existing_node is goal node
+            #i.e. once it's reached, we don't have to turn
+            turndist = 0
+        else:
+            movement_vector = (existing_node.position - candidate_position)
+            turndist = abs(angle_diff(movement_vector.angle(), existing_node.angle))
+        traversal_time = (distance / self.speed) + (turndist / self.turningspeed)
+        return traversal_time
+
+    def _connect_node(self, existing_node, new_position):
+        diff = new_position - existing_node.position  # reversed traversal vector
+        angle = (existing_node.position - new_position).angle()  # direction should be traversal direction
+        n_subdivisions = int(math.ceil(diff.length() / self.max_edge_length))
+        next = existing_node
+        #subdivide the new edge
+        for d in xrange(1, n_subdivisions + 1):
+            newnode = Node(existing_node.position + (diff * d / n_subdivisions), angle, next)
+            self.nodes.append(newnode)
+            next = newnode
+
+    def _connect_to_best(self, candidate_position):
+        best_traversal_time = None
+        best_node = None
+        for existing_node in self.nodes:
+            existing_node_position = existing_node.position
+
+            if self.line_is_traversable(candidate_position, existing_node_position):
+                # check if this existing node is the one that can be reached the fastest from the candidate
+                traversal_time = self._traversal_time(candidate_position, existing_node)
+                if best_node is None or traversal_time < best_traversal_time:
+                    best_traversal_time = traversal_time
+                    best_node = existing_node
+
+        if best_node:
+            # generated state can be connected to some existing node
+            self._connect_node(best_node, candidate_position)
+
+    def run(self, iterations):
+        sg = StateGenerator(0, 640, 0, 480)  # TODO: remove hardcoded world size
+
+        for candidate_position in sg.generate_n(iterations):
+            self._connect_to_best(candidate_position)
+
+    def get_nodes(self):
+        return self.nodes
+
+
 class Arty(Agent):
     SAFETY_THRESHOLD = 0.9  # this has practically no effect in the current implementation
     GLOBALMAXEDGE = 70
     LOCALMAXEDGE = 50
     LOCALMAXSIZE = 10
     FREEMARGIN = 2
-
-    class Node:
-        def __init__(self, position, angle, parent, time=None, freeprob=None):
-            self.position = position
-            self.angle = angle
-            self.time = time
-            self.parent = parent
-            self.freeprob = freeprob
 
     def __init__(self, parameter):
         if parameter is None:
@@ -41,47 +116,16 @@ class Arty(Agent):
         self.GLOBALNODES = parameter
 
     def globaltree(self, view):
-        #RRT from goal
-        nodes = [self.Node(self.goal, None, None)]
-        sg = StateGenerator(0, 640, 0, 480)  # TODO: remove hardcoded world size
-
-        for newpos in sg.generate_n(self.GLOBALNODES):
-            besttime = None
-            bestnode = None
-            for tonode in nodes:
-                topos = tonode.position
-                connectable = True
-                for o in view.obstacles:
-                    if line_distance2(topos, newpos, o.p1, o.p2) < (self.radius + self.FREEMARGIN) ** 2:
-                        connectable = False
-                        break
-
-                if connectable:
-                    dist = topos.distance_to(newpos)
-                    if tonode.parent is None:
-                        turndist = 0  # goal node
-                    else:
-                        turndist = abs(angle_diff((topos - newpos).angle(), tonode.angle))
-                    time = dist / self.speed + turndist / self.turningspeed
-
-                    if bestnode is None or time < besttime:
-                        besttime = time
-                        bestnode = tonode
-
-            if bestnode:
-                topos = bestnode.position
-                diff = newpos - topos
-                angle = diff.angle()
-                difflen = diff.length()
-                div = int(math.ceil(difflen / self.GLOBALMAXEDGE))
-                prev = bestnode
-                #subdivide the new edge
-                for d in xrange(1, div + 1):
-                    newnode = self.Node(topos + diff * d / div, angle, prev)
-                    nodes.append(newnode)
-                    prev = newnode
-
-        self.globalnodes = nodes
+        generator = RoadMapGenerator(
+            view,
+            self.goal,
+            self.radius + self.FREEMARGIN,
+            self.speed,
+            self.turningspeed,
+            self.GLOBALMAXEDGE
+        )
+        generator.run(self.GLOBALNODES)
+        self.globalnodes = generator.get_nodes()
         print "Done building global roadmap tree", len(self.globalnodes)
 
     def init(self, view):
@@ -160,7 +204,7 @@ class Arty(Agent):
         if testpath:
             return testpath
         print "Cannot find safe global path from current, extending search tree"
-        start = Arty.Node(self.position, self.angle, parent=None, time=0, freeprob=1)
+        start = Node(self.position, self.angle, parent=None, time=0, freeprob=1)
         nodes = [start]
 
         # TODO: add unit test to see that last iteration gets reused
@@ -212,7 +256,7 @@ class Arty(Agent):
                     subpos = bestparent.position + diff * d / div
                     freeprob = self.freeprob_turn_line(lastnode.position, lastnode.angle, subpos, view, lastnode.time)
                     dt = self.segment_time(lastnode.angle, lastnode.position, subpos)
-                    newnode = self.Node(subpos, angle, parent=lastnode, time=lastnode.time + dt, freeprob=lastnode.freeprob * freeprob)
+                    newnode = Node(subpos, angle, parent=lastnode, time=lastnode.time + dt, freeprob=lastnode.freeprob * freeprob)
                     lastnode = newnode
                     nodes.append(newnode)
 
