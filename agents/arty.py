@@ -115,7 +115,11 @@ class Arty(Agent):
         super(Arty, self).__init__(parameter)
         self.GLOBALNODES = parameter
 
-    def globaltree(self, view):
+    def init(self, view):
+        """Builds the static obstacle map, global roadmap"""
+        self.build_global_roadmap(view)
+
+    def build_global_roadmap(self, view):
         generator = RoadMapGenerator(
             view,
             self.goal,
@@ -128,9 +132,28 @@ class Arty(Agent):
         self.globalnodes = generator.get_nodes()
         print "Done building global roadmap tree", len(self.globalnodes)
 
-    def init(self, view):
-        """Builds the static obstacle map, global roadmap"""
-        self.globaltree(view)
+    def think(self, dt, view, debugsurface):
+        if not self.goal:
+            return
+        self.view = view
+        self.debugsurface = debugsurface
+
+        # draw the global roadmap
+        for n in self.globalnodes:
+            if n.parent:
+                pygame.draw.line(debugsurface, pygame.Color("black"), n.position, n.parent.position)
+            pygame.draw.circle(debugsurface, pygame.Color("red"), map(int, n.position), 2, 0)
+
+        # mark visible pedestrians
+        for p in view.pedestrians:
+            pygame.draw.circle(debugsurface, pygame.Color("green"), map(int, p.position), int(p.radius) + 2, 2)
+
+        path = self.getpath(view)
+        self.waypoint_clear()
+
+        if path:
+            for p in path:
+                self.waypoint_push(p)
 
     def future_position(self, pedestrian, time):
         pos = pedestrian.position + pedestrian.velocity * time
@@ -198,12 +221,13 @@ class Arty(Agent):
     def getpath(self, view):
         """Use the ART algorithm to get a path to the goal"""
         if self.goal_occupied(view):
+            # TODO: choose another point on the global map that is closer to the goal than self.position
             return
         #first try to find global node by local planner from current position
         testpath, testtime = self.find_globaltree(self.position, self.angle, view, 0.0, 1.0)
         if testpath:
             return testpath
-        print "Cannot find safe global path from current, extending search tree"
+        print "No safe global path - initializing local search"
         start = Node(self.position, self.angle, parent=None, time=0, freeprob=1)
         nodes = [start]
 
@@ -278,87 +302,67 @@ class Arty(Agent):
                             bestsolution_time = gtime
         return bestsolution
 
-    def find_globaltree(self, p1, a1, view, time, startprob):
+    def find_globaltree(self, from_position, from_angle, view, start_time, start_prob):
         """Tries to reach global tree from position/angle
 
             Returns (path, time) to get to goal"""
 
-        bestpath = None
-        besttime = None
+        best_path = None
+        best_time_to_goal = None
 
-        for n in self.globalnodes:
-            free = startprob * self.freeprob_turn_line(p1, a1, n.position, view, time)
+        for global_candidate in self.globalnodes:
+            free_prob, path, time_to_goal = self.find_globalnode(global_candidate, from_position, from_angle, view, start_time, start_prob)
+
+            if free_prob < self.SAFETY_THRESHOLD:
+                pygame.draw.circle(self.debugsurface, pygame.Color("pink"), map(int, global_candidate.position), 5, 2)
+                continue
+
+            if best_path is None or time_to_goal < best_time_to_goal:
+                best_path = path
+                best_time_to_goal = time_to_goal
+
+        return (best_path, best_time_to_goal)
+
+    def find_globalnode(self, global_candidate, from_position, from_angle, view, start_time, start_prob):
+        free = start_prob * self.freeprob_turn_line(from_position, from_angle, global_candidate.position, view, start_time)
+        if free < self.SAFETY_THRESHOLD:
+            pygame.draw.circle(self.debugsurface, pygame.Color("blue"), map(int, global_candidate.position), 8, 2)
+
+        current_node = global_candidate
+        current_time = start_time + self.segment_time(from_angle, from_position, global_candidate.position)
+        current_angle = (global_candidate.position - from_position).angle()
+        # backtrack through global tree, and check for collisions
+        path = [current_node.position]
+        
+        while current_node.parent is not None and free >= self.SAFETY_THRESHOLD:
+            self.freeprob_fail_pedestrian = None
+            free *= self.freeprob_turn_line(current_node.position, current_angle, current_node.parent.position, view, current_time)
             if free < self.SAFETY_THRESHOLD:
-                pygame.draw.circle(self.debugsurface, pygame.Color("blue"), map(int, n.position), 8, 2)
-
-            t = time + self.segment_time(a1, p1, n.position)
-            a2 = (n.position - p1).angle()
-            #try to reach goal from global node
-            path = []
-            cur = n
-            while cur.parent is not None and free >= self.SAFETY_THRESHOLD:
-                path.append(cur.position)
-                self.freeprob_fail_pedestrian = None
-                free *= self.freeprob_turn_line(cur.position, a2, cur.parent.position, view, t)
-                if free < self.SAFETY_THRESHOLD:
+                pygame.draw.aaline(
+                    self.debugsurface,
+                    pygame.Color("pink"),
+                    global_candidate.position,
+                    current_node.position,
+                    3
+                )
+                if self.freeprob_fail_pedestrian:
                     pygame.draw.aaline(
                         self.debugsurface,
                         pygame.Color("pink"),
-                        n.position,
-                        cur.position,
+                        current_node.position,
+                        self.freeprob_fail_pedestrian.position,
                         3
                     )
-                    if self.freeprob_fail_pedestrian:
-                        pygame.draw.aaline(
-                            self.debugsurface,
-                            pygame.Color("pink"),
-                            cur.position,
-                            self.freeprob_fail_pedestrian.position,
-                            3
-                        )
-                        pygame.draw.circle(
-                            self.debugsurface,
-                            pygame.Color("red"),
-                            map(int, self.freeprob_fail_pedestrian.position),
-                            10,
-                            2
-                        )
+                    pygame.draw.circle(
+                        self.debugsurface,
+                        pygame.Color("red"),
+                        map(int, self.freeprob_fail_pedestrian.position),
+                        10,
+                        2
+                    )
 
-                t += self.segment_time(a2, cur.position, cur.parent.position)
-                a2 = (cur.parent.position - cur.position).angle()
-                cur = cur.parent
-
-            if free < self.SAFETY_THRESHOLD:
-                pygame.draw.circle(self.debugsurface, pygame.Color("pink"), map(int, n.position), 5, 2)
-                continue
-
-            path.append(cur.position)
-
-            if bestpath is None or t < besttime:
-                bestpath = path
-                besttime = t
-
-        return (bestpath, besttime)
-
-    def think(self, dt, view, debugsurface):
-        if not self.goal:
-            return
-        self.view = view
-        self.debugsurface = debugsurface
-
-        # draw the global roadmap
-        for n in self.globalnodes:
-            if n.parent:
-                pygame.draw.line(debugsurface, pygame.Color("black"), n.position, n.parent.position)
-            pygame.draw.circle(debugsurface, pygame.Color("red"), map(int, n.position), 2, 0)
-
-        # mark visible pedestrians
-        for p in view.pedestrians:
-            pygame.draw.circle(debugsurface, pygame.Color("green"), map(int, p.position), int(p.radius) + 2, 2)
-
-        path = self.getpath(view)
-        self.waypoint_clear()
-
-        if path:
-            for p in path:
-                self.waypoint_push(p)
+            current_time += self.segment_time(current_angle, current_node.position, current_node.parent.position)
+            current_angle = (current_node.parent.position - current_node.position).angle()
+            current_node = current_node.parent
+            path.append(current_node.position)
+        return free, path, current_time
