@@ -4,6 +4,7 @@ from agents import *
 from scenarios import *
 from keiro.scenario import ScenarioRegistrar
 from keiro.agent import AgentRegistrar
+import keiro.git
 
 from keiro import ffmpeg_encode
 import os
@@ -16,7 +17,36 @@ from datetime import datetime
 os.environ["DJANGO_SETTINGS_MODULE"] = "stats.settings"
 from stats.statsapp import models
 
-if __name__ == "__main__":
+
+def run():
+    git = keiro.git.Git()
+    unstaged = git.unstaged_changes()
+    uncommited = git.uncommited_changes()
+    untracked = git.untracked_files()
+    if (unstaged or uncommited or untracked):
+        if unstaged:
+            print "Unstaged changes in:"
+            print '\n'.join(unstaged)
+            print
+        if uncommited:
+            print "Uncommited changes in:"
+            print '\n'.join(uncommited)
+            print
+        if untracked:
+            print "Untracked files:"
+            print '\n'.join(unstaged)
+            print
+
+        should_continue = "x"
+        while should_continue not in ("", "n", "y"):
+            should_continue = raw_input(
+                "You should commit any changes that affect"
+                "the robot before running a simulation.\n"
+                "Do you want to continue? (y/N)").lower().strip()
+
+        if not should_continue or should_continue == 'n':
+            return
+
     parser = OptionParser()
     parser.add_option("-s", "--scenario", default="RandomWalkers")
     parser.add_option("-S", "--scenarioparameter", type="int")
@@ -103,3 +133,6 @@ if __name__ == "__main__":
 
         if video:
             video.close()
+
+if __name__ == "__main__":
+    run()
