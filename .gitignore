@@ -13,3 +13,5 @@ keiro/astar.py
 keiro/geometry.py
 keiro/particle.py
 keiro/vector2d.py
+keiro.sublime-project
+keiro.sublime-workspace
