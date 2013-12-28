@@ -7,13 +7,13 @@ class Git(object):
         self.devnull = open('/dev/null', 'w')
 
     def git_cmd(self, cmd):
-        extra_args = []
+        base = ["git"]
         if self.workingdir:
-            extra_args = [
+            base += [
                 "--work-tree={0}".format(self.workingdir),
                 "--git-dir={0}/.git".format(self.workingdir)
             ]
-        return cmd + extra_args
+        return base + cmd
 
     def git_call(self, cmd):
         return subprocess.call(
@@ -35,24 +35,24 @@ class Git(object):
         ]
 
     def unstaged_changes(self):
-        return self.git_lines(["git", "diff", "--name-only"])
+        return self.git_lines(["diff", "--name-only"])
 
     def uncommited_changes(self):
         return self.git_lines(
-            ["git", "diff", "--name-only", "--cached"]
+            ["diff", "--name-only", "--cached"]
         )
 
     def untracked_files(self):
         return self.git_lines(
-            ["git", "ls-files", "--other", "--exclude-standard", "--directory"]
+            ["ls-files", "--other", "--exclude-standard", "--directory"]
         )
 
     def commit_id(self):
-        return self.git_output(["git", "rev-parse", "HEAD"])
+        return self.git_output(["rev-parse", "HEAD"])
 
 
 if __name__ == "__main__":
-    git = Git()
+    git = Git(".")
     print git.unstaged_changes()
     print git.uncommited_changes()
     print git.untracked_files()

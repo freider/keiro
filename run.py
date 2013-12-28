@@ -34,7 +34,7 @@ def run():
             print
         if untracked:
             print "Untracked files:"
-            print '\n'.join(unstaged)
+            print '\n'.join(untracked)
             print
 
         should_continue = "x"

@@ -6,6 +6,7 @@ build/*
 *.so
 *.orig
 cpp/*_wrap.cpp
+cpp/build
 *.sqlite3
 .DS_Store
 videos/*
