@@ -1,20 +1,25 @@
 from django.conf.urls.defaults import *
+from django.conf import settings
 from statsapp import models
-import django
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
 # admin.autodiscover()
 
-urlpatterns = patterns('',
-	(r'^/?$', 'django.views.generic.list_detail.object_list', 
-        {'queryset': models.Record.objects.order_by('-date')})
-    # Example:
-    # (r'^stats/', include('stats.foo.urls')),
+urlpatterns = patterns(
+    '',
+    (
+        r'^/?$', 'django.views.generic.list_detail.object_list',
+        {'queryset': models.Record.objects.order_by('-date')}
+    )
+)
 
-    # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
-    # to INSTALLED_APPS to enable admin documentation:
-    # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
-    # (r'^admin/', include(admin.site.urls)),
+urlpatterns += patterns(
+    '',
+    url(
+        r'^video/(?P<path>.*)$', 'django.views.static.serve',
+        {
+            'document_root': settings.KEIRO_VIDEO_PATH,
+            'show_indexes': True
+        }
+    ),
 )

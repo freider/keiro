@@ -32,7 +32,7 @@
 			<tr>
 				<th colspan="3">ID</th>
 				<th colspan="7">Settings</th>
-				<th colspan="4">Results</th>
+				<th colspan="5">Results</th>
 			</tr>
 			<tr>
 				<th>id</th>
@@ -49,6 +49,7 @@
 				<th>Completion Time</th>
 				<th>Avg.Iter.Time</th>
 				<th>Max.Iter.Time</th>
+				<th>Video</th>
 			</tr>
 		{% for o in object_list %}
 			<tr class="{% cycle 'odd' 'even' %}">
@@ -66,6 +67,7 @@
 				<td>{{o.completion_time}}</td>
 				<td>{{o.avg_iteration_time}}</td>
 				<td>{{o.max_iteration_time}}</td>
+				<td><a href="video/{{o.id}}.mp4">Video</a></td>
 			</tr>
         {% endfor %}
 	{% endblock %}

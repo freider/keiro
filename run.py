@@ -30,7 +30,6 @@ def get_cli_options():
     parser.add_option("-f", "--show-fps", action="store_true", default=False)
     parser.add_option("-p", "--profile", action="store_true", default=False)
     parser.add_option("-n", "--no-video", action="store_true", default=False)
-    parser.add_option("-c", "--capture-path", metavar="PATH")
 
     (opts, args) = parser.parse_args()
     return opts
@@ -63,7 +62,8 @@ def verify_untouched_files(git):
                 "Do you want to continue? (y/N)").lower().strip()
 
         if not should_continue or should_continue == 'n':
-            return
+            return False
+    return True
 
 
 class Simulation(object):
@@ -75,25 +75,27 @@ class Simulation(object):
         self._agent = None
 
     def run(self):
-        verify_untouched_files(self.git)
+        if not verify_untouched_files(self.git):
+            return
         self._setup_scenario()
-        if self._check_video_available():
-            video = self._get_video()
-
-        self._scenario.world.add_encoder(video)
-
         if self.opts.profile:
             cProfile.run("scenario.run()")
         else:
-            if self._scenario.run():
-                self._save_results()
-                print("Saved record to database")
-            else:
-                print("User triggered quit, no record saved to database")
-                quit()
+            if self._check_video_available():
+                video = self._get_video()
+                self._scenario.world.add_encoder(video)
 
-        if video:
-            video.close()
+            if not self._scenario.run():
+                raise Exception(
+                    "User triggered quit, no record saved to database"
+                )
+
+            simulation_id = self._save_results()
+            print("Saved record to database")
+
+            if video:
+                video_path = "videos/{0}.mp4".format(simulation_id)
+                video.save(video_path)
 
     def _check_video_available(self):
         if (not self.opts.no_video) and ffmpeg_encode.available():
@@ -110,21 +112,8 @@ class Simulation(object):
         # TODO: use temporary output path, then rename video after completion
         # this will let us set the name to the database row ID to link runs
         # with their video
-
-        if self.opts.capture_path:
-            capture_path = self.opts.capture_path
-        else:
-            filename = "{0}_{1}_{2}.mp4".format(
-                self._scenario,
-                self._agent,
-                self.randomseed
-            )
-            print "Storing video in {0}".format(filename)
-            capture_path = os.path.join("videos", filename)
-
         approx_framerate = int(1 / self.opts.timestep)
-        return ffmpeg_encode.Video(path=capture_path,
-                                   frame_rate=approx_framerate,
+        return ffmpeg_encode.Video(frame_rate=approx_framerate,
                                    frame_size=self._scenario.world.size)
 
     def _setup_scenario(self):
@@ -163,6 +152,7 @@ class Simulation(object):
         r.min_iteration_time = self._agent.iterations.get_min_iterationtime()
         r.completion_time = self._scenario.world.get_time()
         r.save()
+        return r.id
 
 
 def run():

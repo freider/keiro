@@ -1,11 +1,16 @@
 import subprocess
 import os
+import tempfile
 
 
 def available():
     with open(os.devnull, 'w') as devnull:
         try:
-            subprocess.Popen(["ffmpeg", "-version"], stderr=subprocess.STDOUT, stdout=devnull)
+            subprocess.Popen(
+                ["ffmpeg", "-version"],
+                stderr=subprocess.STDOUT,
+                stdout=devnull
+            )
         except OSError:
             return False
     return True
@@ -14,14 +19,14 @@ def available():
 class Video(object):
     """Encodes images to a video file
     """
-    def __init__(self, path, frame_rate, frame_size):
+    def __init__(self, frame_rate, frame_size):
         """Create a new Video output stream
 
         Adding frames using `add_frame()` and make sure to close the
         video stream using `close()` when finished to make sure the
         video file isn't corrupted.
         """
-        self.path = path
+        self.tmp_path = tempfile.NamedTemporaryFile(delete=False).name
         self.frames = 0
         self.frame_size = frame_size
         self.frame_rate = frame_rate
@@ -41,7 +46,7 @@ class Video(object):
             '-r', str(self.frame_rate),
             '-vcodec', 'h264',
             #'-profile:v', 'main',  # for quicktime compatibility
-            self.path,
+            self.tmp_path,
         ]
         self._pipe = subprocess.Popen(cmd, stdin=subprocess.PIPE)
 
@@ -54,10 +59,10 @@ class Video(object):
         self._pipe.stdin.write(image_string)
         self.frames += 1
 
-    def close(self):
+    def save(self, path):
         self._pipe.stdin.close()
         self._pipe.wait()
-
+        os.rename(self.tmp_path, path)
 
 if __name__ == "__main__":
     import Image
@@ -68,10 +73,10 @@ if __name__ == "__main__":
     red = Image.new(mode, size, (255, 0, 0)).tostring()
     blue = Image.new(mode, size, (0, 0, 255)).tostring()
 
-    video = Video("videos/video_test.mp4", frame_rate, size)
+    video = Video(frame_rate, size)
 
     for i in xrange(24):
         video.add_frame(blue)
         video.add_frame(red)
 
-    video.close()
+    video.save("videos/video_test.mp4")
