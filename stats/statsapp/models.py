@@ -3,6 +3,7 @@ from django.db import models
 
 class Record(models.Model):
     date = models.DateTimeField()
+    revision = models.CharField(max_length=42)  # git revision
     scenario = models.CharField(max_length=100)
     scenario_parameter = models.IntegerField(null=True)
     agent = models.CharField(max_length=100)
