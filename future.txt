@@ -1,2 +1,7 @@
 Arty (and possibly others):
     * Even if target is blocked by moving obstacle, keep moving towards some point close to it so you can reach it fast once it clears.
+
+Engine:
+    * Break out all drawing methods into DrawSurface/Canvas class that will enable
+      1. much cleaner/maintainable/swappable drawing code
+      2. lets you provide a dummy drawing engine for tests and faster simulations

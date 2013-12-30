@@ -10,7 +10,8 @@ class AgentRegistrar(type):
 
     def __new__(cls, name, bases, dct):
         assert name not in AgentRegistrar.register, 'Multiple agents %r defined!' % name
-        ret = AgentRegistrar.register[name] = type.__new__(cls, name, bases, dct)
+        ret = AgentRegistrar.register[name] = type.__new__(
+            cls, name, bases, dct)
         return ret
 
 

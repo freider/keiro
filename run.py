@@ -109,9 +109,6 @@ class Simulation(object):
         return False
 
     def _get_video(self):
-        # TODO: use temporary output path, then rename video after completion
-        # this will let us set the name to the database row ID to link runs
-        # with their video
         approx_framerate = int(1 / self.opts.timestep)
         return ffmpeg_encode.Video(frame_rate=approx_framerate,
                                    frame_size=self._scenario.world.size)
@@ -131,9 +128,17 @@ class Simulation(object):
             self._agent,
             random_seed=self.randomseed + 1
         )
+
+        # TODO: the following should be put in the scenario setup
         self._scenario.world.set_timestep(self.opts.timestep)
         self._scenario.world.set_show_fps(self.opts.show_fps)
-        self._agent.init(View(self._scenario.world.get_obstacles(), []))
+        self._agent.init(
+            View(
+                self._scenario.world.get_obstacles(),
+                [],
+                self._scenario.world.size
+            )
+        )
 
     def _save_results(self):
         r = models.Record()

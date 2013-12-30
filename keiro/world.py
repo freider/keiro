@@ -5,9 +5,11 @@ from particle import World as PhysicsWorld
 
 
 class View(object):
-    def __init__(self, obstacles, pedestrians):
+    def __init__(self, obstacles, pedestrians, world_size):
         self.obstacles = obstacles
         self.pedestrians = pedestrians
+        maxx, maxy = world_size
+        self.world_bounds = (0, maxx, 0, maxy)
 
 
 class World(PhysicsWorld):
@@ -32,7 +34,10 @@ class World(PhysicsWorld):
         self._time = 0
         self._iterations = 0
         self.update(0)  # so we have no initial collisions
-        self.debugsurface = pygame.Surface(self.size, masks=pygame.SRCALPHA).convert_alpha()
+        self.debugsurface = pygame.Surface(
+            self.size,
+            masks=pygame.SRCALPHA
+        ).convert_alpha()
 
     def set_timestep(self, timestep):
         self.timestep = timestep
@@ -80,11 +85,18 @@ class World(PhysicsWorld):
 
         for u in self.units:
             if u.view_range != 0:
-                #view = View(self.get_obstacles(), self.particles_in_range(u, u.view_range))
+                # view = View(self.get_obstacles(),
+                #             self.particles_in_range(u, u.view_range),
+                #             self.size)
                 # Marc's occlusion code
-                view = View(self.get_obstacles(), self.particles_in_view_range(u, u.view_range))  # (with occlusion)
+                view = View(
+                    self.get_obstacles(),
+                    # with occlusion
+                    self.particles_in_view_range(u, u.view_range),
+                    self.size
+                )
             else:
-                view = View(self.get_obstacles(), [])
+                view = View(self.get_obstacles(), [], self.size)
 
             u._think(dt, view, self.debugsurface)
 

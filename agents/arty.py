@@ -112,8 +112,7 @@ class RoadMapGenerator(object):
             self._connect_node(best_node, candidate_position)
 
     def run(self, iterations):
-        # TODO: remove hardcoded world size
-        sg = StateGenerator(0, 640, 0, 480)
+        sg = StateGenerator(*self.view.world_bounds)
 
         for candidate_position in sg.generate_n(iterations):
             self._connect_to_best(candidate_position)
@@ -298,7 +297,7 @@ class Arty(Agent):
              self.position.y - self.view_range,
              self.position.y + self.view_range
              ),
-            (0, 640, 0, 480),  # TODO: remove hardcoded world size)
+            view.world_bounds,
             10)  # arbitrarily chosen
 
         #always try to use the nodes from the last solution in this iterations
