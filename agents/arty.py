@@ -3,7 +3,8 @@ import math
 from keiro.agent import Agent
 from keiro.vector2d import Vec2d
 from keiro.geometry import linesegdist2, line_distance2, angle_diff
-from keiro.stategenerator import ExtendingGenerator, StateGenerator, PrependedGenerator
+from keiro.stategenerator import ExtendingGenerator, StateGenerator
+from keiro.stategenerator import PrependedGenerator
 
 
 class TestGenerator(PrependedGenerator):
@@ -32,10 +33,11 @@ class RoadMapGenerator(object):
     """Creates roadmap that covers the static environment.
 
     Implemented using RRT expanded from the goal.
-    Call once after a new target has been assigned.    
+    Call once after a new target has been assigned.
     """
 
-    def __init__(self, view, goal, min_distance, speed, turningspeed, max_edge_length):
+    def __init__(self, view, goal, min_distance,
+                 speed, turningspeed, max_edge_length):
         self.view = view
         self.goal = goal
         self.min_distance = min_distance
@@ -46,7 +48,11 @@ class RoadMapGenerator(object):
         self.nodes = [Node(self.goal, None, None)]
 
     def line_is_traversable(self, p1, p2):
-        """Check if traversing in p1-p2 on a straight path is possible without colliding into static obstacles"""
+        """Check if line is collision free with static obstacles
+
+        Returns True if a straight path between p1 and p2 is possible without
+        colliding into static obstacles
+        """
         for o in self.view.obstacles:
             if line_distance2(p1, p2, o.p1, o.p2) < self.min_distance2:
                 return False
@@ -60,20 +66,30 @@ class RoadMapGenerator(object):
             turndist = 0
         else:
             movement_vector = (existing_node.position - candidate_position)
-            turndist = abs(angle_diff(movement_vector.angle(), existing_node.angle))
-        traversal_time = (distance / self.speed) + (turndist / self.turningspeed)
+            turndist = abs(
+                angle_diff(movement_vector.angle(), existing_node.angle)
+            )
+        line_dt = distance / self.speed
+        turn_dt = turndist / self.turningspeed
+        traversal_time = line_dt + turn_dt
         return traversal_time
 
     def _connect_node(self, existing_node, new_position):
-        diff = new_position - existing_node.position  # reversed traversal vector
-        angle = (existing_node.position - new_position).angle()  # direction should be traversal direction
+        # reversed traversal vector
+        diff = new_position - existing_node.position
+        # direction should be traversal direction
+        angle = (existing_node.position - new_position).angle()
         n_subdivisions = int(math.ceil(diff.length() / self.max_edge_length))
-        next = existing_node
+        next_node = existing_node
         #subdivide the new edge
         for d in xrange(1, n_subdivisions + 1):
-            newnode = Node(existing_node.position + (diff * d / n_subdivisions), angle, next)
+            newnode = Node(
+                existing_node.position + (diff * d / n_subdivisions),
+                angle,
+                next_node
+            )
             self.nodes.append(newnode)
-            next = newnode
+            next_node = newnode
 
     def _connect_to_best(self, candidate_position):
         best_traversal_time = None
@@ -81,9 +97,12 @@ class RoadMapGenerator(object):
         for existing_node in self.nodes:
             existing_node_position = existing_node.position
 
-            if self.line_is_traversable(candidate_position, existing_node_position):
-                # check if this existing node is the one that can be reached the fastest from the candidate
-                traversal_time = self._traversal_time(candidate_position, existing_node)
+            if self.line_is_traversable(
+                    candidate_position, existing_node_position):
+                # check if this existing node is the one that
+                # can be reached the fastest from the candidate
+                traversal_time = self._traversal_time(candidate_position,
+                                                      existing_node)
                 if best_node is None or traversal_time < best_traversal_time:
                     best_traversal_time = traversal_time
                     best_node = existing_node
@@ -93,7 +112,8 @@ class RoadMapGenerator(object):
             self._connect_node(best_node, candidate_position)
 
     def run(self, iterations):
-        sg = StateGenerator(0, 640, 0, 480)  # TODO: remove hardcoded world size
+        # TODO: remove hardcoded world size
+        sg = StateGenerator(0, 640, 0, 480)
 
         for candidate_position in sg.generate_n(iterations):
             self._connect_to_best(candidate_position)
@@ -103,7 +123,7 @@ class RoadMapGenerator(object):
 
 
 class Arty(Agent):
-    SAFETY_THRESHOLD = 0.9  # this has practically no effect in the current implementation
+    SAFETY_THRESHOLD = 0.9  # has no effect in the current implementation
     GLOBALMAXEDGE = 70
     LOCALMAXEDGE = 50
     LOCALMAXSIZE = 10
@@ -141,12 +161,29 @@ class Arty(Agent):
         # draw the global roadmap
         for n in self.globalnodes:
             if n.parent:
-                pygame.draw.line(debugsurface, pygame.Color("black"), n.position, n.parent.position)
-            pygame.draw.circle(debugsurface, pygame.Color("red"), map(int, n.position), 2, 0)
+                pygame.draw.line(
+                    debugsurface,
+                    pygame.Color("black"),
+                    n.position,
+                    n.parent.position
+                )
+            pygame.draw.circle(
+                debugsurface,
+                pygame.Color("red"),
+                map(int, n.position),
+                2,
+                0
+                )
 
         # mark visible pedestrians
         for p in view.pedestrians:
-            pygame.draw.circle(debugsurface, pygame.Color("green"), map(int, p.position), int(p.radius) + 2, 2)
+            pygame.draw.circle(
+                debugsurface,
+                pygame.Color("green"),
+                map(int, p.position),
+                int(p.radius) + 2,
+                2
+            )
 
         path = self.getpath(view)
         self.waypoint_clear()
@@ -157,25 +194,38 @@ class Arty(Agent):
 
     def future_position(self, pedestrian, time):
         pos = pedestrian.position + pedestrian.velocity * time
-        #pygame.draw.line(self.debugsurface, (255, 0, 0), pedestrian.position, pos)
+        #pygame.draw.line(self.debugsurface,
+        #                 (255, 0, 0),
+        #                 pedestrian.position,
+        #                 pos)
         return pos
 
     def freeprob_pedestrians(self, position, view, time):
-        """Returns probability that specified position will be collision free at specified time with respect to pedestrians"""
+        """Probability that position will be collision free
+
+        At specified time with respect to pedestrians in view
+        """
         for p in view.pedestrians:
-            pedestrianpos = self.future_position(p, time)  # extrapolated position
-            if position.distance_to(pedestrianpos) < (self.radius + p.radius + self.FREEMARGIN):
+            # extrapolate position
+            pedestrianpos = self.future_position(p, time)
+            safe_dist = (self.radius + p.radius + self.FREEMARGIN)
+            if position.distance_to(pedestrianpos) < safe_dist:
                 self.freeprob_fail_pedestrian = p
                 return 0  # collision with pedestrian
         return 1
 
     def freeprob_turn(self, position, a1, a2, view, starttime):
-        """ Probability that a turn started at starttime at position between angles a1 and a2 will be collision free """
+        """ Probability that a turn is collision free
+
+            Started at starttime at position between
+            angles a1 and a2.
+        """
         dur = abs(angle_diff(a1, a2)) / self.turningspeed
         for p in view.pedestrians:
             p1 = p.position
             p2 = self.future_position(p, dur)  # extrapolate
-            if linesegdist2(p1, p2, position) < (self.radius + p.radius + self.FREEMARGIN) ** 2:
+            safedist2 = (self.radius + p.radius + self.FREEMARGIN) ** 2
+            if linesegdist2(p1, p2, position) < safedist2:
                 self.freeprob_fail_pedestrian = p
                 return 0
         return 1
@@ -185,8 +235,10 @@ class Arty(Agent):
         if p1 == p2:
             return self.freeprob_pedestrians(p1, view, starttime)
 
+        safedist2 = (self.radius + self.FREEMARGIN) ** 2
+
         for o in view.obstacles:
-            if line_distance2(o.p1, o.p2, p1, p2) < (self.radius + self.FREEMARGIN) ** 2:
+            if line_distance2(o.p1, o.p2, p1, p2) < safedist2:
                 return 0
 
         diff = p2 - p1
@@ -199,7 +251,11 @@ class Arty(Agent):
 
         freeprob = 1.0
         for i in xrange(numsegments + 1):
-            freeprob *= self.freeprob_pedestrians(p1 + v * i * segmentlen, view, starttime + i * timediff)
+            passed_position = p1 + v * i * segmentlen
+            passing_time = starttime + i * timediff
+            freeprob *= self.freeprob_pedestrians(
+                passed_position, view, passing_time
+            )
 
         return freeprob
 
@@ -212,7 +268,7 @@ class Arty(Agent):
         return free
 
     def segment_time(self, a1, p1, p2):
-        """Returns time to get from a state (a1, p1) to ((p2-p1).angle(), p2)"""
+        """Time to get from a state (a1, p1) to ((p2-p1).angle(), p2)"""
         diff = p2 - p1
         turningtime = abs(angle_diff(a1, diff.angle())) / self.turningspeed
         movetime = diff.length() / self.speed
@@ -221,14 +277,18 @@ class Arty(Agent):
     def getpath(self, view):
         """Use the ART algorithm to get a path to the goal"""
         if self.goal_occupied(view):
-            # TODO: choose another point on the global map that is closer to the goal than self.position
+            # TODO: choose another point on the global map
+            #       that is closer to the goal than self.position
             return
         #first try to find global node by local planner from current position
-        testpath, testtime = self.find_globaltree(self.position, self.angle, view, 0.0, 1.0)
+        testpath, testtime = self.find_globaltree(
+            self.position, self.angle, view, 0.0, 1.0
+        )
         if testpath:
             return testpath
         print "No safe global path - initializing local search"
-        start = Node(self.position, self.angle, parent=None, time=0, freeprob=1)
+        start = Node(self.position, self.angle,
+                     parent=None, time=0, freeprob=1)
         nodes = [start]
 
         # TODO: add unit test to see that last iteration gets reused
@@ -255,18 +315,25 @@ class Arty(Agent):
             bestparent = None
             besttime = None
             for n in nodes:
-                freeprob = self.freeprob_turn_line(n.position, n.angle, nextpos, view, n.time)
+                freeprob = self.freeprob_turn_line(
+                    n.position, n.angle, nextpos, view, n.time
+                )
                 newprob = n.freeprob * freeprob
                 if newprob < self.SAFETY_THRESHOLD:
                     continue
-                endtime = n.time + self.segment_time(n.angle, n.position, nextpos)
+                segment_time = self.segment_time(n.angle, n.position, nextpos)
+                endtime = n.time + segment_time
 
                 if bestparent is None or endtime < besttime:
                     bestparent = n
                     besttime = endtime
 
             if bestparent is not None:
-                pygame.draw.line(self.debugsurface, (0, 255, 0), bestparent.position, nextpos)
+                pygame.draw.line(self.debugsurface,
+                                 (0, 255, 0),
+                                 bestparent.position,
+                                 nextpos
+                                 )
                 #subdivide the new edge
                 diff = nextpos - bestparent.position
                 angle = diff.angle()
@@ -278,14 +345,36 @@ class Arty(Agent):
                 for d in xrange(1, div + 1):
                     #add new node and subdivisions to new graph
                     subpos = bestparent.position + diff * d / div
-                    freeprob = self.freeprob_turn_line(lastnode.position, lastnode.angle, subpos, view, lastnode.time)
-                    dt = self.segment_time(lastnode.angle, lastnode.position, subpos)
-                    newnode = Node(subpos, angle, parent=lastnode, time=lastnode.time + dt, freeprob=lastnode.freeprob * freeprob)
+                    freeprob = self.freeprob_turn_line(
+                        lastnode.position,
+                        lastnode.angle,
+                        subpos,
+                        view,
+                        lastnode.time
+                    )
+                    dt = self.segment_time(
+                        lastnode.angle,
+                        lastnode.position,
+                        subpos
+                    )
+                    newnode = Node(
+                        subpos, angle,
+                        parent=lastnode,
+                        time=lastnode.time + dt,
+                        freeprob=lastnode.freeprob * freeprob
+                    )
                     lastnode = newnode
                     nodes.append(newnode)
 
-                    #get the best path to the global graph on to the goal from the new node
-                    gpath, gtime = self.find_globaltree(newnode.position, newnode.angle, view, newnode.time, newnode.freeprob)
+                    #get the best path to the global graph
+                    #on to the goal from the new node
+                    gpath, gtime = self.find_globaltree(
+                        newnode.position,
+                        newnode.angle,
+                        view,
+                        newnode.time,
+                        newnode.freeprob
+                    )
                     if gpath is not None:
                         if bestsolution is None or gtime < bestsolution_time:
                             path = []
@@ -302,7 +391,8 @@ class Arty(Agent):
                             bestsolution_time = gtime
         return bestsolution
 
-    def find_globaltree(self, from_position, from_angle, view, start_time, start_prob):
+    def find_globaltree(self, from_position, from_angle,
+                        view, start_time, start_prob):
         """Tries to reach global tree from position/angle
 
             Returns (path, time) to get to goal"""
@@ -311,10 +401,22 @@ class Arty(Agent):
         best_time_to_goal = None
 
         for global_candidate in self.globalnodes:
-            free_prob, path, time_to_goal = self.find_globalnode(global_candidate, from_position, from_angle, view, start_time, start_prob)
+            free_prob, path, time_to_goal = self.find_globalnode(
+                global_candidate,
+                from_position,
+                from_angle,
+                view,
+                start_time,
+                start_prob
+            )
 
             if free_prob < self.SAFETY_THRESHOLD:
-                pygame.draw.circle(self.debugsurface, pygame.Color("pink"), map(int, global_candidate.position), 5, 2)
+                pygame.draw.circle(self.debugsurface,
+                                   pygame.Color("pink"),
+                                   map(int, global_candidate.position),
+                                   5,
+                                   2
+                                   )
                 continue
 
             if best_path is None or time_to_goal < best_time_to_goal:
@@ -323,20 +425,43 @@ class Arty(Agent):
 
         return (best_path, best_time_to_goal)
 
-    def find_globalnode(self, global_candidate, from_position, from_angle, view, start_time, start_prob):
-        free = start_prob * self.freeprob_turn_line(from_position, from_angle, global_candidate.position, view, start_time)
+    def find_globalnode(self, global_candidate, from_position,
+                        from_angle, view, start_time, start_prob):
+        free = start_prob * self.freeprob_turn_line(
+            from_position,
+            from_angle,
+            global_candidate.position,
+            view,
+            start_time
+        )
+
         if free < self.SAFETY_THRESHOLD:
-            pygame.draw.circle(self.debugsurface, pygame.Color("blue"), map(int, global_candidate.position), 8, 2)
+            pygame.draw.circle(self.debugsurface,
+                               pygame.Color("blue"),
+                               map(int, global_candidate.position),
+                               8,
+                               2
+                               )
 
         current_node = global_candidate
-        current_time = start_time + self.segment_time(from_angle, from_position, global_candidate.position)
+        current_time = start_time + self.segment_time(
+            from_angle,
+            from_position,
+            global_candidate.position
+        )
         current_angle = (global_candidate.position - from_position).angle()
         # backtrack through global tree, and check for collisions
         path = [current_node.position]
-        
-        while current_node.parent is not None and free >= self.SAFETY_THRESHOLD:
+
+        while current_node.parent and free >= self.SAFETY_THRESHOLD:
             self.freeprob_fail_pedestrian = None
-            free *= self.freeprob_turn_line(current_node.position, current_angle, current_node.parent.position, view, current_time)
+            free *= self.freeprob_turn_line(
+                current_node.position,
+                current_angle,
+                current_node.parent.position,
+                view,
+                current_time
+            )
             if free < self.SAFETY_THRESHOLD:
                 pygame.draw.aaline(
                     self.debugsurface,
@@ -361,8 +486,14 @@ class Arty(Agent):
                         2
                     )
 
-            current_time += self.segment_time(current_angle, current_node.position, current_node.parent.position)
-            current_angle = (current_node.parent.position - current_node.position).angle()
+            current_time += self.segment_time(
+                current_angle,
+                current_node.position,
+                current_node.parent.position
+            )
+            current_direction = \
+                current_node.parent.position - current_node.position
+            current_angle = current_direction.angle()
             current_node = current_node.parent
             path.append(current_node.position)
         return free, path, current_time

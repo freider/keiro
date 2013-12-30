@@ -79,7 +79,8 @@ class Agent(Unit):
         #draw all waypoints
         last = self.position
         for i in xrange(self.waypoint_len()):
-            pygame.draw.aaline(screen, (0, 0, 0), last, self.waypoint(i).position)
+            pygame.draw.aaline(screen,
+                               (0, 0, 0), last, self.waypoint(i).position)
             last = self.waypoint(i).position
             pygame.draw.aaline(screen, (0, 0, 0), last, last)
 
@@ -93,9 +94,10 @@ class Agent(Unit):
         )
 
     def init(self, view):
-        """Called before simulation starts with the initial information available to the agent
+        """Called before simulation starts
 
-        Allows for agent initialization using information about of static obstacles
+        Allows for agent initialization using information
+        about static obstacles.
         """
         pass
 
@@ -107,12 +109,15 @@ class Agent(Unit):
         self.iterations.end_iteration()
 
     def think(self, dt, view, debugsurface):
-        raise NotImplementedError('An Agent needs to have a brain! Implement the `think()` method')
+        raise NotImplementedError(
+            'An Agent needs to have a brain! Implement the `think()` method'
+        )
 
     def goal_occupied(self, view):
-        """Returns if goal is currently occupied by obstacle/unit that isn't moving
+        """Returns if goal is occupied by obstacle/unit that isn't moving
 
-        Convenience method that can be used to fallback to a nearby goal or similar
+        Convenience method that can be used to trigger fallback
+        to a nearby goal or similar.
         """
         for line in view.obstacles:
             if linesegdist2(line.p1, line.p2, self.goal) < self.radius ** 2:

@@ -25,6 +25,11 @@ class CrossingPaths(Scenario):
 
 
 class BestToFollow(Scenario):
+    """ Scenario where the optimal path is to follow a pedestrian
+
+        The pedestrian walks to the target and then turns moves out
+        of the way
+    """
     world_size = (200, 100)
     walls = False
 
