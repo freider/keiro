@@ -60,17 +60,15 @@ class Agent(Unit):
 
     def render(self, screen):
         #draw a cross over the goal
-        pygame.draw.aaline(
-            screen,
-            (255, 0, 0),
+        screen.line(
             self.goal + Vec2d(-10, -10),
-            self.goal + Vec2d(10, 10)
+            self.goal + Vec2d(10, 10),
+            (255, 0, 0)
         )
-        pygame.draw.aaline(
-            screen,
-            (255, 0, 0),
+        screen.line(
             self.goal + Vec2d(10, -10),
-            self.goal + Vec2d(-10, 10)
+            self.goal + Vec2d(-10, 10),
+            (255, 0, 0),
         )
 
         super(Agent, self).render(screen)
@@ -80,17 +78,17 @@ class Agent(Unit):
         #draw all waypoints
         last = self.position
         for i in xrange(self.waypoint_len()):
-            pygame.draw.aaline(screen,
-                               (0, 0, 0), last, self.waypoint(i).position)
+            screen.line(
+                last, self.waypoint(i).position, (0, 0, 0)
+            )
             last = self.waypoint(i).position
-            pygame.draw.aaline(screen, (0, 0, 0), last, last)
+            screen.line(last, last, (0, 0, 0))
 
         #draw viewrange
-        pygame.draw.circle(
-            screen,
+        screen.circle(
+            self.position,
+            self.view_range,
             (100, 100, 100),
-            map(int, self.position),
-            int(self.view_range),
             1
         )
 

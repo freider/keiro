@@ -160,29 +160,22 @@ class Arty(Agent):
         # draw the global roadmap
         for n in self.globalnodes:
             if n.parent:
-                pygame.draw.line(
-                    debugsurface,
-                    pygame.Color("black"),
+                debugsurface.line(
                     n.position,
-                    n.parent.position
+                    n.parent.position,
+                    "black",
+                    2
                 )
-            pygame.draw.circle(
-                debugsurface,
-                pygame.Color("red"),
-                map(int, n.position),
+            debugsurface.circle(
+                n.position,
                 2,
+                "red",
                 0
-                )
+            )
 
         # mark visible pedestrians
         for p in view.pedestrians:
-            pygame.draw.circle(
-                debugsurface,
-                pygame.Color("green"),
-                map(int, p.position),
-                int(p.radius) + 2,
-                2
-            )
+            debugsurface.circle(p.position, p.radius + 2, "green", 2)
 
         path = self.getpath(view)
         self.waypoint_clear()
@@ -410,12 +403,12 @@ class Arty(Agent):
             )
 
             if free_prob < self.SAFETY_THRESHOLD:
-                pygame.draw.circle(self.debugsurface,
-                                   pygame.Color("pink"),
-                                   map(int, global_candidate.position),
-                                   5,
-                                   2
-                                   )
+                self.debugsurface.circle(
+                    global_candidate.position,
+                    5,
+                    "pink",
+                    2
+                )
                 continue
 
             if best_path is None or time_to_goal < best_time_to_goal:
@@ -462,26 +455,23 @@ class Arty(Agent):
                 current_time
             )
             if free < self.SAFETY_THRESHOLD:
-                pygame.draw.aaline(
-                    self.debugsurface,
-                    pygame.Color("pink"),
+                self.debugsurface.line(
                     global_candidate.position,
                     current_node.position,
+                    "pink",
                     3
                 )
                 if self.freeprob_fail_pedestrian:
-                    pygame.draw.aaline(
-                        self.debugsurface,
-                        pygame.Color("pink"),
+                    self.debugsurface.line(
                         current_node.position,
                         self.freeprob_fail_pedestrian.position,
+                        "pink",
                         3
                     )
-                    pygame.draw.circle(
-                        self.debugsurface,
-                        pygame.Color("red"),
-                        map(int, self.freeprob_fail_pedestrian.position),
+                    self.debugsurface.circle(
+                        self.freeprob_fail_pedestrian.position,
                         10,
+                        "red",
                         2
                     )
 

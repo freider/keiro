@@ -21,29 +21,29 @@ class Unit(LinearParticle):
         self.think(*args, **kwargs)
 
     def render(self, screen):
-        pygame.draw.circle(
-            screen,
+        screen.circle(
+            self.position,
+            self.radius,
             self.color,
-            map(int, self.position),
-            int(self.radius),
             0  # width=0 means filled circle
         )
-        pygame.draw.circle(
-            screen,
-            (0, 0, 0),
+        screen.circle(
             map(int, self.position),
             int(self.radius),
+            (0, 0, 0),
             2
         )
 
         #this draws a direction vector for a unit
-        dirvector = map(int, (self.position.x + math.cos(self.angle) * self.radius, self.position.y + math.sin(self.angle) * self.radius))
+        dirvector = (
+            self.position.x + math.cos(self.angle) * self.radius,
+            self.position.y + math.sin(self.angle) * self.radius
+        )
 
-        pygame.draw.line(
-            screen,
-            (0, 0, 0),
-            map(int, self.position),
+        screen.line(
+            self.position,
             dirvector,
+            (0, 0, 0),
             2
         )
 

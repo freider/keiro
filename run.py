@@ -29,7 +29,9 @@ def get_cli_options():
 
     parser.add_option("-f", "--show-fps", action="store_true", default=False)
     parser.add_option("-p", "--profile", action="store_true", default=False)
-    parser.add_option("-n", "--no-video", action="store_true", default=False)
+    parser.add_option("-V", "--no-video", action="store_true", default=False)
+    parser.add_option("-G", "--no-gitcheck",
+                      action="store_true", default=False)
 
     (opts, args) = parser.parse_args()
     return opts
@@ -75,27 +77,30 @@ class Simulation(object):
         self._agent = None
 
     def run(self):
-        if not verify_untouched_files(self.git):
-            return
+        if not self.opts.no_gitcheck:
+            if not verify_untouched_files(self.git):
+                return
         self._setup_scenario()
         if self.opts.profile:
             cProfile.run("scenario.run()")
-        else:
-            if self._check_video_available():
-                video = self._get_video()
-                self._scenario.world.add_encoder(video)
+            return
 
-            if not self._scenario.run():
-                raise Exception(
-                    "User triggered quit, no record saved to database"
-                )
+        video = None
+        if self._check_video_available():
+            video = self._get_video()
+            self._scenario.world.add_encoder(video)
 
-            simulation_id = self._save_results()
-            print("Saved record to database")
+        if not self._scenario.run():
+            raise Exception(
+                "User triggered quit, no record saved to database"
+            )
 
-            if video:
-                video_path = "videos/{0}.mp4".format(simulation_id)
-                video.save(video_path)
+        simulation_id = self._save_results()
+        print("Saved record to database")
+
+        if video:
+            video_path = "videos/{0}.mp4".format(simulation_id)
+            video.save(video_path)
 
     def _check_video_available(self):
         if (not self.opts.no_video) and ffmpeg_encode.available():

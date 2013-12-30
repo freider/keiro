@@ -26,11 +26,21 @@ class PygameCanvas(object):
         return input_color
 
     def line(self, from_coordinate, to_coordate, color="black", thickness=2):
-        self.surface.aaline(
+        pygame.draw.aaline(
+            self.surface,
             self._color(color),
             map(int, from_coordinate),
             map(int, to_coordate),
             thickness
+        )
+
+    def circle(self, center, radius, color="black", stroke_width=2):
+        pygame.draw.circle(
+            self.surface,
+            self._color(color),
+            map(int, center),
+            int(radius),
+            stroke_width
         )
 
     def blit(self, canvas, position):
@@ -143,7 +153,7 @@ class World(PhysicsWorld):
         return dt
 
     def render(self, canvas):
-        canvas.fill("white")
+        canvas.fill((255, 255, 255))
 
         for o in self.obstacles:
             o.render(canvas)
