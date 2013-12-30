@@ -12,6 +12,37 @@ class View(object):
         self.world_bounds = (0, maxx, 0, maxy)
 
 
+class PygameCanvas(object):
+    def __init__(self, surface):
+        self.surface = surface
+
+    def fill(self, color):
+        self.surface.fill(color)
+
+    def _color(self, input_color):
+        if isinstance(input_color, basestring):
+            return pygame.Color(input_color)
+        assert isinstance(input_color, tuple)
+        return input_color
+
+    def line(self, from_coordinate, to_coordate, color="black", thickness=2):
+        self.surface.aaline(
+            self._color(color),
+            map(int, from_coordinate),
+            map(int, to_coordate),
+            thickness
+        )
+
+    def blit(self, canvas, position):
+        self.surface.blit(canvas.surface, position)
+
+    def flush(self):
+        pygame.display.flip()
+
+    def image_string(self):
+        return pygame.image.tostring(self.surface, "RGB")
+
+
 class World(PhysicsWorld):
     def __init__(self, size):
         super(World, self).__init__()
@@ -30,14 +61,18 @@ class World(PhysicsWorld):
     def init(self):
         pygame.init()
         pygame.display.set_caption("Crowd Navigation")
-        self._screen = pygame.display.set_mode(self.size)
+        self.drawcanvas = PygameCanvas(
+            pygame.display.set_mode(self.size)
+        )
+        self.debugcanvas = PygameCanvas(
+            pygame.Surface(
+                self.size,
+                masks=pygame.SRCALPHA
+            ).convert_alpha()
+        )
         self._time = 0
         self._iterations = 0
         self.update(0)  # so we have no initial collisions
-        self.debugsurface = pygame.Surface(
-            self.size,
-            masks=pygame.SRCALPHA
-        ).convert_alpha()
 
     def set_timestep(self, timestep):
         self.timestep = timestep
@@ -81,7 +116,7 @@ class World(PhysicsWorld):
 
         self.update(dt)
 
-        self.debugsurface.fill((0, 0, 0, 0))  # transparent
+        self.debugcanvas.fill((0, 0, 0, 0))  # transparent
 
         for u in self.units:
             if u.view_range != 0:
@@ -98,32 +133,30 @@ class World(PhysicsWorld):
             else:
                 view = View(self.get_obstacles(), [], self.size)
 
-            u._think(dt, view, self.debugsurface)
+            u._think(dt, view, self.debugcanvas)
 
         if self.show_fps:
             sys.stdout.write("%f fps           \r" % self.clock.get_fps())
             sys.stdout.flush()
 
-        self.render(self._screen)
+        self.render(self.drawcanvas)
         return dt
 
-    def render(self, screen):
-        screen.fill((255, 255, 255))
+    def render(self, canvas):
+        canvas.fill("white")
 
         for o in self.obstacles:
-            o.render(screen)
+            o.render(canvas)
         ID = 0
         for u in self.units:
             #u.render_ID(screen, ID)
-            u.render(screen)
+            u.render(canvas)
             ID = ID + 1
 
-        screen.blit(self.debugsurface, (0, 0))
-
-        pygame.display.flip()
+        canvas.blit(self.debugcanvas, (0, 0))
+        canvas.flush()
 
         if len(self.encoders) > 0:
-            mode = "RGB"
-            imagestring = pygame.image.tostring(screen, mode)
+            imagestring = self.canvas.image_string()
             for enc in self.encoders:
                 enc.add_frame(imagestring)
