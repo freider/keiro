@@ -1,0 +1,2 @@
+Arty (and possibly others):
+    * Even if target is blocked by moving obstacle, keep moving towards some point close to it so you can reach it fast once it clears.
