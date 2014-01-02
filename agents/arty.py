@@ -212,10 +212,11 @@ class Arty(Agent):
             angles a1 and a2.
         """
         dur = abs(angle_diff(a1, a2)) / self.turningspeed
-        print "Turn duration", dur
         for p in view.pedestrians:
-            p1 = self.future_position(p, starttime)  # extrapolate @ start of turn
-            p2 = self.future_position(p, starttime + dur)  # extrapolate @ end of turn
+            # extrapolate to start of turn
+            p1 = self.future_position(p, starttime)
+            # extrapolate to end of turn
+            p2 = self.future_position(p, starttime + dur)
             safedist2 = (self.radius + p.radius + self.FREEMARGIN) ** 2
             if linesegdist2(p1, p2, position) < safedist2:
                 self.freeprob_fail_pedestrian = p
@@ -256,9 +257,7 @@ class Arty(Agent):
         a2 = (p2 - p1).angle()
         dt = abs(angle_diff(a1, a2)) / self.turningspeed
         free = self.freeprob_turn(p1, a1, a2, view, starttime)
-        print "Turn", starttime, free, 
         free *= self.freeprob_line(p1, p2, view, starttime + dt)
-        print "Move ", starttime + dt, free
         return free
 
     def segment_time(self, a1, p1, p2):
@@ -462,7 +461,6 @@ class Arty(Agent):
                 current_time
             )
             if free < self.SAFETY_THRESHOLD:
-                print "Time to failing candidate", time_to_candidate  # TODO: remove
                 self.debugsurface.line(
                     global_candidate.position,
                     current_node.position,
