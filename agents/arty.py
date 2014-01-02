@@ -430,11 +430,10 @@ class Arty(Agent):
         )
         # is that first straight segment safe?
         if free < self.SAFETY_THRESHOLD:
-            self.debugsurface.circle(
+            self.debugsurface.line(
+                from_position,
                 global_candidate.position,
-                8,
-                "blue",
-                2
+                "red"
             )
 
         # update node and time to reflect new position/time
