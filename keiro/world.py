@@ -155,16 +155,16 @@ class World(PhysicsWorld):
 
         for u in self.units:
             if u.view_range != 0:
-                # view = View(self.get_obstacles(),
-                #             self.particles_in_range(u, u.view_range),
-                #             self.size)
+                view = View(self.get_obstacles(),
+                            self.particles_in_range(u, u.view_range),
+                            self.size)
                 # Marc's occlusion code
-                view = View(
-                    self.get_obstacles(),
-                    # with occlusion
-                    self.particles_in_view_range(u, u.view_range),
-                    self.size
-                )
+                # view = View(
+                #     self.get_obstacles(),
+                #     # with occlusion
+                #     self.particles_in_view_range(u, u.view_range),
+                #     self.size
+                # )
             else:
                 view = View(self.get_obstacles(), [], self.size)
 
