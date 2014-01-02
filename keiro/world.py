@@ -67,8 +67,9 @@ class PygameCanvas(object):
             stroke_width
         )
 
-    def blit(self, canvas, position):
-        self.surface.blit(canvas.surface, position)
+    def blit(self, source_canvas, position):
+        if isinstance(source_canvas, PygameCanvas):
+            self.surface.blit(source_canvas.surface, position)
 
     def flush(self):
         pygame.display.flip()
@@ -191,6 +192,6 @@ class World(PhysicsWorld):
         canvas.flush()
 
         if len(self.encoders) > 0:
-            imagestring = self.canvas.image_string()
+            imagestring = canvas.image_string()
             for enc in self.encoders:
                 enc.add_frame(imagestring)

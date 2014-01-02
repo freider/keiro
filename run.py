@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 from keiro.world import View
 from agents import *
 from scenarios import *
@@ -44,17 +45,17 @@ def verify_untouched_files(git):
 
     if (unstaged or uncommited or untracked):
         if unstaged:
-            print "Unstaged changes in:"
-            print '\n'.join(unstaged)
-            print
+            print("Unstaged changes in:")
+            print('\n'.join(unstaged))
+            print()
         if uncommited:
-            print "Uncommited changes in:"
-            print '\n'.join(uncommited)
-            print
+            print("Uncommited changes in:")
+            print('\n'.join(uncommited))
+            print()
         if untracked:
-            print "Untracked files:"
-            print '\n'.join(untracked)
-            print
+            print("Untracked files:")
+            print('\n'.join(untracked))
+            print()
 
         should_continue = "x"
         while should_continue not in ("", "n", "y"):
@@ -101,6 +102,7 @@ class Simulation(object):
         if video:
             video_path = "videos/{0}.mp4".format(simulation_id)
             video.save(video_path)
+            print("Saved video to", video_path)
 
     def _check_video_available(self):
         if (not self.opts.no_video) and ffmpeg_encode.available():
