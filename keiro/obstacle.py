@@ -8,9 +8,8 @@ class Obstacle(object):
         self.bounds = []
 
     def render(self, screen):
-        color = pygame.Color("pink")
         for line in self.bounds:
-            pygame.draw.line(screen, color, line.p1, line.p2)
+            screen.line(line.p1, line.p2, "pink")
 
 
 class Line(Obstacle):
@@ -34,4 +33,4 @@ class Rectangle(Obstacle):
 
     def render(self, screen):
         color = (130, 130, 130)
-        pygame.draw.rect(screen, color, self._rect, 0)
+        screen.rect(self._rect, color, 0)
