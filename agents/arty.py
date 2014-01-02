@@ -1,4 +1,3 @@
-import pygame
 import math
 from keiro.agent import Agent
 from keiro.vector2d import Vec2d
@@ -321,11 +320,11 @@ class Arty(Agent):
                     besttime = endtime
 
             if bestparent is not None:
-                pygame.draw.line(self.debugsurface,
-                                 (0, 255, 0),
-                                 bestparent.position,
-                                 nextpos
-                                 )
+                self.debugsurface.line(
+                    bestparent.position,
+                    nextpos,
+                    (0, 255, 0),
+                )
                 #subdivide the new edge
                 diff = nextpos - bestparent.position
                 angle = diff.angle()
@@ -428,12 +427,12 @@ class Arty(Agent):
         )
 
         if free < self.SAFETY_THRESHOLD:
-            pygame.draw.circle(self.debugsurface,
-                               pygame.Color("blue"),
-                               map(int, global_candidate.position),
-                               8,
-                               2
-                               )
+            self.debugsurface.circle(
+                map(int, global_candidate.position),
+                8,
+                "blue",
+                2
+            )
 
         current_node = global_candidate
         current_time = start_time + self.segment_time(
