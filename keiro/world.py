@@ -12,6 +12,30 @@ class View(object):
         self.world_bounds = (0, maxx, 0, maxy)
 
 
+class DummyCanvas(object):
+    # abstract canvas class, can be used as dummy for not drawing
+    def fill(self, color):
+        pass
+
+    def _color(self, input_color):
+        pass
+
+    def line(self, from_coordinate, to_coordate, color="black", thickness=2):
+        pass
+
+    def circle(self, center, radius, color="black", stroke_width=2):
+        pass
+
+    def blit(self, canvas, position):
+        pass
+
+    def flush(self):
+        pass
+
+    def image_string(self):
+        pass
+
+
 class PygameCanvas(object):
     def __init__(self, surface):
         self.surface = surface
