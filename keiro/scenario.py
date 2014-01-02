@@ -84,8 +84,8 @@ class Scenario(object):  # abstract
 class Spawner(Scenario):
     crowd_rate = 0
 
-    def __init__(self, parameter, agent):
-        super(Spawner, self).__init__(parameter, agent)
+    def __init__(self, parameter, agent, random_seed):
+        super(Spawner, self).__init__(parameter, agent, random_seed)
         if self.parameter is not None:
             self.crowd_rate = self.parameter
 
@@ -94,7 +94,7 @@ class Spawner(Scenario):
         exact = dt * self.crowd_rate
         numtospawn = int(exact)
         exact -= numtospawn
-        if random.random() <= exact:
+        if self.random.random() <= exact:
             numtospawn += 1
         self.spawn(numtospawn)
 
