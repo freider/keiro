@@ -168,7 +168,7 @@ class Arty(Agent):
             debugsurface.circle(
                 n.position,
                 2,
-                "red",
+                "black",
                 0
             )
 
@@ -212,9 +212,10 @@ class Arty(Agent):
             angles a1 and a2.
         """
         dur = abs(angle_diff(a1, a2)) / self.turningspeed
+        print "Turn duration", dur
         for p in view.pedestrians:
-            p1 = p.position
-            p2 = self.future_position(p, dur)  # extrapolate
+            p1 = self.future_position(p, starttime)  # extrapolate @ start of turn
+            p2 = self.future_position(p, starttime + dur)  # extrapolate @ end of turn
             safedist2 = (self.radius + p.radius + self.FREEMARGIN) ** 2
             if linesegdist2(p1, p2, position) < safedist2:
                 self.freeprob_fail_pedestrian = p
@@ -255,7 +256,9 @@ class Arty(Agent):
         a2 = (p2 - p1).angle()
         dt = abs(angle_diff(a1, a2)) / self.turningspeed
         free = self.freeprob_turn(p1, a1, a2, view, starttime)
+        print "Turn", starttime, free, 
         free *= self.freeprob_line(p1, p2, view, starttime + dt)
+        print "Move ", starttime + dt, free
         return free
 
     def segment_time(self, a1, p1, p2):
@@ -271,9 +274,9 @@ class Arty(Agent):
             # TODO: choose another point on the global map
             #       that is closer to the goal than self.position
             return
-        #first try to find global node by local planner from current position
+        #first try to find global node by straight line from current position
         testpath, testtime = self.find_globaltree(
-            self.position, self.angle, view, 0.0, 1.0
+            self.position, self.angle, view, start_time=0.0, start_prob=1.0
         )
         if testpath:
             return testpath
@@ -397,15 +400,15 @@ class Arty(Agent):
                 from_position,
                 from_angle,
                 view,
-                start_time,
-                start_prob
+                start_time=start_time,
+                start_prob=start_prob
             )
 
             if free_prob < self.SAFETY_THRESHOLD:
-                self.debugsurface.circle(
+                self.debugsurface.line(
+                    from_position,
                     global_candidate.position,
-                    5,
-                    "pink",
+                    "red",
                     2
                 )
                 continue
@@ -418,6 +421,7 @@ class Arty(Agent):
 
     def find_globalnode(self, global_candidate, from_position,
                         from_angle, view, start_time, start_prob):
+        # get to global node
         free = start_prob * self.freeprob_turn_line(
             from_position,
             from_angle,
@@ -425,23 +429,27 @@ class Arty(Agent):
             view,
             start_time
         )
-
+        # is that first straight segment safe?
         if free < self.SAFETY_THRESHOLD:
             self.debugsurface.circle(
-                map(int, global_candidate.position),
+                global_candidate.position,
                 8,
                 "blue",
                 2
             )
 
+        # update node and time to reflect new position/time
         current_node = global_candidate
-        current_time = start_time + self.segment_time(
+        time_to_candidate = self.segment_time(
             from_angle,
             from_position,
             global_candidate.position
         )
+        current_time = start_time + time_to_candidate
+
         current_angle = (global_candidate.position - from_position).angle()
-        # backtrack through global tree, and check for collisions
+
+        # follow global tree to goal, and check for collisions
         path = [current_node.position]
 
         while current_node.parent and free >= self.SAFETY_THRESHOLD:
@@ -454,6 +462,7 @@ class Arty(Agent):
                 current_time
             )
             if free < self.SAFETY_THRESHOLD:
+                print "Time to failing candidate", time_to_candidate  # TODO: remove
                 self.debugsurface.line(
                     global_candidate.position,
                     current_node.position,
