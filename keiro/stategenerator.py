@@ -1,7 +1,7 @@
 import random
 import unittest
 from vector2d import Vec2d
-from numpy import array
+import numpy as np
 
 
 class StateGenerator(object):
@@ -42,11 +42,18 @@ class PrependedGenerator(StateGenerator):
 
 class ExtendingGenerator(PrependedGenerator):
     """Extending the target area for each generated point"""
-    def __init__(self, startarea, endarea, steps):
-        super(ExtendingGenerator, self).__init__(*startarea)
+    def __init__(self, minarea, maxarea, steps):
         self.n = 0
         self.steps = steps
-        self.diff = (array(endarea) - array(startarea)) / float(steps)
+        endarray = np.array(maxarea)
+        startarray = np.array((
+            max(endarray[0], minarea[0]),
+            min(endarray[1], minarea[1]),
+            max(endarray[2], minarea[2]),
+            min(endarray[3], minarea[3])
+        ))
+        self.diff = (endarray - startarray) / float(steps)
+        super(ExtendingGenerator, self).__init__(*startarray)
 
     def generate(self):
         ret = super(ExtendingGenerator, self).generate()

@@ -44,3 +44,18 @@ class BestToFollow(Scenario):
         u.waypoint_push(Vec2d(180, 50))
         u.waypoint_push(Vec2d(180, 90))
         self.world.add_unit(u)
+
+
+class PredictableCrowd(Scenario):
+    world_size = (400, 400)
+
+    def init(self):
+        self.agent.position = Vec2d(50, 50)
+        self.agent.goal = Vec2d(350, 350)
+        for i in xrange(1, 10):
+            u = Unit()
+            xcoord = 50 + i * 30
+            u.position = Vec2d(xcoord, 150)
+            u.waypoint_push(Vec2d(xcoord, 200))
+            u.waypoint_push(Vec2d(xcoord, 50))
+            self.world.add_unit(u)

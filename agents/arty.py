@@ -235,7 +235,7 @@ class Arty(Agent):
         diff = p2 - p1
         length = diff.length()
         v = diff / length
-        resolution = self.radius * 2
+        resolution = self.radius
         numsegments = int(math.ceil(length / resolution))
         segmentlen = length / numsegments
         timediff = segmentlen / self.speed
@@ -323,7 +323,7 @@ class Arty(Agent):
                 self.debugsurface.line(
                     bestparent.position,
                     nextpos,
-                    (0, 255, 0),
+                    "black",
                 )
                 #subdivide the new edge
                 diff = nextpos - bestparent.position
