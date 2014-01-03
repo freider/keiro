@@ -27,7 +27,7 @@ class TriArea(Agent):
             return
 
         for p in view.pedestrians:
-            pygame.draw.circle(debugsurface, pygame.Color("green"), map(int, p.position), int(p.radius+2), 2)
+            debugsurface.circle(p.position, p.radius + 2, "green", 2)
             #pygame.draw.aaline(debugsurface, pygame.Color("yellow"), map(int, self.position), map(int, p.position))
 
         #generating static voronoi points (only performed once)
@@ -115,16 +115,16 @@ class TriArea(Agent):
             dD = computeDelaunayTriangulation(dPoints)
             for d in dD:
                 if(d[0] == 0):
-                    pygame.draw.aaline(debugsurface, (255, 0, 0, 255), dPoints[d[0]], dPoints[d[1]])
-                    pygame.draw.aaline(debugsurface, (255, 0, 0, 255), dPoints[d[0]], dPoints[d[2]])
+                    debugsurface.line(dPoints[d[0]], dPoints[d[1]], "red")
+                    debugsurface.line(dPoints[d[0]], dPoints[d[2]], "red")
                     neighborPairs.append([dPoints[d[1]], dPoints[d[2]]])
                 if(d[1] == 0):
-                    pygame.draw.aaline(debugsurface, (255, 0, 0, 255), dPoints[d[1]], dPoints[d[0]])
-                    pygame.draw.aaline(debugsurface, (255, 0, 0, 255), dPoints[d[1]], dPoints[d[2]])
+                    debugsurface.line(dPoints[d[1]], dPoints[d[0]], "red")
+                    debugsurface.line(dPoints[d[1]], dPoints[d[2]], "red")
                     neighborPairs.append([dPoints[d[0]], dPoints[d[2]]])
                 if(d[2] == 0):
-                    pygame.draw.aaline(debugsurface, (255, 0, 0, 255), dPoints[d[2]], dPoints[d[1]])
-                    pygame.draw.aaline(debugsurface, (255, 0, 0, 255), dPoints[d[2]], dPoints[d[0]])
+                    debugsurface.line(dPoints[d[2]], dPoints[d[1]], "red")
+                    debugsurface.line(dPoints[d[2]], dPoints[d[0]], "red")
                     neighborPairs.append([dPoints[d[0]], dPoints[d[1]]])
 
             maxArea = 0

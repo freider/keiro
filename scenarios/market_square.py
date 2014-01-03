@@ -1,3 +1,4 @@
+import pygame
 from keiro.scenario import Scenario
 from keiro.vector2d import Vec2d
 from keiro import obstacle
@@ -35,23 +36,36 @@ class CrowdedMarketSquare(Scenario):
         rects = []
         for j in xrange(2):
             for i in xrange(4):
-                r = obstacle.Rectangle((i + 1) * 50 + 100 * i, (j + 1) * 100 + 120 * j - 50, 100, 120)
-                rects.append(r)
+                dimensions = (
+                    (i + 1) * 50 + 100 * i,
+                    (j + 1) * 100 + 120 * j - 50,
+                    100,
+                    120
+                )
+                r = obstacle.Rectangle(*dimensions)
+                rects.append(pygame.Rect(*dimensions))
                 self.world.add_obstacle(r)
 
         for i in xrange(self.parameter):
             good = False
             u = RandomWalkingAvoider()
 
-            while not good:  # generate random positions for pedestrians that are not inside obstacles...
-                init_position = Vec2d(self.random.randrange(u.radius + 1, self.world.size[0] - u.radius - 1),
-                                      self.random.randrange(u.radius + 1, self.world.size[1] - u.radius - 1))
+            # random positions for pedestrians that are not inside obstacles
+            while not good:
+                init_position = Vec2d(
+                    self.random.randrange(u.radius + 1,
+                                          self.world.size[0] - u.radius - 1),
+                    self.random.randrange(u.radius + 1,
+                                          self.world.size[1] - u.radius - 1))
                 good = init_position.distance_to(self.agent.position) > 20
 
                 for r in rects:
                     if not good:
                         break
-                    good = good and not r._rect.inflate(u.radius * 3, u.radius * 3).collidepoint(init_position)
+                    good = good and not r.inflate(
+                        u.radius * 3,
+                        u.radius * 3
+                    ).collidepoint(init_position)
 
             u.position = init_position
             self.world.add_unit(u)

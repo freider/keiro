@@ -1,6 +1,5 @@
 from vector2d import Vec2d
 from particle import Obstacle as ObstacleBase
-import pygame
 
 
 class Obstacle(object):
@@ -21,16 +20,22 @@ class Line(Obstacle):
 class Rectangle(Obstacle):
     def __init__(self, left, top, width, height):
         super(Rectangle, self).__init__()
-        self._rect = pygame.Rect(left, top, width, height)  # for drawing
+        self.top = top
+        self.left = left
+        self.bottom = top + height
+        self.right = left + width
 
-        bottom = top + height
-        right = left + width
-
-        self.bounds = (ObstacleBase(Vec2d(left, top), Vec2d(right, top)),
-                        ObstacleBase(Vec2d(right, top), Vec2d(right, bottom)),
-                        ObstacleBase(Vec2d(right, bottom), Vec2d(left, bottom)),
-                        ObstacleBase(Vec2d(left, bottom), Vec2d(left, top)))
+        self.bounds = (ObstacleBase(Vec2d(self.left, self.top),
+                                    Vec2d(self.right, self.top)),
+                       ObstacleBase(Vec2d(self.right, self.top),
+                                    Vec2d(self.right, self.bottom)),
+                       ObstacleBase(Vec2d(self.right, self.bottom),
+                                    Vec2d(self.left, self.bottom)),
+                       ObstacleBase(Vec2d(self.left, self.bottom),
+                                    Vec2d(self.left, self.top))
+                       )
 
     def render(self, screen):
         color = (130, 130, 130)
-        screen.rect(self._rect, color, 0)
+        screen.rect(self.top, self.left, self.bottom, self.right,
+                    color=color, stroke_width=0)

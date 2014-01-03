@@ -20,7 +20,8 @@ class DummyCanvas(object):
     def _color(self, input_color):
         pass
 
-    def line(self, from_coordinate, to_coordate, color="black", thickness=2):
+    def line(self, from_coordinate, to_coordate,
+             color="black", stroke_width=2):
         pass
 
     def circle(self, center, radius, color="black", stroke_width=2):
@@ -33,6 +34,9 @@ class DummyCanvas(object):
         pass
 
     def image_string(self):
+        pass
+
+    def rect(self, top, left, bottom, right, color="black", stroke_width=0):
         pass
 
 
@@ -49,16 +53,18 @@ class PygameCanvas(object):
         assert isinstance(input_color, tuple)
         return input_color
 
-    def line(self, from_coordinate, to_coordate, color="black", thickness=2):
-        pygame.draw.aaline(
+    def line(self, from_coordinate, to_coordate,
+             color="black", stroke_width=1):
+        pygame.draw.line(
             self.surface,
             self._color(color),
             map(int, from_coordinate),
             map(int, to_coordate),
-            thickness
+            stroke_width
         )
 
-    def circle(self, center, radius, color="black", stroke_width=2):
+    def circle(self, center, radius,
+               color="black", stroke_width=2):
         pygame.draw.circle(
             self.surface,
             self._color(color),
@@ -74,8 +80,13 @@ class PygameCanvas(object):
     def flush(self):
         pygame.display.flip()
 
-    def image_string(self):
+    def get_image_string(self):
         return pygame.image.tostring(self.surface, "RGB")
+
+    def rect(self, top, left, bottom, right, color="black", stroke_width=0):
+        color = self._color(color)
+        pygame_rect = pygame.Rect(left, top, right-left, bottom-top)
+        pygame.draw.rect(self.surface, color, pygame_rect, stroke_width)
 
 
 class World(PhysicsWorld):
@@ -96,7 +107,7 @@ class World(PhysicsWorld):
     def init(self):
         pygame.init()
         pygame.display.set_caption("Crowd Navigation")
-        self.drawcanvas = PygameCanvas(
+        self.display_canvas = PygameCanvas(
             pygame.display.set_mode(self.size)
         )
         self.debugcanvas = PygameCanvas(
@@ -151,7 +162,7 @@ class World(PhysicsWorld):
 
         self.update(dt)
 
-        self.debugcanvas.fill((0, 0, 0, 0))  # transparent
+        self.debugcanvas.fill((255, 255, 255, 0))  # transparent
 
         for u in self.units:
             if u.view_range != 0:
@@ -174,7 +185,7 @@ class World(PhysicsWorld):
             sys.stdout.write("%f fps           \r" % self.clock.get_fps())
             sys.stdout.flush()
 
-        self.render(self.drawcanvas)
+        self.render(self.display_canvas)
         return dt
 
     def render(self, canvas):
@@ -183,15 +194,17 @@ class World(PhysicsWorld):
         for o in self.obstacles:
             o.render(canvas)
         ID = 0
+
+        canvas.blit(self.debugcanvas, (0, 0))
+
         for u in self.units:
             #u.render_ID(screen, ID)
             u.render(canvas)
             ID = ID + 1
 
-        canvas.blit(self.debugcanvas, (0, 0))
         canvas.flush()
 
         if len(self.encoders) > 0:
-            imagestring = canvas.image_string()
+            imagestring = canvas.get_image_string()
             for enc in self.encoders:
                 enc.add_frame(imagestring)

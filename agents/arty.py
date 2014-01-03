@@ -161,9 +161,7 @@ class Arty(Agent):
             if n.parent:
                 debugsurface.line(
                     n.position,
-                    n.parent.position,
-                    "black",
-                    2
+                    n.parent.position
                 )
             debugsurface.circle(
                 n.position,
@@ -407,8 +405,7 @@ class Arty(Agent):
                 self.debugsurface.line(
                     from_position,
                     global_candidate.position,
-                    "red",
-                    2
+                    "red"
                 )
                 continue
 
@@ -463,15 +460,13 @@ class Arty(Agent):
                 self.debugsurface.line(
                     global_candidate.position,
                     current_node.position,
-                    "pink",
-                    3
+                    "pink"
                 )
                 if self.freeprob_fail_pedestrian:
                     self.debugsurface.line(
                         current_node.position,
                         self.freeprob_fail_pedestrian.position,
-                        "pink",
-                        3
+                        "pink"
                     )
                     self.debugsurface.circle(
                         self.freeprob_fail_pedestrian.position,

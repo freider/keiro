@@ -43,7 +43,7 @@ class Agent(Unit):
     """Base class for all navigational algorithms"""
     __metaclass__ = AgentRegistrar
 
-    view_range = 150
+    view_range = 10000  # 150
 
     def __init__(self, parameter):
         super(Agent, self).__init__()
@@ -81,8 +81,9 @@ class Agent(Unit):
             screen.line(
                 last, self.waypoint(i).position, (0, 0, 0)
             )
-            last = self.waypoint(i).position
-            screen.line(last, last, (0, 0, 0))
+            nextpos = self.waypoint(i).position
+            screen.line(last, nextpos, (0, 255, 0), stroke_width=4)
+            last = nextpos
 
         #draw viewrange
         screen.circle(
