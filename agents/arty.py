@@ -278,9 +278,6 @@ class Arty(Agent):
         if testpath:
             return testpath
         print "No safe global path - initializing local search"
-        start = Node(self.position, self.angle,
-                     parent=None, time=0, freeprob=1)
-        nodes = [start]
 
         # TODO: add unit test to see that last iteration gets reused
         states = ExtendingGenerator(
@@ -299,88 +296,120 @@ class Arty(Agent):
             #if pos.distance_to(self.position) <= self.radius:
             states.prepend(pos)
 
-        bestsolution = None
-        bestsolution_time = None
+        solution = None
+        solution_time = None
+
+        for reachable_node in self.extended_search(states, view):
+            #get the best path to the global graph
+            #on to the goal from the new node
+            gpath, gtime = self.find_globaltree(
+                reachable_node.position,
+                reachable_node.angle,
+                view,
+                reachable_node.time,
+                reachable_node.freeprob
+            )
+            if gpath is not None and (
+                solution is None or gtime < solution_time
+            ):
+                path = []
+                n = reachable_node
+                while n is not None:
+                    path.append(n.position)
+                    n = n.parent
+                path.reverse()
+
+                for gpos in gpath:
+                    path.append(gpos)
+
+                solution = path
+                solution_time = gtime
+        return solution
+
+    def extension_best_parent(self, new_position, nodes, view):
+        bestparent = None
+        besttime = None
+        for test_parent in nodes:
+            freeprob = self.freeprob_turn_line(
+                test_parent.position,
+                test_parent.angle,
+                new_position,
+                view,
+                test_parent.time
+            )
+            newprob = test_parent.freeprob * freeprob
+            if newprob < self.SAFETY_THRESHOLD:
+                continue
+            segment_time = self.segment_time(
+                test_parent.angle,
+                test_parent.position,
+                new_position
+            )
+            endtime = test_parent.time + segment_time
+
+            if bestparent is None or endtime < besttime:
+                bestparent = test_parent
+                besttime = endtime
+        return bestparent
+
+    def subdivide_edge(self, startpos, endpos, max_length):
+        diff = endpos - startpos
+        angle = diff.angle()
+        difflen = diff.length()
+        div = int(math.ceil(difflen / self.LOCALMAXEDGE))
+        for d in xrange(1, div + 1):
+            yield angle, startpos + diff * d / div
+
+    def extended_search(self, states, view):
+        start = Node(self.position, self.angle,
+                     parent=None, time=0, freeprob=1)
+        nodes = [start]
 
         for nextpos in states.generate_n(self.LOCALMAXSIZE):
-            bestparent = None
-            besttime = None
-            for n in nodes:
+            bestparent = self.extension_best_parent(nextpos, nodes, view)
+
+            if bestparent is None:
+                continue
+
+            self.debugsurface.line(
+                bestparent.position,
+                nextpos
+            )
+            lastnode = bestparent
+
+            for angle, subpos in self.subdivide_edge(
+                bestparent.position,
+                nextpos,
+                self.LOCALMAXEDGE
+            ):
+                #add new node and subdivisions to new graph
                 freeprob = self.freeprob_turn_line(
-                    n.position, n.angle, nextpos, view, n.time
+                    lastnode.position,
+                    lastnode.angle,
+                    subpos,
+                    view,
+                    lastnode.time
                 )
-                newprob = n.freeprob * freeprob
-                if newprob < self.SAFETY_THRESHOLD:
-                    continue
-                segment_time = self.segment_time(n.angle, n.position, nextpos)
-                endtime = n.time + segment_time
-
-                if bestparent is None or endtime < besttime:
-                    bestparent = n
-                    besttime = endtime
-
-            if bestparent is not None:
-                self.debugsurface.line(
-                    bestparent.position,
-                    nextpos,
-                    "black",
+                if freeprob < self.SAFETY_THRESHOLD:
+                    # FIXME: a subdivision of a safe route should also be safe
+                    # but sometimes it isn't. Likely floating point issues...
+                    # assert False
+                    break
+                dt = self.segment_time(
+                    lastnode.angle,
+                    lastnode.position,
+                    subpos
                 )
-                #subdivide the new edge
-                diff = nextpos - bestparent.position
-                angle = diff.angle()
-                difflen = diff.length()
-                div = int(math.ceil(difflen / self.LOCALMAXEDGE))
-
-                lastnode = bestparent
-
-                for d in xrange(1, div + 1):
-                    #add new node and subdivisions to new graph
-                    subpos = bestparent.position + diff * d / div
-                    freeprob = self.freeprob_turn_line(
-                        lastnode.position,
-                        lastnode.angle,
-                        subpos,
-                        view,
-                        lastnode.time
-                    )
-                    dt = self.segment_time(
-                        lastnode.angle,
-                        lastnode.position,
-                        subpos
-                    )
-                    newnode = Node(
-                        subpos, angle,
-                        parent=lastnode,
-                        time=lastnode.time + dt,
-                        freeprob=lastnode.freeprob * freeprob
-                    )
-                    lastnode = newnode
-                    nodes.append(newnode)
-
-                    #get the best path to the global graph
-                    #on to the goal from the new node
-                    gpath, gtime = self.find_globaltree(
-                        newnode.position,
-                        newnode.angle,
-                        view,
-                        newnode.time,
-                        newnode.freeprob
-                    )
-                    if gpath is not None:
-                        if bestsolution is None or gtime < bestsolution_time:
-                            path = []
-                            n = newnode
-                            while n is not None:
-                                path.append(n.position)
-                                n = n.parent
-                            path.reverse()
-
-                            for gpos in gpath:
-                                path.append(gpos)
-
-                            bestsolution = path
-                            bestsolution_time = gtime
-        return bestsolution
+                newnode = Node(
+                    subpos,
+                    angle,
+                    parent=lastnode,
+                    time=lastnode.time + dt,
+                    freeprob=lastnode.freeprob * freeprob
+                )
+                lastnode = newnode
+                nodes.append(newnode)
+                yield newnode
 
     def find_globaltree(self, from_position, from_angle,
                         view, start_time, start_prob):
