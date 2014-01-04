@@ -1,5 +1,4 @@
 import time
-import pygame
 from vector2d import Vec2d
 from geometry import linesegdist2
 from keiro.unit import Unit
@@ -43,7 +42,7 @@ class Agent(Unit):
     """Base class for all navigational algorithms"""
     __metaclass__ = AgentRegistrar
 
-    view_range = 10000  # 150
+    view_range = 150
 
     def __init__(self, parameter):
         super(Agent, self).__init__()

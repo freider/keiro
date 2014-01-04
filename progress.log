@@ -143,4 +143,11 @@ Reading paper on Path planning using harmonic functions and probabilistic cell d
 Got some inspiration for a "dynamic" A* using randomly expanding trees in space-time statespace to avoid future probable collisions.
 Scenarios can be chosen at launch using terminal parameters. Feature to create: GUI for launching simulations and saving results in a database.
 
+January 2013:
+Refactored a bunch of things and found several implementation mistakes in Arty code. Made some optimizations and created new scenarios.
+
+Insights:
+* Global graph isn't optimized for time to goal, but time to connected node when being built. Optimizing for time to goal is probably beneficial. 
+* There is a lot of branch-cutting heuristics in arty that would make the algo better if they were removed, but also slower:
+	* Using trees instead of directed acyclic graphs for both local and global search. Makes implementation simpler and less computationally intensive though.
 

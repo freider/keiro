@@ -44,7 +44,7 @@ class RoadMapGenerator(object):
         self.speed = speed
         self.turningspeed = turningspeed
         self.max_edge_length = max_edge_length
-        self.nodes = [Node(self.goal, None, None)]
+        self.nodes = [Node(self.goal, None, None, 0)]
 
     def line_is_traversable(self, p1, p2):
         """Check if line is collision free with static obstacles
@@ -82,16 +82,23 @@ class RoadMapGenerator(object):
         next_node = existing_node
         #subdivide the new edge
         for d in xrange(1, n_subdivisions + 1):
-            newnode = Node(
-                existing_node.position + (diff * d / n_subdivisions),
-                angle,
+            subpos = existing_node.position + (diff * d / n_subdivisions)
+            total_time = next_node.time + self._traversal_time(
+                subpos,
                 next_node
             )
+
+            newnode = Node(
+                subpos,
+                angle,
+                next_node,
+                total_time
+            )
             self.nodes.append(newnode)
-            next_node = newnode
+            #next_node = newnode
 
     def _connect_to_best(self, candidate_position):
-        best_traversal_time = None
+        best_total_time = None
         best_node = None
         for existing_node in self.nodes:
             existing_node_position = existing_node.position
@@ -102,8 +109,9 @@ class RoadMapGenerator(object):
                 # can be reached the fastest from the candidate
                 traversal_time = self._traversal_time(candidate_position,
                                                       existing_node)
-                if best_node is None or traversal_time < best_traversal_time:
-                    best_traversal_time = traversal_time
+                total_time = traversal_time + existing_node.time
+                if best_node is None or total_time < best_total_time:
+                    best_total_time = total_time
                     best_node = existing_node
 
         if best_node:
@@ -115,6 +123,7 @@ class RoadMapGenerator(object):
 
         for candidate_position in sg.generate_n(iterations):
             self._connect_to_best(candidate_position)
+        self.nodes.sort(key=lambda x: x.time)
 
     def get_nodes(self):
         return self.nodes
@@ -122,8 +131,15 @@ class RoadMapGenerator(object):
 
 class Arty(Agent):
     SAFETY_THRESHOLD = 0.9  # has no effect in the current implementation
-    GLOBALMAXEDGE = 70
-    LOCALMAXEDGE = 50
+
+    @property
+    def GLOBALMAXEDGE(self):
+        return self.radius * 2
+
+    @property
+    def LOCALMAXEDGE(self):
+        return self.radius * 2
+
     LOCALMAXSIZE = 10
     FREEMARGIN = 2
 
@@ -180,6 +196,8 @@ class Arty(Agent):
         if path:
             for p in path:
                 self.waypoint_push(p)
+        else:
+            print("No safe route, giving up!")
 
     def future_position(self, pedestrian, time):
         pos = pedestrian.position + pedestrian.velocity * time
@@ -271,7 +289,7 @@ class Arty(Agent):
             return
         #first try to find global node by straight line from current position
         testpath, testtime = self.find_globaltree(
-            self.position, self.angle, view, start_time=0.0, start_prob=1.0
+            self.position, self.angle, view, start_time=0.0, start_safeness=1.0
         )
         if testpath:
             return testpath
@@ -304,8 +322,8 @@ class Arty(Agent):
                 reachable_node.position,
                 reachable_node.angle,
                 view,
-                reachable_node.time,
-                reachable_node.safeness
+                start_time=reachable_node.time,
+                start_safeness=reachable_node.safeness
             )
             if gpath is not None and (
                 solution is None or gtime < solution_time
@@ -349,7 +367,7 @@ class Arty(Agent):
         diff = endpos - startpos
         angle = diff.angle()
         difflen = diff.length()
-        div = int(math.ceil(difflen / self.LOCALMAXEDGE))
+        div = int(math.ceil(difflen / max_length))
         for d in xrange(1, div + 1):
             yield angle, startpos + diff * d / div
 
@@ -376,91 +394,95 @@ class Arty(Agent):
                 self.LOCALMAXEDGE
             ):
                 #add new node and subdivisions to new graph
-                dt, safeness = self.test_move(
+                move_time, move_safeness = self.test_move(
                     lastnode.position,
                     lastnode.angle,
                     subpos,
                     view,
                     lastnode.time
                 )
-                if safeness < self.SAFETY_THRESHOLD:
+                if move_safeness < self.SAFETY_THRESHOLD:
                     # FIXME: a subdivision of a safe route should also be safe
                     # but sometimes it isn't. Likely floating point issues...
-                    # assert False
+                    #assert False
                     break
                 newnode = Node(
                     subpos,
                     angle,
                     parent=lastnode,
-                    time=lastnode.time + dt,
-                    safeness=lastnode.safeness * safeness
+                    time=lastnode.time + move_time,
+                    safeness=lastnode.safeness * move_safeness
                 )
                 lastnode = newnode
                 nodes.append(newnode)
                 yield newnode
 
     def find_globaltree(self, from_position, from_angle,
-                        view, start_time, start_prob):
+                        view, start_time, start_safeness):
         """Tries to reach global tree from position/angle
 
             Returns (path, time) to get to goal"""
 
-        best_path = None
-        best_time_to_goal = None
+        # best_path = None
+        # best_time_to_goal = None
 
         for global_candidate in self.globalnodes:
-            free_prob, path, time_to_goal = self.find_globalnode(
+            safeness, path, time_to_goal = self.backtrack_via_global(
                 global_candidate,
                 from_position,
                 from_angle,
                 view,
                 start_time=start_time,
-                start_prob=start_prob
+                start_safeness=start_safeness
             )
 
-            if free_prob < self.SAFETY_THRESHOLD:
+            if safeness < self.SAFETY_THRESHOLD:
                 self.debugsurface.line(
                     from_position,
                     global_candidate.position,
                     "red"
                 )
                 continue
+            # TODO: make optimality/suboptimality an option
+            # With global nodes sorted by time to goal,
+            # this is a pretty fast heuristic
+            return path, time_to_goal
+        #     if best_path is None or time_to_goal < best_time_to_goal:
+        #         best_path = path
+        #         best_time_to_goal = time_to_goal
+        return None, None
+        # return (best_path, best_time_to_goal)
 
-            if best_path is None or time_to_goal < best_time_to_goal:
-                best_path = path
-                best_time_to_goal = time_to_goal
-
-        return (best_path, best_time_to_goal)
-
-    def find_globalnode(self, global_candidate, from_position,
-                        from_angle, view, start_time, start_prob):
+    def backtrack_via_global(self, global_candidate, from_position,
+                             from_angle, view, start_time, start_safeness):
         # get to global node
-        time_to_candidate, move_safeness = self.test_move(
+        move_time, move_safeness = self.test_move(
             from_position,
             from_angle,
             global_candidate.position,
             view,
             start_time
         )
-        free = start_prob * move_safeness
+        safeness = start_safeness * move_safeness
         # is that first straight segment safe?
-        if free < self.SAFETY_THRESHOLD:
+        if safeness < self.SAFETY_THRESHOLD:
             self.debugsurface.line(
                 from_position,
                 global_candidate.position,
                 "red"
             )
+            # don't have to return here since loop below will be skipped anyway
 
         # update node and time to reflect new position/time
         current_node = global_candidate
-        current_time = start_time + time_to_candidate
+        current_time = start_time + move_time
 
         current_angle = (global_candidate.position - from_position).angle()
 
         # follow global tree to goal, and check for collisions
         path = [current_node.position]
 
-        while current_node.parent and free >= self.SAFETY_THRESHOLD:
+        while current_node.parent and safeness >= self.SAFETY_THRESHOLD:
             self.safeness_fail_pedestrian = None
             move_time, move_safeness = self.test_move(
                 current_node.position,
@@ -469,8 +491,8 @@ class Arty(Agent):
                 view,
                 current_time
             )
-            free *= move_safeness
-            if free < self.SAFETY_THRESHOLD:
+            safeness *= move_safeness
+            if safeness < self.SAFETY_THRESHOLD:
                 self.debugsurface.line(
                     global_candidate.position,
                     current_node.position,
@@ -495,4 +517,4 @@ class Arty(Agent):
             current_angle = current_direction.angle()
             current_node = current_node.parent
             path.append(current_node.position)
-        return free, path, current_time
+        return safeness, path, current_time
