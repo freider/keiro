@@ -20,12 +20,12 @@ class TestGenerator(PrependedGenerator):
 
 
 class Node:
-    def __init__(self, position, angle, parent, time=None, freeprob=None):
+    def __init__(self, position, angle, parent, time=None, safeness=None):
         self.position = position
         self.angle = angle
         self.time = time
         self.parent = parent
-        self.freeprob = freeprob
+        self.safeness = safeness
 
 
 class RoadMapGenerator(object):
@@ -189,7 +189,7 @@ class Arty(Agent):
         #                 pos)
         return pos
 
-    def freeprob_pedestrians(self, position, view, time):
+    def safeness_pedestrians(self, position, view, time):
         """Probability that position will be collision free
 
         At specified time with respect to pedestrians in view
@@ -199,11 +199,11 @@ class Arty(Agent):
             pedestrianpos = self.future_position(p, time)
             safe_dist = (self.radius + p.radius + self.FREEMARGIN)
             if position.distance_to(pedestrianpos) < safe_dist:
-                self.freeprob_fail_pedestrian = p
+                self.safeness_fail_pedestrian = p
                 return 0  # collision with pedestrian
         return 1
 
-    def freeprob_turn(self, position, a1, a2, view, starttime):
+    def turn_safeness(self, position, a1, a2, view, starttime):
         """ Probability that a turn is collision free
 
             Started at starttime at position between
@@ -217,14 +217,14 @@ class Arty(Agent):
             p2 = self.future_position(p, starttime + dur)
             safedist2 = (self.radius + p.radius + self.FREEMARGIN) ** 2
             if linesegdist2(p1, p2, position) < safedist2:
-                self.freeprob_fail_pedestrian = p
+                self.safeness_fail_pedestrian = p
                 return 0
         return 1
 
-    def freeprob_line(self, p1, p2, view, starttime):
+    def line_safeness(self, p1, p2, view, starttime):
         """ Free probability for moving from p1 to p2 starting on starttime """
         if p1 == p2:
-            return self.freeprob_pedestrians(p1, view, starttime)
+            return self.safeness_pedestrians(p1, view, starttime)
 
         safedist2 = (self.radius + self.FREEMARGIN) ** 2
 
@@ -240,30 +240,28 @@ class Arty(Agent):
         segmentlen = length / numsegments
         timediff = segmentlen / self.speed
 
-        freeprob = 1.0
+        safeness = 1.0
         for i in xrange(numsegments + 1):
             passed_position = p1 + v * i * segmentlen
             passing_time = starttime + i * timediff
-            freeprob *= self.freeprob_pedestrians(
+            safeness *= self.safeness_pedestrians(
                 passed_position, view, passing_time
             )
 
-        return freeprob
+        return safeness
 
-    def freeprob_turn_line(self, p1, a1, p2, view, starttime):
-        """Free probability for turning and then walking on a straight line"""
-        a2 = (p2 - p1).angle()
-        dt = abs(angle_diff(a1, a2)) / self.turningspeed
-        free = self.freeprob_turn(p1, a1, a2, view, starttime)
-        free *= self.freeprob_line(p1, p2, view, starttime + dt)
-        return free
+    def test_move(self, p1, a1, p2, view, starttime):
+        """Get from a state (a1, p1) to ((p2-p1).angle(), p2)
 
-    def segment_time(self, a1, p1, p2):
-        """Time to get from a state (a1, p1) to ((p2-p1).angle(), p2)"""
+        Returns (traversal_time, safeness)
+        """
         diff = p2 - p1
-        turningtime = abs(angle_diff(a1, diff.angle())) / self.turningspeed
+        a2 = diff.angle()
+        turningtime = abs(angle_diff(a1, a2)) / self.turningspeed
         movetime = diff.length() / self.speed
-        return turningtime + movetime
+        safeness = self.turn_safeness(p1, a1, a2, view, starttime)
+        safeness *= self.line_safeness(p1, p2, view, starttime + turningtime)
+        return ((turningtime + movetime), safeness)
 
     def getpath(self, view):
         """Use the ART algorithm to get a path to the goal"""
@@ -307,7 +305,7 @@ class Arty(Agent):
                 reachable_node.angle,
                 view,
                 reachable_node.time,
-                reachable_node.freeprob
+                reachable_node.safeness
             )
             if gpath is not None and (
                 solution is None or gtime < solution_time
@@ -330,21 +328,16 @@ class Arty(Agent):
         bestparent = None
         besttime = None
         for test_parent in nodes:
-            freeprob = self.freeprob_turn_line(
+            segment_time, safeness = self.test_move(
                 test_parent.position,
                 test_parent.angle,
                 new_position,
                 view,
                 test_parent.time
             )
-            newprob = test_parent.freeprob * freeprob
+            newprob = test_parent.safeness * safeness
             if newprob < self.SAFETY_THRESHOLD:
                 continue
-            segment_time = self.segment_time(
-                test_parent.angle,
-                test_parent.position,
-                new_position
-            )
             endtime = test_parent.time + segment_time
 
             if bestparent is None or endtime < besttime:
@@ -362,7 +355,7 @@ class Arty(Agent):
 
     def extended_search(self, states, view):
         start = Node(self.position, self.angle,
-                     parent=None, time=0, freeprob=1)
+                     parent=None, time=0, safeness=1)
         nodes = [start]
 
         for nextpos in states.generate_n(self.LOCALMAXSIZE):
@@ -383,29 +376,24 @@ class Arty(Agent):
                 self.LOCALMAXEDGE
             ):
                 #add new node and subdivisions to new graph
-                freeprob = self.freeprob_turn_line(
+                dt, safeness = self.test_move(
                     lastnode.position,
                     lastnode.angle,
                     subpos,
                     view,
                     lastnode.time
                 )
-                if freeprob < self.SAFETY_THRESHOLD:
+                if safeness < self.SAFETY_THRESHOLD:
                     # FIXME: a subdivision of a safe route should also be safe
                     # but sometimes it isn't. Likely floating point issues...
                     # assert False
                     break
-                dt = self.segment_time(
-                    lastnode.angle,
-                    lastnode.position,
-                    subpos
-                )
                 newnode = Node(
                     subpos,
                     angle,
                     parent=lastnode,
                     time=lastnode.time + dt,
-                    freeprob=lastnode.freeprob * freeprob
+                    safeness=lastnode.safeness * safeness
                 )
                 lastnode = newnode
                 nodes.append(newnode)
@@ -447,13 +435,14 @@ class Arty(Agent):
     def find_globalnode(self, global_candidate, from_position,
                         from_angle, view, start_time, start_prob):
         # get to global node
-        free = start_prob * self.freeprob_turn_line(
+        time_to_candidate, move_safeness = self.test_move(
             from_position,
             from_angle,
             global_candidate.position,
             view,
             start_time
         )
+        free = start_prob * move_safeness
         # is that first straight segment safe?
         if free < self.SAFETY_THRESHOLD:
             self.debugsurface.line(
@@ -464,11 +453,6 @@ class Arty(Agent):
 
         # update node and time to reflect new position/time
         current_node = global_candidate
-        time_to_candidate = self.segment_time(
-            from_angle,
-            from_position,
-            global_candidate.position
-        )
         current_time = start_time + time_to_candidate
 
         current_angle = (global_candidate.position - from_position).angle()
@@ -477,38 +461,35 @@ class Arty(Agent):
         path = [current_node.position]
 
         while current_node.parent and free >= self.SAFETY_THRESHOLD:
-            self.freeprob_fail_pedestrian = None
-            free *= self.freeprob_turn_line(
+            self.safeness_fail_pedestrian = None
+            move_time, move_safeness = self.test_move(
                 current_node.position,
                 current_angle,
                 current_node.parent.position,
                 view,
                 current_time
             )
+            free *= move_safeness
             if free < self.SAFETY_THRESHOLD:
                 self.debugsurface.line(
                     global_candidate.position,
                     current_node.position,
                     "pink"
                 )
-                if self.freeprob_fail_pedestrian:
+                if self.safeness_fail_pedestrian:
                     self.debugsurface.line(
                         current_node.position,
-                        self.freeprob_fail_pedestrian.position,
+                        self.safeness_fail_pedestrian.position,
                         "pink"
                     )
                     self.debugsurface.circle(
-                        self.freeprob_fail_pedestrian.position,
+                        self.safeness_fail_pedestrian.position,
                         10,
                         "red",
                         2
                     )
 
-            current_time += self.segment_time(
-                current_angle,
-                current_node.position,
-                current_node.parent.position
-            )
+            current_time += move_time
             current_direction = \
                 current_node.parent.position - current_node.position
             current_angle = current_direction.angle()

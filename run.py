@@ -83,7 +83,7 @@ class Simulation(object):
                 return
         self._setup_scenario()
         if self.opts.profile:
-            cProfile.run("scenario.run()")
+            cProfile.runctx("self._scenario.run()", globals(), locals())
             return
 
         video = None
