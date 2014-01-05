@@ -87,3 +87,19 @@ class LonelyBlocking(Scenario):
         u = Unit()
         u.position = Vec2d(200, 200)
         self.world.add_unit(u)
+
+
+class SelfBattle(Scenario):
+    world_size = (400, 400)
+
+    def init(self):
+        self.agent.position = Vec2d(100, 200)
+        self.agent.angle = 0
+        self.agent.goal = Vec2d(300, 200)
+        from agents.voronoimap import VoronoiMap
+        from agents.arty import Arty
+        u = Arty(0)
+        u.position = Vec2d(300, 200)
+        u.goal = Vec2d(100, 200)
+        u.angle = math.pi
+        self.world.add_unit(u)

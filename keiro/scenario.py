@@ -1,7 +1,7 @@
+import random
 from vector2d import Vec2d
 from keiro import obstacle
 import pygame
-import random
 from world import World
 
 
@@ -26,17 +26,15 @@ class Scenario(object):  # abstract
         # all scenarios should use self.random instead of
         # the global random module so they are not affected
         # by how much randomness is in the agents
-        self.random = random.Random()
-        if random_seed:
-            self.random.seed(random_seed)
+        self.random = random.Random(random_seed)
         self.world = World(self.world_size)
-        self.world.init()
         self.init()
 
         if self.walls:
             self.add_walls()
 
         self.world.add_unit(agent)
+        self.world.init()
 
     def __repr__(self):
         return "{0}({1})".format(self.__class__.__name__, self.parameter)

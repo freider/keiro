@@ -2,17 +2,27 @@ import pygame
 import math
 from vector2d import Vec2d
 from particle import LinearParticle
+import random
 
 
 class Unit(LinearParticle):
     color = (255, 255, 255)
     view_range = 0
 
-    def __init__(self):
+    def __init__(self, random_seed=None):
         super(Unit, self).__init__()
         self.radius = 8
         self.speed = 20
         self.turningspeed = 2 * math.pi / 3
+        self.random = random.Random(random_seed)
+
+    def init(self, view):
+        """Called before simulation starts
+
+        Allows for unit initialization using information
+        about static obstacles.
+        """
+        pass
 
     def think(self, dt, view, debugsurface):
         pass

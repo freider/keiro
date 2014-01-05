@@ -1,4 +1,3 @@
-import random
 from keiro.agent import Agent
 from keiro import graphbuilder
 from keiro import astar
@@ -9,10 +8,11 @@ from keiro.vector2d import Vec2d
 class RoadMap(Agent):
     FREEMARGIN = 1
 
-    def __init__(self, parameter):
+    def __init__(self, parameter, random):
         if parameter is None:
             parameter = 10
-        super(RoadMap, self).__init__(parameter)
+        self.random = random
+        super(RoadMap, self).__init__(parameter, random=random)
         self.NODES = parameter
         self.cdist = 10000000
 
@@ -54,8 +54,12 @@ class RoadMap(Agent):
             gb.connect(self.position, self.goal)
         else:
             # using half of the points for global planning
+            world_size = self.view.world_bounds[1::2]
             for i in xrange(self.NODES / 2):
-                newpos = Vec2d(640 * random.random(), 480 * random.random())
+                newpos = Vec2d(
+                    self.random.random(),
+                    self.random.random()
+                ) * Vec2d(*world_size)
                 for pos in gb.positions():
                     if graphbuilder.free_path(
                         Vec2d(*pos), newpos, view, safe_distance
@@ -66,8 +70,8 @@ class RoadMap(Agent):
             # some extra local points (within view range) to handle the crowd
             for i in xrange(self.NODES - self.NODES / 2):
                 random_offset = Vec2d(
-                    (2 * random.random() - 1) * self.view_range,
-                    (2 * random.random() - 1) * self.view_range
+                    (2 * self.random.random() - 1) * self.view_range,
+                    (2 * self.random.random() - 1) * self.view_range
                 )
                 newpos = self.position + random_offset
                 for pos in gb.positions():

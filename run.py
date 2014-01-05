@@ -129,23 +129,19 @@ class Simulation(object):
         ScenarioClass = ScenarioRegistrar.register[self.opts.scenario]
         AgentClass = AgentRegistrar.register[self.opts.agent]
 
-        self._agent = AgentClass(self.opts.agentparameter)
+        self._agent = AgentClass(
+            self.opts.agentparameter,
+            random_seed=random.random()
+        )
         self._scenario = ScenarioClass(
             self.opts.scenarioparameter,
             self._agent,
-            random_seed=self.randomseed + 1
+            random_seed=random.random()
         )
 
         # TODO: the following should be put in the scenario setup
         self._scenario.world.set_timestep(self.opts.timestep)
         self._scenario.world.set_show_fps(self.opts.show_fps)
-        self._agent.init(
-            View(
-                self._scenario.world.get_obstacles(),
-                [],
-                self._scenario.world.size
-            )
-        )
 
     def _save_results(self):
         r = models.Record()

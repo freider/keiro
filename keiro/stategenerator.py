@@ -1,4 +1,3 @@
-import random
 import unittest
 from vector2d import Vec2d
 import numpy as np
@@ -6,15 +5,16 @@ import numpy as np
 
 class StateGenerator(object):
     """Generate random 2d points within supplied rectangle"""
-    def __init__(self, minx, maxx, miny, maxy):
+    def __init__(self, minx, maxx, miny, maxy, random=None):
+        self.random = random
         self.minx = minx
         self.maxx = maxx
         self.miny = miny
         self.maxy = maxy
 
     def generate(self):
-        posx = self.minx + random.random() * (self.maxx - self.minx)
-        posy = self.miny + random.random() * (self.maxy - self.miny)
+        posx = self.minx + self.random.random() * (self.maxx - self.minx)
+        posy = self.miny + self.random.random() * (self.maxy - self.miny)
         return Vec2d(posx, posy)
 
     def generate_n(self, n):
@@ -23,9 +23,12 @@ class StateGenerator(object):
 
 
 class PrependedGenerator(StateGenerator):
-    """Allows bias of the generator by prepending the random queue with non-random points"""
-    def __init__(self, minx, maxx, miny, maxy):
-        super(PrependedGenerator, self).__init__(minx, maxx, miny, maxy)
+    """Allows bias of the generator by prepending
+    the random queue with non-random points"""
+    def __init__(self, minx, maxx, miny, maxy, random):
+        super(PrependedGenerator, self).__init__(
+            minx, maxx, miny, maxy, random=random
+        )
         self.biaspoints = []
 
     def prepend(self, point):
@@ -42,7 +45,7 @@ class PrependedGenerator(StateGenerator):
 
 class ExtendingGenerator(PrependedGenerator):
     """Extending the target area for each generated point"""
-    def __init__(self, minarea, maxarea, steps):
+    def __init__(self, minarea, maxarea, steps, random):
         self.n = 0
         self.steps = steps
         endarray = np.array(maxarea)
@@ -53,7 +56,7 @@ class ExtendingGenerator(PrependedGenerator):
             min(endarray[3], minarea[3])
         ))
         self.diff = (endarray - startarray) / float(steps)
-        super(ExtendingGenerator, self).__init__(*startarray)
+        super(ExtendingGenerator, self).__init__(*startarray, random=random)
 
     def generate(self):
         ret = super(ExtendingGenerator, self).generate()
@@ -73,8 +76,9 @@ class TestGenerators(unittest.TestCase):
         self.maxx = 200
         self.miny = -200
         self.maxy = -100
-        self.sg = StateGenerator(100, 200, -200, -100)
-        self.pg = PrependedGenerator(100, 200, -200, -100)
+        import random
+        self.sg = StateGenerator(100, 200, -200, -100, random)
+        self.pg = PrependedGenerator(100, 200, -200, -100, random)
 
     def test_sg(self):
         for pos in self.sg.generate_n(100):
@@ -90,7 +94,8 @@ class TestGenerators(unittest.TestCase):
         bias2 = self.sg.generate()
         self.pg.prepend(bias)
         self.pg.prepend(bias2)
-        self.assertTrue(self.pg.generate() == bias and self.pg.generate() == bias2)
+        self.assertTrue(self.pg.generate() == bias
+                        and self.pg.generate() == bias2)
 
 
 if __name__ == "__main__":

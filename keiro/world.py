@@ -123,6 +123,14 @@ class World(PhysicsWorld):
         self._time = 0
         self._iterations = 0
         self.update(0)  # so we have no initial collisions
+        for u in self.units:
+            u.init(
+                View(
+                    self.get_obstacles(),
+                    [],
+                    self.size
+                )
+            )
 
     def set_timestep(self, timestep):
         self.timestep = timestep

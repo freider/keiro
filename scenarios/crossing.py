@@ -9,7 +9,8 @@ class Crossing(Spawner):
 
     def init(self):
         self.agent.position = Vec2d(10, self.world.size[1] / 2)
-        self.agent.goal = Vec2d(self.world.size[0] - 10, self.world.size[1] / 2)
+        self.agent.goal = Vec2d(self.world.size[0] - 10,
+                                self.world.size[1] / 2)
         self.agent.angle = (self.agent.goal - self.agent.position).angle()
 
         agent_travel = self.agent.goal - self.agent.position
@@ -29,7 +30,10 @@ class Crossing(Spawner):
 
     def spawn(self, num_units):
         for u in self.world.units:
-            if u is not self.agent and u.position.distance_to(u.goal) <= u.radius:
+            if (
+                u is not self.agent and
+                u.position.distance_to(u.goal) <= u.radius
+            ):
                 self.world.remove_unit(u)
                 avg_groundspeed = u.travel_length / (self.world._time - u.spawn_time)
                 self.world.avg_groundspeed_list.append(avg_groundspeed)

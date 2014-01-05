@@ -8,7 +8,9 @@ from keiro.geometry import linesegdist2
 
 
 class ARoadMap(Agent):
-    """Same algorithm as roadmap.py but using collision detection similar to arty.py while searching for paths and has A* coded in Python"""
+    """Same algorithm as roadmap.py
+    but using collision detection similar to arty.py
+    while searching for paths and has A* coded in Python"""
     def __init__(self, parameter):
         raise NotImplementedError  # Only copied the file so far...
         if parameter is None:

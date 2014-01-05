@@ -44,8 +44,8 @@ class Agent(Unit):
 
     view_range = 150
 
-    def __init__(self, parameter):
-        super(Agent, self).__init__()
+    def __init__(self, parameter, **kwargs):
+        super(Agent, self).__init__(**kwargs)
         self.parameter = parameter
         self.color = (100, 100, 255)
         self.travel_length = 0
@@ -92,19 +92,14 @@ class Agent(Unit):
             1
         )
 
-    def init(self, view):
-        """Called before simulation starts
-
-        Allows for agent initialization using information
-        about static obstacles.
-        """
-        pass
-
     def _think(self, dt, view, debugsurface):
         if self.goal_occupied(view):
             print "Goal occupied"
         self.iterations.start_iteration()
         self.think(dt, view, debugsurface)
+        # mark visible pedestrians
+        for p in view.pedestrians:
+            debugsurface.circle(p.position, p.radius + 1, "black", 2)
         self.iterations.end_iteration()
 
     def think(self, dt, view, debugsurface):

@@ -13,11 +13,10 @@ BIG_FLOAT = 1e38
 class VoronoiMap(Agent):
     FREEMARGIN = 2
 
-    def __init__(self, parameter):
+    def __init__(self, parameter, **kwargs):
         if parameter is None:
             parameter = 10
-        super(VoronoiMap, self).__init__(parameter)
-        self.NODES = parameter
+        super(VoronoiMap, self).__init__(parameter, **kwargs)
         self.cdist = 10000000
         self.speed = 20
         self.staticVPoints = []
@@ -25,10 +24,6 @@ class VoronoiMap(Agent):
     def think(self, dt, view, debugsurface):
         if not self.goal:  # have no goal?
             return
-
-        for p in view.pedestrians:
-            debugsurface.circle(p.position, p.radius + 2, "green", 2)
-            #pygame.draw.aaline(debugsurface, pygame.Color("yellow"), map(int, self.position), map(int, p.position))
 
         #generating static voronoi points (only performed once)
         if len(self.staticVPoints) == 0:

@@ -1,22 +1,7 @@
 import math
 from keiro.agent import Agent
-from keiro.vector2d import Vec2d
 from keiro.geometry import linesegdist2, line_distance2, angle_diff
 from keiro.stategenerator import ExtendingGenerator, StateGenerator
-from keiro.stategenerator import PrependedGenerator
-
-
-class TestGenerator(PrependedGenerator):
-    def __init__(self, *args):
-        super(TestGenerator, self).__init__(*args)
-        self.first = True
-
-    def generate(self):
-        self.first = not self.first
-        if self.first:
-            return Vec2d(300, 250)
-        else:
-            return Vec2d(300, 150)
 
 
 class Node:
@@ -36,7 +21,8 @@ class RoadMapGenerator(object):
     """
 
     def __init__(self, view, goal, min_distance,
-                 speed, turningspeed, max_edge_length):
+                 speed, turningspeed, max_edge_length,
+                 random):
         self.view = view
         self.goal = goal
         self.min_distance = min_distance
@@ -45,6 +31,7 @@ class RoadMapGenerator(object):
         self.turningspeed = turningspeed
         self.max_edge_length = max_edge_length
         self.nodes = [Node(self.goal, None, None, 0)]
+        self.random = random
 
     def line_is_traversable(self, p1, p2):
         """Check if line is collision free with static obstacles
@@ -119,7 +106,7 @@ class RoadMapGenerator(object):
             self._connect_node(best_node, candidate_position)
 
     def run(self, iterations):
-        sg = StateGenerator(*self.view.world_bounds)
+        sg = StateGenerator(*self.view.world_bounds, random=self.random)
 
         for candidate_position in sg.generate_n(iterations):
             self._connect_to_best(candidate_position)
@@ -143,10 +130,10 @@ class Arty(Agent):
     LOCALMAXSIZE = 10
     FREEMARGIN = 2
 
-    def __init__(self, parameter):
+    def __init__(self, parameter, **kwargs):
         if parameter is None:
             parameter = 60
-        super(Arty, self).__init__(parameter)
+        super(Arty, self).__init__(parameter, **kwargs)
         self.GLOBALNODES = parameter
 
     def init(self, view):
@@ -160,7 +147,8 @@ class Arty(Agent):
             self.radius + self.FREEMARGIN,
             self.speed,
             self.turningspeed,
-            self.GLOBALMAXEDGE
+            self.GLOBALMAXEDGE,
+            self.random
         )
         generator.run(self.GLOBALNODES)
         self.globalnodes = generator.get_nodes()
@@ -185,10 +173,6 @@ class Arty(Agent):
                 "black",
                 0
             )
-
-        # mark visible pedestrians
-        for p in view.pedestrians:
-            debugsurface.circle(p.position, p.radius + 1, "black", 2)
 
         path = self.getpath(view)
         self.waypoint_clear()
@@ -354,7 +338,8 @@ class Arty(Agent):
              self.position.y + self.view_range
              ),
             view.world_bounds,
-            10)  # arbitrarily chosen
+            steps=10,  # arbitrarily chosen
+            random=self.random)
 
         #always try to use the nodes from the last solution in this iterations
         #so they are kept if still the best
