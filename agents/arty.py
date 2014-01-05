@@ -201,13 +201,9 @@ class Arty(Agent):
 
     def future_position(self, pedestrian, time):
         pos = pedestrian.position + pedestrian.velocity * time
-        #pygame.draw.line(self.debugsurface,
-        #                 (255, 0, 0),
-        #                 pedestrian.position,
-        #                 pos)
         return pos
 
-    def safeness_pedestrians(self, position, view, time):
+    def static_safeness(self, position, view, time):
         """Probability that position will be collision free
 
         At specified time with respect to pedestrians in view
@@ -239,19 +235,46 @@ class Arty(Agent):
                 return 0
         return 1
 
-    def line_safeness(self, p1, p2, view, starttime):
-        """ Free probability for moving from p1 to p2 starting on starttime """
-        if p1 == p2:
-            return self.safeness_pedestrians(p1, view, starttime)
+    def line_pedestrian_safeness(self, position, velocity,
+                                 start_time, end_time, view):
+        """ Safety of moving straight between position and velocity
+        between start_time and end_time
 
-        safedist2 = (self.radius + self.FREEMARGIN) ** 2
 
-        for o in view.obstacles:
-            if line_distance2(o.p1, o.p2, p1, p2) < safedist2:
+        (p00, p10, v0, v1, r0, r1 are given)
+
+        p01 = p00 + v0 * t
+        p11 = p10 + v1 * t
+
+        Minimize:
+        |p01 - p11|
+
+        """
+        for o in view.pedestrians:
+            pd = position - (o.position + o.velocity * start_time)
+            vd = velocity - o.velocity
+            vd2 = vd.length2()
+            if vd2 == 0:
+                t = 0
+            else:
+                t = -pd.dot(vd) / vd2
+            t = max(min(t, end_time - start_time), 0)
+            safe_dist2 = (self.radius + o.radius + self.FREEMARGIN) ** 2
+            dist2 = (pd + vd * t).length2()
+            if dist2 < safe_dist2:
                 return 0
+        #quit()
+        return 1
 
+    def approx_line_pedestrian_safeness(
+        self,
+        position, velocity, start_time, end_time, view
+    ):
+        p1 = position
+        p2 = p1 + velocity * (end_time - start_time)
         diff = p2 - p1
         length = diff.length()
+
         v = diff / length
         resolution = self.radius
         numsegments = int(math.ceil(length / resolution))
@@ -261,12 +284,37 @@ class Arty(Agent):
         safeness = 1.0
         for i in xrange(numsegments + 1):
             passed_position = p1 + v * i * segmentlen
-            passing_time = starttime + i * timediff
-            safeness *= self.safeness_pedestrians(
+            passing_time = start_time + i * timediff
+            safeness *= self.static_safeness(
                 passed_position, view, passing_time
             )
 
         return safeness
+
+    def line_safeness(self, p1, p2, view, starttime):
+        """ Free probability for moving from p1 to p2 starting on starttime
+        """
+        if p1 == p2:
+            return self.static_safeness(p1, view, starttime)
+
+        safedist2 = (self.radius + self.FREEMARGIN) ** 2
+
+        for o in view.obstacles:
+            if line_distance2(o.p1, o.p2, p1, p2) < safedist2:
+                return 0
+
+        diff = p2 - p1
+        length = diff.length()
+        v = diff * self.speed / length
+        t = length / self.speed
+
+        return self.line_pedestrian_safeness(
+            position=p1,
+            velocity=v,
+            start_time=starttime,
+            end_time=starttime + t,
+            view=view
+        )
 
     def test_move(self, p1, a1, p2, view, starttime):
         """Get from a state (a1, p1) to ((p2-p1).angle(), p2)
@@ -277,9 +325,12 @@ class Arty(Agent):
         a2 = diff.angle()
         turningtime = abs(angle_diff(a1, a2)) / self.turningspeed
         movetime = diff.length() / self.speed
-        safeness = self.turn_safeness(p1, a1, a2, view, starttime)
-        safeness *= self.line_safeness(p1, p2, view, starttime + turningtime)
-        return ((turningtime + movetime), safeness)
+        turn_safeness = self.turn_safeness(p1, a1, a2, view, starttime)
+        line_safeness = self.line_safeness(
+            p1, p2, view,
+            starttime + turningtime
+        )
+        return ((turningtime + movetime), turn_safeness * line_safeness)
 
     def getpath(self, view):
         """Use the ART algorithm to get a path to the goal"""
@@ -377,6 +428,12 @@ class Arty(Agent):
         nodes = [start]
 
         for nextpos in states.generate_n(self.LOCALMAXSIZE):
+            self.debugsurface.circle(
+                nextpos,
+                3,
+                "blue",
+                0
+            )
             bestparent = self.extension_best_parent(nextpos, nodes, view)
 
             if bestparent is None:
@@ -413,7 +470,9 @@ class Arty(Agent):
                     time=lastnode.time + move_time,
                     safeness=lastnode.safeness * move_safeness
                 )
-                lastnode = newnode
+                # Uncomment next line to make each segment be counted
+                # as an individual waypoint
+                #lastnode = newnode
                 nodes.append(newnode)
                 yield newnode
 

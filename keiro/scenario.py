@@ -79,6 +79,7 @@ class Scenario(object):  # abstract
 
             dt = self.world.advance()
             self.update(dt)
+            #raw_input("Press enter")
 
 
 class Spawner(Scenario):

@@ -147,7 +147,9 @@ January 2013:
 Refactored a bunch of things and found several implementation mistakes in Arty code. Made some optimizations and created new scenarios.
 
 Insights:
-* Global graph isn't optimized for time to goal, but time to connected node when being built. Optimizing for time to goal is probably beneficial. 
-* There is a lot of branch-cutting heuristics in arty that would make the algo better if they were removed, but also slower:
+- Global graph isn't optimized for time to goal, but time to connected node when being built. Optimizing for time to goal is probably beneficial. 
+- There is a lot of branch-cutting heuristics in arty that would make the algo better if they were removed, but also slower:
 	* Using trees instead of directed acyclic graphs for both local and global search. Makes implementation simpler and less computationally intensive though.
 
+- Intersection between pedestrian and agent can probably be postulated as a non-linear optimization problem. Right now it's essentially being solved by suboptimal brute force, but it can probably be much faster using established optimization techniques.
+- Can probably improve performance of pedestrian collision detection by first trying time-independent line-intersection of movements from both actors, that should give us some false positives (for collision), but will eliminate o lot of work for all the (true) negatives it will provide.
