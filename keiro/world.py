@@ -24,6 +24,10 @@ class DummyCanvas(object):
              color="black", stroke_width=2):
         pass
 
+    def polygon(self, coordinates, color):
+        for c0, c1 in zip(coordinates, coordinates[1:] + [coordinates[0]]):
+            self.line(c0, c1, color)
+
     def circle(self, center, radius, color="black", stroke_width=2):
         pass
 
@@ -40,7 +44,7 @@ class DummyCanvas(object):
         pass
 
 
-class PygameCanvas(object):
+class PygameCanvas(DummyCanvas):
     def __init__(self, surface):
         self.surface = surface
 

@@ -1,4 +1,3 @@
-import pygame
 import math
 from keiro.agent import Agent
 from keiro import graphbuilder
@@ -27,7 +26,7 @@ class TriAreaDot(Agent):
             return
 
         for p in view.pedestrians:
-            pygame.draw.circle(debugsurface, pygame.Color("green"), map(int, p.position), int(p.radius+2), 2)
+            debugsurface.circle(p.position, p.radius + 2, "green", 2)
             #pygame.draw.aaline(debugsurface, pygame.Color("yellow"), map(int, self.position), map(int, p.position))
 
         #generating static voronoi points (only performed once)
@@ -82,28 +81,32 @@ class TriAreaDot(Agent):
                     if((e[1] != -1) and (e[2] != -1)): #indicates line to infinity
                         if graphbuilder.free_path_obstacles_only(Vec2d(*vDNodes[e[1]]), Vec2d(*vDNodes[e[2]]), view, safe_distance):
                             gb.connect(vDNodes[e[1]], vDNodes[e[2]])
-                            pygame.draw.aaline(debugsurface, (0,255,0,255), vDNodes[e[1]], vDNodes[e[2]])
+                            debugsurface.line(vDNodes[e[1]], vDNodes[e[2]], "green")
     
                 for pos in gb.positions(): # get off the voronoi map
                     diff = Vec2d(*pos) - self.position
                     if(graphbuilder.free_path(self.position + diff.norm()*self.radius, Vec2d(*pos), view, safe_distance) and (diff.length() <= self.view_range)):
                         #so agent is not blocked by pedestrian next to it
                         gb.connect(self.position, pos)
-                        pygame.draw.aaline(debugsurface, (0,255,0,255), self.position, pos)
+                        debugsurface.line(self.position, pos, "green")
                     diff = self.goal - Vec2d(*pos)          
                     if(graphbuilder.free_path(self.goal, Vec2d(*pos), view, 0) and (diff.length() <= self.view_range)):
                         gb.connect(self.goal, pos)
-                        pygame.draw.aaline(debugsurface, (0,255,0,255), self.goal, pos)
+                        debugsurface.line(self.goal, pos, "green")
     
                 start = gb.node(self.position, self.angle)
                 end = gb.node(self.goal, None)
                 nodes = gb.all_nodes()
                 for p in gb.positions():
-                    pygame.draw.circle(debugsurface, (0,0,0), map(int, p), 2, 0)    
+                    debugsurface.circle(p, 2, "black", 0)
 
                 result = astar.shortest_path(start, end, nodes)
                 for r in xrange(len(result.indices)-1):
-                    pygame.draw.aaline(debugsurface, (255,0,255,255), nodes[result.indices[r]].position, nodes[result.indices[r+1]].position)
+                    debugsurface.line(
+                        nodes[result.indices[r]].position,
+                        nodes[result.indices[r+1]].position,
+                        (255,0,255)
+                    )
                 
                 if len(result.indices) > 1:
                     bestHeading = Vec2d(*nodes[result.indices[1]].position) - self.position
@@ -129,8 +132,8 @@ class TriAreaDot(Agent):
                     nbrIndexB = d[0]
                     nbrIndexC = d[1]
                 if(nbr):
-                    pygame.draw.aaline(debugsurface, (255,0,0,255), dPoints[0], dPoints[nbrIndexB])
-                    pygame.draw.aaline(debugsurface, (255,0,0,255), dPoints[0], dPoints[nbrIndexC])
+                    debugsurface.line(dPoints[0], dPoints[nbrIndexB], "red")
+                    debugsurface.line(dPoints[0], dPoints[nbrIndexC], "red")
                     if(nbrIndexB - 2 < numPeds): # offset by 2 because first two dPoints are agent pos and goal
                         velB = tuple(view.pedestrians[nbrIndexB-2].velocity)
                     else:
@@ -159,7 +162,7 @@ class TriAreaDot(Agent):
                 midPointHeading = Vec2d(*midPoint) - self.position
                 areaDot = abs(AxDot*By + Ax*ByDot + BxDot*Cy + Bx*CyDot + CxDot*Ay + Cx*AyDot - AyDot*Bx - Ay*BxDot - ByDot*Cx - By*CxDot - CyDot*Ax - Cy*AxDot) * pow((1+math.cos(bestHeading.angle(midPointHeading)))/2,1)
                             #the higher the power, the more focused the weighting is on the goalpoint
-                pygame.draw.polygon(debugsurface, (200, 100, 130, int(min(areaDot/4,255))), [[Ax, Ay], [Bx, By], [Cx, Cy]])
+                debugsurface.polygon([[Ax, Ay], [Bx, By], [Cx, Cy]], (200, 100, 130, int(min(areaDot/4,255))))
                 if areaDot > maxAreaDot:
                     maxAreaDot = areaDot
                     maxMidPoint = midPoint          

@@ -1,4 +1,3 @@
-import pygame
 import math
 from keiro.agent import Agent
 from keiro import graphbuilder
