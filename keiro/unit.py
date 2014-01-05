@@ -28,9 +28,9 @@ class Unit(LinearParticle):
             0  # width=0 means filled circle
         )
         screen.circle(
-            map(int, self.position),
-            int(self.radius),
-            (0, 0, 0),
+            self.position,
+            self.radius,
+            (150, 150, 150),
             2
         )
 
@@ -43,8 +43,8 @@ class Unit(LinearParticle):
         screen.line(
             self.position,
             dirvector,
-            (0, 0, 0),
-            2
+            (150, 150, 150),
+            1
         )
 
     def render_ID(self, screen, ID):

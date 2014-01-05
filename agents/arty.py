@@ -188,7 +188,7 @@ class Arty(Agent):
 
         # mark visible pedestrians
         for p in view.pedestrians:
-            debugsurface.circle(p.position, p.radius + 2, "green", 2)
+            debugsurface.circle(p.position, p.radius + 1, "black", 2)
 
         path = self.getpath(view)
         self.waypoint_clear()

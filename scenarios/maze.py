@@ -9,7 +9,7 @@ class Maze(Scenario):
 
     def init(self):
         if self.parameter is None:
-            self.parameter = 50
+            self.parameter = 20
 
         self.agent.position = Vec2d(200, 200)
         self.agent.goal = Vec2d(400, 200)
