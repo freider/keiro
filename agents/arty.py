@@ -510,32 +510,17 @@ class Arty(Agent):
 
     def backtrack_via_global(self, global_candidate, from_position,
                              from_angle, view, start_time, start_safeness):
-        # get to global node
-        move_time, move_safeness = self.test_move(
+        # create a start linked to the candidate
+        current_node = Node(
             from_position,
-            from_angle,
-            global_candidate.position,
-            view,
-            start_time
+            None,
+            global_candidate
         )
-        safeness = start_safeness * move_safeness
-        # is that first straight segment safe?
-        if safeness < self.SAFETY_THRESHOLD:
-            self.debugsurface.line(
-                from_position,
-                global_candidate.position,
-                "red"
-            )
-            # don't have to return here since loop below will be skipped anyway
-
-        # update node and time to reflect new position/time
-        current_node = global_candidate
-        current_time = start_time + move_time
-
-        current_angle = (global_candidate.position - from_position).angle()
-
+        safeness = start_safeness
+        current_angle = from_angle
+        current_time = start_time
         # follow global tree to goal, and check for collisions
-        path = [current_node.position]
+        path = []
 
         while current_node.parent and safeness >= self.SAFETY_THRESHOLD:
             self.safeness_fail_pedestrian = None
@@ -551,7 +536,7 @@ class Arty(Agent):
                 self.debugsurface.line(
                     global_candidate.position,
                     current_node.position,
-                    "pink"
+                    "red"
                 )
                 if self.safeness_fail_pedestrian:
                     self.debugsurface.line(
