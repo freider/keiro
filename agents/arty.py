@@ -108,8 +108,19 @@ class RoadMapGenerator(object):
     def run(self, iterations):
         sg = StateGenerator(*self.view.world_bounds, random=self.random)
 
-        for candidate_position in sg.generate_n(iterations):
-            self._connect_to_best(candidate_position)
+        while len(self.nodes) < iterations:
+        #for candidate_position in sg.generate_n(iterations):
+            candidate_position = sg.generate()
+            mindist2 = None
+            for n in self.nodes:
+                dist2 = n.position.distance_to2(candidate_position)
+                if (
+                    (mindist2 is None or dist2 < mindist2) and
+                    self.line_is_traversable(n.position, candidate_position)
+                ):
+                    mindist2 = dist2
+            if mindist2 >= 1000:
+                self._connect_to_best(candidate_position)
         self.nodes.sort(key=lambda x: x.time)
 
     def get_nodes(self):
