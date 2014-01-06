@@ -153,3 +153,8 @@ Insights:
 
 - Intersection between pedestrian and agent can probably be postulated as a non-linear optimization problem. Right now it's essentially being solved by suboptimal brute force, but it can probably be much faster using established optimization techniques.
 - Can probably improve performance of pedestrian collision detection by first trying time-independent line-intersection of movements from both actors, that should give us some false positives (for collision), but will eliminate o lot of work for all the (true) negatives it will provide.
+
+January 6th 2013:
+- Maybe it's better to generate very sparse global graphs (or at least remove extraneous points after generation) to just have some helper points for difficult topologies.
+	Then we can use local search to its full extent every iteration and navigate to the best point in the global graph (the closest one to the target which is safe) every time. This is probably a good idea.
+
