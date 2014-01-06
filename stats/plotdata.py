@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 import os
+import time
+import tempfile
+import subprocess
 os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
 from statsapp.models import Record
 import Gnuplot
@@ -82,8 +85,9 @@ def tab_separated_string(plotdata):
     return '\n'.join(['\t'.join(map(str, r)) for r in plotdata])
 
 
-def plot(plotdata, xaxis, yaxis, title, outfile=None):
+def plot(plotdata, xaxis, yaxis, title, outfile):
     g = Gnuplot.Gnuplot()
+
     if len(plotdata) == 2:
         raise NotImplementedError  # not worth the effort at the moment
         g('set data style linespoints')
@@ -97,11 +101,12 @@ def plot(plotdata, xaxis, yaxis, title, outfile=None):
         g('set title "%s"' % title)
         g('set xlabel "%s"' % xaxis)
         g('set ylabel "%s"' % yaxis)
-        if outfile:
-            g('set terminal pdf')
-            g('set output "%s"' % outfile)
-
+        g('set terminal pdf')
+        g('set output "%s"' % outfile)
         g.plot(plotdata[0])
+        # subprocess.call(['open', outfile])
+        # time.sleep(1)
+        # fileobject.close()
 
 #   if outfile:
 #       g.hardcopy(outfile, enhanced = 1, color = 0)
@@ -118,8 +123,12 @@ if __name__ == "__main__":
     parser.add_option("-y", "--yaxis", type="string", default="")
     parser.add_option("-i", "--title", type="string", default="")
 
-    actions = {'itertime': itertime, 'collisions':
-               collisions, 'goaltime': ttg, 'dual': dual}
+    actions = {
+        'itertime': itertime,
+        'collisions': collisions,
+        'goaltime': ttg,
+        'dual': dual
+    }
 
     (opts, args) = parser.parse_args()
 
@@ -146,7 +155,7 @@ if __name__ == "__main__":
     if args:
         outfile = args[0]
     else:
-        outfile = None
+        outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False).name
 
     data = action(groups)
 
@@ -154,3 +163,7 @@ if __name__ == "__main__":
         plot(data, opts.xaxis, opts.yaxis, opts.title, outfile)
     else:
         print "Insufficient data"
+    print outfile
+    subprocess.call(['open', outfile])
+    time.sleep(1)
+    os.unlink(outfile)
