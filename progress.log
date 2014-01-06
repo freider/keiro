@@ -157,4 +157,8 @@ Insights:
 January 6th 2013:
 - Maybe it's better to generate very sparse global graphs (or at least remove extraneous points after generation) to just have some helper points for difficult topologies.
 	Then we can use local search to its full extent every iteration and navigate to the best point in the global graph (the closest one to the target which is safe) every time. This is probably a good idea.
-
+- Parameters to Arty should be:
+	* int: agent_min_nodes (for agent graph), before trying to find goal graph
+	* int: agent_max_nodes (for agent graph), before giving up (this could also be time based...)
+	* int: goal_nodes 
+	* boolean (default true): stop_on_closest, stop checking global nodes when one approximately closet to the goal has been found
