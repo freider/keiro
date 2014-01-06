@@ -58,15 +58,15 @@ You also need to set up the sqlite (or other rdbms) for storing statistics of ea
 ## Running
 Default simulation:
 
-    $ python keiro.py
+    $ python run.py
 
 A simulation using the Arty algorithm
 
-    $ python keiro.py -a Arty
+    $ python run.py -a Arty
 
 Different scenarios (Try one of: {MarketSquare | CrowdedMarketSquare | TheFlood | Crossing})
     
-    $ python keiro.py -s MarketSquare
+    $ python run.py -s MarketSquare
   
 Videos will be automatically stored in the videos directory after each successful simulation (if ffmpeg is installed on your system and available on the $PATH)
 
