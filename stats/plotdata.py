@@ -1,115 +1,36 @@
 #!/usr/bin/env python
 import os
-import time
-import tempfile
-import subprocess
 os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
 from statsapp.models import Record
-import Gnuplot
-import Gnuplot.funcutils
 from numpy import *
+import pandas as pd
+from pandas.tools.pivot import pivot_table
+import numpy as np
 
 
-def collisions(groups):
-    plotdata = []
+def metric_vs_property(
+    agent,
+    scenario,
+    scenario_parameter,
+    metrics=('completion_time',),
+    property='agent_parameter',
+    aggfunc=np.mean
+):
+    qs = Record.objects.filter(
+        agent=agent,
+        scenario=scenario,
+        scenario_parameter=scenario_parameter
+    )
+    df = pd.DataFrame(list(qs.values()))
+    table = pivot_table(
+        df,
+        values=list(metrics),
+        rows=[property],
+        #cols=[metric],
+        aggfunc=np.mean
+    )
+    return table
 
-    for xval in sorted(groups.keys()):
-        s = 0.0
-        n = 0
-        for r in groups[xval]:
-            s += r.collisions
-            n += 1
-        yval = s / n
-        plotdata.append((xval, yval))
-
-    return [plotdata]
-
-
-def ttg(groups):
-    plotdata = []
-
-    for xval in sorted(groups.keys()):
-        s = 0.0
-        n = 0
-        for r in groups[xval]:
-            s += r.completion_time
-            n += 1
-        yval = s / n
-        plotdata.append((xval, yval))
-
-    return [plotdata]
-
-
-def itertime(groups):
-    plotdata = []
-    for xval in sorted(groups.keys()):
-        s = array(4 * [0.0])
-        n = 0
-        for r in groups[xval]:
-            s += array([
-                xval,
-                r.avg_iteration_time,
-                r.min_iteration_time,
-                r.max_iteration_time
-            ])
-            n += 1
-        xyval = s / n
-        plotdata.append(xyval)
-
-    return [plotdata]
-
-
-def dual(groups):
-    plotdata = []
-    plotdata2 = []
-    for xval in sorted(groups.keys()):
-        s = array(4 * [0.0])
-        s2 = array(2 * [0.0])
-        n = 0
-        for r in groups[xval]:
-            s += array([
-                xval,
-                r.avg_iteration_time,
-                r.min_iteration_time,
-                r.max_iteration_time
-            ])
-            s2 += array([xval, r.completion_time])
-            n += 1
-        xyval = s / n
-        plotdata.append(xyval)
-
-    return [plotdata, plotdata2]
-
-
-def tab_separated_string(plotdata):
-    return '\n'.join(['\t'.join(map(str, r)) for r in plotdata])
-
-
-def plot(plotdata, xaxis, yaxis, title, outfile):
-    g = Gnuplot.Gnuplot()
-
-    if len(plotdata) == 2:
-        raise NotImplementedError  # not worth the effort at the moment
-        g('set data style linespoints')
-        g.plot(plotdata[0], plotdata[1])
-
-    elif len(plotdata) == 1:
-        if len(plotdata[0][0]) == 2:
-            g('set data style linespoints')
-        elif len(plotdata[0][0]) == 4:
-            g('set data style yerrorlines')
-        g('set title "%s"' % title)
-        g('set xlabel "%s"' % xaxis)
-        g('set ylabel "%s"' % yaxis)
-        g('set terminal pdf')
-        g('set output "%s"' % outfile)
-        g.plot(plotdata[0])
-        # subprocess.call(['open', outfile])
-        # time.sleep(1)
-        # fileobject.close()
-
-#   if outfile:
-#       g.hardcopy(outfile, enhanced = 1, color = 0)
 
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -118,7 +39,7 @@ if __name__ == "__main__":
     parser.add_option("-S", "--scenarioparameter", type="int", default=None)
     parser.add_option("-a", "--agent", default="RoadMap")
     parser.add_option("-A", "--agentparameter", type="int")
-    parser.add_option("-t", "--plottype", type="string", default="itertime")
+    parser.add_option("-t", "--plottype", type="string", default="goaltime")
     parser.add_option("-x", "--xaxis", type="string", default="")
     parser.add_option("-y", "--yaxis", type="string", default="")
     parser.add_option("-i", "--title", type="string", default="")
@@ -126,7 +47,7 @@ if __name__ == "__main__":
     actions = {
         'itertime': itertime,
         'collisions': collisions,
-        'goaltime': ttg,
+        'goaltime': time_to_goal,
         'dual': dual
     }
 
@@ -137,33 +58,9 @@ if __name__ == "__main__":
     scenario = opts.scenario
     scenario_parameter = opts.scenarioparameter
 
-    qs = Record.objects.filter(
-        agent=agent,
-        scenario=scenario,
-        scenario_parameter=scenario_parameter
-    ).filter(agent_parameter__lt=100)  # skip reference point
-
-    groups = {}
-    # grouping by key
-    for r in qs:
-        key = r.agent_parameter
-        if key in groups:
-            groups[key].append(r)
-        else:
-            groups[key] = [r]
-
-    if args:
-        outfile = args[0]
-    else:
-        outfile = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False).name
-
-    data = action(groups)
-
-    if data[0]:
-        plot(data, opts.xaxis, opts.yaxis, opts.title, outfile)
-    else:
-        print "Insufficient data"
-    print outfile
-    subprocess.call(['open', outfile])
-    time.sleep(1)
-    os.unlink(outfile)
+    print metric_vs_property(
+        agent='Arty',
+        scenario='MarketSquare',
+        scenario_parameter=None,
+        metrics=['completion_time', 'max_iteration_time']
+    )
