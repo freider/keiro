@@ -8,7 +8,7 @@ class Obstacle(object):
 
     def render(self, screen):
         for line in self.bounds:
-            screen.line(line.p1, line.p2, "pink", 2)
+            screen.line(line.p1, line.p2, "black", 2)
 
 
 class Line(Obstacle):

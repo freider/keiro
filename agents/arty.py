@@ -3,6 +3,8 @@ from keiro.agent import Agent
 from keiro.geometry import linesegdist2, line_distance2, angle_diff
 from keiro.stategenerator import ExtendingGenerator, StateGenerator
 
+DRAW_BLOCKED_PATHS = False
+
 
 class Node:
     def __init__(self, position, angle, parent, time=None, safeness=None):
@@ -492,11 +494,12 @@ class Arty(Agent):
             )
 
             if safeness < self.SAFETY_THRESHOLD:
-                self.debugsurface.line(
-                    from_position,
-                    global_candidate.position,
-                    "red"
-                )
+                if DRAW_BLOCKED_PATHS:
+                    self.debugsurface.line(
+                        from_position,
+                        global_candidate.position,
+                        "red"
+                    )
                 continue
             # TODO: make optimality/suboptimality an option
             # With global nodes sorted by time to goal,
@@ -533,11 +536,12 @@ class Arty(Agent):
             )
             safeness *= move_safeness
             if safeness < self.SAFETY_THRESHOLD:
-                self.debugsurface.line(
-                    global_candidate.position,
-                    current_node.position,
-                    "red"
-                )
+                if DRAW_BLOCKED_PATHS:
+                    self.debugsurface.line(
+                        global_candidate.position,
+                        current_node.position,
+                        "red"
+                    )
                 if self.safeness_fail_pedestrian:
                     self.debugsurface.line(
                         current_node.position,
