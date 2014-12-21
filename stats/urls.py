@@ -23,3 +23,8 @@ urlpatterns += patterns(
         }
     ),
 )
+
+urlpatterns += patterns(
+    '',
+    url(r'^delete/(?P<rid>\d+)$', 'statsapp.views.delete')
+)

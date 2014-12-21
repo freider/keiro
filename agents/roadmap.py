@@ -8,11 +8,10 @@ from keiro.vector2d import Vec2d
 class RoadMap(Agent):
     FREEMARGIN = 1
 
-    def __init__(self, parameter, random):
+    def __init__(self, parameter, **kwargs):
         if parameter is None:
             parameter = 10
-        self.random = random
-        super(RoadMap, self).__init__(parameter, random=random)
+        super(RoadMap, self).__init__(parameter, **kwargs)
         self.NODES = parameter
         self.cdist = 10000000
 
@@ -54,12 +53,12 @@ class RoadMap(Agent):
             gb.connect(self.position, self.goal)
         else:
             # using half of the points for global planning
-            world_size = self.view.world_bounds[1::2]
+            world_size = view.world_bounds[1::2]
             for i in xrange(self.NODES / 2):
                 newpos = Vec2d(
-                    self.random.random(),
-                    self.random.random()
-                ) * Vec2d(*world_size)
+                    world_size[0] * self.random.random(),
+                    world_size[1] * self.random.random()
+                )
                 for pos in gb.positions():
                     if graphbuilder.free_path(
                         Vec2d(*pos), newpos, view, safe_distance

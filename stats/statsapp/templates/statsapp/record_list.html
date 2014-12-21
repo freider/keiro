@@ -32,7 +32,7 @@
 			<tr>
 				<th colspan="3">ID</th>
 				<th colspan="7">Settings</th>
-				<th colspan="5">Results</th>
+				<th colspan="6">Results</th>
 			</tr>
 			<tr>
 				<th>id</th>
@@ -50,12 +50,13 @@
 				<th>Avg.Iter.Time</th>
 				<th>Max.Iter.Time</th>
 				<th>Video</th>
+				<th>Actions</th>
 			</tr>
 		{% for o in object_list %}
 			<tr class="{% cycle 'odd' 'even' %}">
 				<td>{{o.id}}</td>
 				<td>{{o.date}}</td>
-				<td>{{o.revision}}</td>
+				<td>{{o.revision|slice:":6"}}</td>
 				<td>{{o.scenario}}</td>
 				<td>{{o.scenario_parameter}}</td>
 				<td>{{o.agent}}</td>
@@ -68,6 +69,7 @@
 				<td>{{o.avg_iteration_time}}</td>
 				<td>{{o.max_iteration_time}}</td>
 				<td><a href="video/{{o.id}}.mp4">Video</a></td>
+				<td><a href="delete/{{o.id}}">Delete</a></td>
 			</tr>
         {% endfor %}
 	{% endblock %}
