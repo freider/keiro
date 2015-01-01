@@ -1,12 +1,13 @@
 # Create your views here.
 import os
-import statsapp.models as m
+from statsapp import models
 from django.http import HttpResponse
 from django.conf import settings
+from django.views.generic.list import ListView
 
 
 def delete(request, rid):
-    rec = m.Record.objects.get(pk=rid)
+    rec = models.Record.objects.get(pk=rid)
     recrepr = repr(rec)
     extra = ""
     videopath = os.path.join(
@@ -20,3 +21,7 @@ def delete(request, rid):
     return HttpResponse(
         "Deleted {}{}".format(recrepr, extra)
     )
+
+
+class RecordListView(ListView):
+    queryset = models.Record.objects.order_by('-date')

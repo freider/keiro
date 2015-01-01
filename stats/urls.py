@@ -1,20 +1,11 @@
-from django.conf.urls.defaults import *
+from django.conf.urls import url
 from django.conf import settings
-from statsapp import models
-# Uncomment the next two lines to enable the admin:
-# from django.contrib import admin
-# admin.autodiscover()
+from statsapp.views import RecordListView
 
-urlpatterns = patterns(
-    '',
-    (
-        r'^/?$', 'django.views.generic.list_detail.object_list',
-        {'queryset': models.Record.objects.order_by('-date')}
-    )
-)
-
-urlpatterns += patterns(
-    '',
+urlpatterns = [
+    url(
+        r'^/?$', RecordListView.as_view()
+    ),
     url(
         r'^video/(?P<path>.*)$', 'django.views.static.serve',
         {
@@ -22,9 +13,5 @@ urlpatterns += patterns(
             'show_indexes': True
         }
     ),
-)
-
-urlpatterns += patterns(
-    '',
     url(r'^delete/(?P<rid>\d+)$', 'statsapp.views.delete')
-)
+]

@@ -1,27 +1,19 @@
 #!/usr/bin/env python
 import os
 os.environ["DJANGO_SETTINGS_MODULE"] = "settings"
-from statsapp.models import Record
+
 from numpy import *
-import pandas as pd
+
 from pandas.tools.pivot import pivot_table
 import numpy as np
 
 
 def metric_vs_property(
-    agent,
-    scenario,
-    scenario_parameter,
+    data,
     metrics=('completion_time',),
     property='agent_parameter',
-    aggfunc=np.mean
+    aggfunc=np.mean,
 ):
-    qs = Record.objects.filter(
-        agent=agent,
-        scenario=scenario,
-        scenario_parameter=scenario_parameter
-    )
-    df = pd.DataFrame(list(qs.values()))
     table = pivot_table(
         df,
         values=list(metrics),
