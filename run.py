@@ -121,22 +121,19 @@ class Simulation(object):
                                    frame_size=self._scenario.world.size)
 
     def _setup_scenario(self):
-        # TODO: change to using once randomizes instance per Simluation
-
-        # as to not be affected by external calls
         # seed needs to be set before the scenario is setup
-        random.seed(self.randomseed)
+        local_random = random.Random(self.randomseed)
         ScenarioClass = ScenarioRegistrar.register[self.opts.scenario]
         AgentClass = AgentRegistrar.register[self.opts.agent]
 
         self._agent = AgentClass(
             self.opts.agentparameter,
-            random_seed=random.random()
+            random_seed=local_random.random()
         )
         self._scenario = ScenarioClass(
             self.opts.scenarioparameter,
             self._agent,
-            random_seed=random.random()
+            random_seed=local_random.random()
         )
 
         # TODO: the following should be put in the scenario setup

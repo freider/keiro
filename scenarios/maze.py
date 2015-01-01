@@ -42,7 +42,7 @@ class Maze(Scenario):
 
         for m in xrange(self.parameter):
             good = False
-            u = RandomWalkingAvoider()
+            u = RandomWalkingAvoider(random_seed=self.random.random())
 
             # generate random positions for pedestrians
             # that are not inside obstacles...

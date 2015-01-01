@@ -16,7 +16,7 @@ class CrossingPaths(Scenario):
         self.agent.goal = Vec2d(400, 200)
         self.agent.angle = 0
 
-        u = Stubborn()
+        u = Stubborn(random_seed=self.random.random())
         u.position = Vec2d(300, 100)
         u.goal = Vec2d(300, 300)
         u.angle = math.pi / 2

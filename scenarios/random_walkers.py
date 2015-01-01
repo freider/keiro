@@ -21,6 +21,6 @@ class RandomWalkers(Scenario):
             while init_position.distance_to(self.agent.position) < 20:
                 init_position = Vec2d(self.random.randrange(self.world.size[0]),
                                       self.random.randrange(self.world.size[1]))
-            u = RandomWalkingAvoider()
+            u = RandomWalkingAvoider(self.random.random())
             u.position = init_position
             self.world.add_unit(u)

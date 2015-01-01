@@ -14,7 +14,8 @@ class Unit(LinearParticle):
         self.radius = 8
         self.speed = 20
         self.turningspeed = 2 * math.pi / 3
-        self.random = random.Random(random_seed)
+        if random_seed is not None:
+            self.random = random.Random(random_seed)
 
     def init(self, view):
         """Called before simulation starts

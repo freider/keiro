@@ -48,7 +48,7 @@ class CrowdedMarketSquare(Scenario):
 
         for i in xrange(self.parameter):
             good = False
-            u = RandomWalkingAvoider()
+            u = RandomWalkingAvoider(random_seed=self.random.random())
 
             # random positions for pedestrians that are not inside obstacles
             while not good:
