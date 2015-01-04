@@ -24,6 +24,16 @@ class CrossingPaths(Scenario):
         self.world.add_unit(u)
 
 
+class Empty(Scenario):
+    """ Empty scenario for reference
+    """
+
+    def init(self):
+        self.agent.position = Vec2d(100, 100)
+        self.agent.goal = Vec2d(540, 380)
+        self.agent.angle = 0
+
+
 class BestToFollow(Scenario):
     """ Scenario where the optimal path is to follow a pedestrian
 
