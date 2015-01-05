@@ -196,8 +196,11 @@ class Arty(Agent):
         else:
             print("No safe route, giving up!")
 
+    def obstacle_velocity(self, pedestrian):
+        return pedestrian.velocity
+
     def future_position(self, pedestrian, time):
-        pos = pedestrian.position + pedestrian.velocity * time
+        pos = pedestrian.position + self.obstacle_velocity(pedestrian) * time
         return pos
 
     def static_safeness(self, position, view, time):
@@ -248,8 +251,8 @@ class Arty(Agent):
 
         """
         for o in view.pedestrians:
-            pd = position - (o.position + o.velocity * start_time)
-            vd = velocity - o.velocity
+            pd = position - self.future_position(o, start_time)
+            vd = velocity - self.obstacle_velocity(o)
             vd2 = vd.length2()
             if vd2 == 0:
                 t = 0
